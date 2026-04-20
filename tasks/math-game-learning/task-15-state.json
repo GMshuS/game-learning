@@ -1,0 +1,11 @@
+{
+  "taskId": "task-15",
+  "status": "completed",
+  "outputFiles": [
+    "math-game-learning/src/components/MainMenu.vue",
+    "math-game-learning/src/components/GameNavbar.vue",
+    "math-game-learning/src/config/navigation.js",
+    "math-game-learning/src/components/GameApp.vue"
+  ],
+  "timestamp": "2026-04-20T04:58:07.804Z"
+}

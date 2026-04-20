@@ -1,0 +1,12 @@
+{
+  "taskId": "task-4",
+  "status": "completed",
+  "outputFiles": [
+    "math-game-learning/src/config/adventure.js",
+    "math-game-learning/src/config/equipment.js",
+    "math-game-learning/src/scenes/WorldMapScene.js",
+    "math-game-learning/src/config/phaser.js",
+    "math-game-learning/src/components/AdventureMap.vue"
+  ],
+  "timestamp": "2026-04-20T04:38:21.524Z"
+}

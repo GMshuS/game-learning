@@ -1,0 +1,11 @@
+{
+  "taskId": "task-10",
+  "status": "completed",
+  "outputFiles": [
+    "math-game-learning/src/config/wordProblems.js",
+    "math-game-learning/src/components/VisualWordProblem.vue",
+    "math-game-learning/src/components/DraggableItem.vue",
+    "math-game-learning/src/components/StepByStepGuide.vue"
+  ],
+  "timestamp": "2026-04-20T04:48:59.795Z"
+}
