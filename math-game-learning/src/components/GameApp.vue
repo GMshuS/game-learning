@@ -50,6 +50,8 @@
       <ShopView
         v-if="currentView === 'shop'"
         :playerCoins="playerInfo.coins"
+        :inventory="playerInventory"
+        @buy="handleBuy"
         @startCashier="startCashier"
         @back="goBack"
       />
@@ -112,6 +114,11 @@ const showAchievements = ref(false)
 const unlockedAreas = ref(['area_1'])
 const currentAreaId = ref('area_1')
 
+// 玩家库存（用于商店显示）
+const playerInventory = computed(() => {
+  return gameStore.items || []
+})
+
 // 获取设置对象
 const settings = computed(() => ({
   sound: settingsStore.sound,
@@ -157,6 +164,45 @@ const startShop = () => {
   currentView.value = 'shop'
   gameStore.setGameMode('shop')
   audioStore.playBgm('shop')
+}
+
+// 处理购买
+const handleBuy = ({ items, total }) => {
+  // items 是包含多个商品的数组：[{ product, quantity }, ...]
+  
+  // 检查金币是否足够
+  if (gameStore.playerCoins < total) {
+    alert('金币不足！')
+    return
+  }
+  
+  // 消费金币
+  const spent = gameStore.spendCoins(total)
+  if (!spent) {
+    alert('购买失败！')
+    return
+  }
+  
+  // 添加所有物品到库存
+  if (gameStore.inventory) {
+    items.forEach(({ product, quantity }) => {
+      gameStore.inventory.addItem({
+        id: product.id,
+        name: product.name,
+        icon: product.icon,
+        quantity: quantity
+      })
+    })
+  }
+  
+  // 保存游戏
+  gameStore.saveGame()
+  
+  // 播放音效
+  audioStore.playSfx('victory')
+  
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  alert(`成功购买 ${itemCount} 件商品！`)
 }
 
 // 开始战斗
@@ -235,15 +281,34 @@ const onBattleEnd = (result) => {
 // 收银游戏完成处理
 const onCashierComplete = (result) => {
   if (result.status === 'success') {
-    gameStore.addCoins(result.rewards.coins)
-    gameStore.addExp(result.rewards.exp)
+    // 使用 CashierGame 中计算的奖励
+    if (result.rewards && result.rewards.coins) {
+      gameStore.addCoins(result.rewards.coins)
+      gameStore.addExp(result.rewards.exp)
+    } else {
+      // 备用计算方式
+      const coins = result.stars * 10
+      const exp = result.stars * 5 + Math.max(0, 30 - result.timeUsed)
+      gameStore.addCoins(coins)
+      gameStore.addExp(exp)
+    }
   }
-  goBack()
+  // 不在这里调用 goBack()，让玩家看到结果
+  // 玩家可以点击"再来一题"或"结束游戏"按钮
 }
 
-onMounted(() => {
-  // 初始化游戏
-  gameStore.initGame()
+onMounted(async () => {
+  // 初始化游戏 - 等待完成
+  const loaded = await gameStore.initGame()
+  console.log('GameApp onMounted - game loaded:', loaded, 'player:', gameStore.player)
+  
+  // 如果没有存档，创建新游戏
+  if (!loaded || !gameStore.player) {
+    console.log('No saved game, creating new game')
+    await gameStore.newGame('冒险者', 1)
+    console.log('New game created - player:', gameStore.player)
+  }
+  
   audioStore.init()
   settingsStore.loadSettings()
   

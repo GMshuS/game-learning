@@ -1,8 +1,17 @@
 <template>
   <div class="shop-view">
+    <!-- 经营商店玩法说明 -->
+    <GameTutorial
+      v-if="showTutorial"
+      title="🏪 经营商店玩法说明"
+      :steps="shopTutorialSteps"
+      @close="closeTutorial"
+    />
+    
     <div class="shop-header">
       <h2>🏪 文具商店</h2>
       <div class="header-actions">
+        <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
         <div class="coins-display">
           <span class="coin-icon">💰</span>
           <span class="coin-amount">{{ playerCoins }}</span>
@@ -35,7 +44,6 @@
           v-for="product in filteredProducts"
           :key="product.id"
           class="product-card"
-          :class="{ selected: selectedProduct?.id === product.id }"
           @click="selectProduct(product)"
         >
           <div class="product-image">{{ product.icon }}</div>
@@ -43,40 +51,56 @@
             <h4 class="product-name">{{ product.name }}</h4>
             <p class="product-price">
               <span class="price-icon">💰</span>
-              {{ product.price }}
+              {{ product.sellPrice }}
             </p>
             <p class="product-desc">{{ product.description }}</p>
           </div>
+          <button 
+            class="btn-add-cart"
+            @click.stop="addToCart(product)"
+            :disabled="!canAddToCart(product)"
+          >
+            {{ getCartItem(product)?.quantity ? '已选 x' + getCartItem(product)?.quantity : '加入购物车' }}
+          </button>
         </div>
       </div>
 
-      <!-- 购买面板 -->
-      <div v-if="selectedProduct" class="purchase-panel">
-        <h3>购买商品</h3>
-        <div class="product-detail">
-          <span class="detail-icon">{{ selectedProduct.icon }}</span>
-          <div class="detail-info">
-            <span class="detail-name">{{ selectedProduct.name }}</span>
-            <span class="detail-price">💰 {{ selectedProduct.price }}</span>
+      <!-- 购物车 -->
+      <div class="cart-section">
+        <h3>🛒 购物车 ({{ cartItemCount }} 件商品)</h3>
+        <div v-if="shoppingCart.length === 0" class="empty-cart">
+          购物车空空如也，请点击商品添加到购物车
+        </div>
+        <div v-else class="cart-list">
+          <div
+            v-for="item in shoppingCart"
+            :key="item.product.id"
+            class="cart-item"
+          >
+            <span class="cart-icon">{{ item.product.icon }}</span>
+            <span class="cart-name">{{ item.product.name }}</span>
+            <span class="cart-price">¥{{ item.product.sellPrice }} × {{ item.quantity }}</span>
+            <div class="cart-actions">
+              <button class="cart-btn" @click="updateCartQuantity(item.product.id, -1)">-</button>
+              <span class="cart-qty">{{ item.quantity }}</span>
+              <button class="cart-btn" @click="updateCartQuantity(item.product.id, 1)">+</button>
+              <button class="cart-btn remove" @click="removeFromCart(item.product.id)">×</button>
+            </div>
           </div>
         </div>
         
-        <div class="quantity-selector">
-          <button class="qty-btn" @click="buyQuantity = Math.max(1, buyQuantity - 1)">-</button>
-          <span class="qty-value">{{ buyQuantity }}</span>
-          <button class="qty-btn" @click="buyQuantity++">+</button>
-        </div>
-        
-        <div class="total-price">
-          总价：<span class="total-amount">💰 {{ selectedProduct.price * buyQuantity }}</span>
+        <div v-if="shoppingCart.length > 0" class="cart-total">
+          <span>合计：</span>
+          <span class="total-amount">💰 {{ cartTotal }}</span>
         </div>
         
         <button 
-          class="btn-buy" 
-          @click="buyItem"
-          :disabled="playerCoins < selectedProduct.price * buyQuantity"
+          v-if="shoppingCart.length > 0"
+          class="btn-checkout" 
+          @click="checkout"
+          :disabled="playerCoins < cartTotal"
         >
-          确认购买
+          确认购买 ({{ cartTotal }} 💰)
         </button>
       </div>
 
@@ -99,8 +123,38 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getAllProducts, getProductsByCategory, shopConfig } from '../config/shop'
+import GameTutorial from './GameTutorial.vue'
+
+const showTutorial = ref(false)
+
+const shopTutorialSteps = [
+  {
+    title: '浏览商品',
+    description: '在商店中浏览各种商品，商品分为文具区、书籍区、零食区和玩具区四个分类。'
+  },
+  {
+    title: '加入购物车',
+    description: '点击商品卡片上的"加入购物车"按钮，可以将商品添加到购物车。可以添加多个不同商品。'
+  },
+  {
+    title: '管理购物车',
+    description: '在购物车区域可以调整商品数量，或删除不需要的商品。购物车会显示所有商品的总价。'
+  },
+  {
+    title: '确认购买',
+    description: '金币足够时，点击"确认购买"按钮完成购买。购买后金币会减少，商品会添加到你的库存中。'
+  },
+  {
+    title: '收银游戏',
+    description: '点击"收银游戏"按钮可以玩找零游戏，练习收银技巧，赢取额外金币奖励！'
+  }
+]
+
+const closeTutorial = () => {
+  showTutorial.value = false
+}
 
 const props = defineProps({
   playerCoins: {
@@ -121,7 +175,7 @@ const emit = defineEmits(['buy', 'sell', 'upgrade', 'back', 'startCashier'])
 
 const selectedCategory = ref('all')
 const selectedProduct = ref(null)
-const buyQuantity = ref(1)
+const shoppingCart = ref([])
 
 const categories = computed(() => {
   return [
@@ -141,6 +195,16 @@ const playerInventory = computed(() => {
   return props.inventory || []
 })
 
+// 购物车商品数量
+const cartItemCount = computed(() => {
+  return shoppingCart.value.reduce((sum, item) => sum + item.quantity, 0)
+})
+
+// 购物车总价
+const cartTotal = computed(() => {
+  return shoppingCart.value.reduce((sum, item) => sum + item.product.sellPrice * item.quantity, 0)
+})
+
 const selectCategory = (categoryId) => {
   selectedCategory.value = categoryId
   selectedProduct.value = null
@@ -148,29 +212,70 @@ const selectCategory = (categoryId) => {
 
 const selectProduct = (product) => {
   selectedProduct.value = product
-  buyQuantity.value = 1
 }
 
-const buyItem = () => {
-  if (selectedProduct.value && buyQuantity.value > 0) {
-    emit('buy', {
-      product: selectedProduct.value,
-      quantity: buyQuantity.value
+// 获取购物车中的商品
+const getCartItem = (product) => {
+  return shoppingCart.value.find(item => item.product.id === product.id)
+}
+
+// 是否可以添加到购物车
+const canAddToCart = (product) => {
+  return true // 总是可以添加
+}
+
+// 加入购物车
+const addToCart = (product) => {
+  const existing = shoppingCart.value.find(item => item.product.id === product.id)
+  if (existing) {
+    existing.quantity++
+  } else {
+    shoppingCart.value.push({
+      product,
+      quantity: 1
     })
   }
 }
 
-const sellItem = () => {
-  if (selectedProduct.value && sellQuantity.value > 0) {
-    emit('sell', {
-      product: selectedProduct.value,
-      quantity: sellQuantity.value
-    })
+// 更新购物车数量
+const updateCartQuantity = (productId, delta) => {
+  const item = shoppingCart.value.find(item => item.product.id === productId)
+  if (item) {
+    item.quantity += delta
+    if (item.quantity <= 0) {
+      removeFromCart(productId)
+    }
   }
 }
 
-const upgradeShop = (upgrade) => {
-  emit('upgrade', upgrade)
+// 从购物车移除
+const removeFromCart = (productId) => {
+  const index = shoppingCart.value.findIndex(item => item.product.id === productId)
+  if (index !== -1) {
+    shoppingCart.value.splice(index, 1)
+  }
+}
+
+// 结账
+const checkout = () => {
+  if (shoppingCart.value.length === 0) return
+  
+  if (props.playerCoins < cartTotal.value) {
+    alert('金币不足！')
+    return
+  }
+  
+  // 发送购买事件，包含所有购物车商品
+  emit('buy', {
+    items: shoppingCart.value.map(item => ({
+      product: item.product,
+      quantity: item.quantity
+    })),
+    total: cartTotal.value
+  })
+  
+  // 清空购物车
+  shoppingCart.value = []
 }
 </script>
 
@@ -224,6 +329,22 @@ const upgradeShop = (upgrade) => {
   transition: all 0.3s ease;
 }
 
+.btn-help {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-right: 0.5rem;
+}
+
+.btn-help:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
 .btn-cashier:hover,
 .btn-back:hover {
   background: rgba(255, 255, 255, 0.2);
@@ -266,7 +387,7 @@ const upgradeShop = (upgrade) => {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -280,16 +401,12 @@ const upgradeShop = (upgrade) => {
   border-radius: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .product-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
-
-.product-card.selected {
-  border-color: #fbbf24;
-  box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
 }
 
 .product-image {
@@ -319,86 +436,128 @@ const upgradeShop = (upgrade) => {
   opacity: 0.7;
 }
 
-.purchase-panel {
+.btn-add-cart {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-add-cart:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 222, 128, 0.4);
+}
+
+.btn-add-cart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-section {
   background: rgba(0, 0, 0, 0.3);
   padding: 1.5rem;
   border-radius: 15px;
   margin-bottom: 1.5rem;
 }
 
-.purchase-panel h3 {
+.cart-section h3 {
   margin: 0 0 1rem 0;
 }
 
-.product-detail {
+.empty-cart {
+  text-align: center;
+  opacity: 0.6;
+  padding: 2rem;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cart-item {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
 
-.detail-icon {
-  font-size: 2.5rem;
+.cart-icon {
+  font-size: 1.5rem;
 }
 
-.detail-info {
+.cart-name {
   flex: 1;
-}
-
-.detail-name {
-  display: block;
   font-weight: bold;
-  margin-bottom: 0.3rem;
 }
 
-.detail-price {
+.cart-price {
   color: #fbbf24;
+  font-size: 0.9rem;
 }
 
-.quantity-selector {
+.cart-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.3rem;
 }
 
-.qty-btn {
-  width: 40px;
-  height: 40px;
+.cart-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 1.5rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.qty-btn:hover {
-  transform: scale(1.1);
+.cart-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.qty-value {
-  font-size: 1.5rem;
+.cart-btn.remove {
+  background: rgba(239, 68, 68, 0.5);
+}
+
+.cart-btn.remove:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
+.cart-qty {
+  min-width: 30px;
+  text-align: center;
   font-weight: bold;
-  min-width: 40px;
-  text-align: center;
 }
 
-.total-price {
-  text-align: center;
-  margin-bottom: 1rem;
+.cart-total {
+  margin-top: 1rem;
+  text-align: right;
   font-size: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .total-amount {
   color: #fbbf24;
   font-weight: bold;
+  margin-left: 0.5rem;
 }
 
-.btn-buy {
+.btn-checkout {
   width: 100%;
+  margin-top: 1rem;
   padding: 1rem;
   border: none;
   border-radius: 25px;
@@ -410,12 +569,12 @@ const upgradeShop = (upgrade) => {
   transition: all 0.3s ease;
 }
 
-.btn-buy:hover:not(:disabled) {
+.btn-checkout:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(74, 222, 128, 0.4);
 }
 
-.btn-buy:disabled {
+.btn-checkout:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

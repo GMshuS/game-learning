@@ -16,21 +16,21 @@
         <div class="customer-info">
           <span class="customer-avatar">👤</span>
           <div class="customer-text">
-            <p class="customer-statement">{{ problem.customerStatement }}</p>
+            <p class="customer-statement">我买了这些东西，一共 {{ formatPrice(problem.total) }} 元，给你 {{ formatPrice(problem.payment) }} 元</p>
           </div>
         </div>
         <div class="transaction-info">
           <div class="transaction-row">
             <span>应收：</span>
-            <span class="amount due">💰 ¥{{ (problem.total / 100).toFixed(2) }}</span>
+            <span class="amount due">💰 ¥{{ formatPrice(problem.total) }}</span>
           </div>
           <div class="transaction-row">
             <span>实收：</span>
-            <span class="amount paid">💵 ¥{{ (problem.paid / 100).toFixed(2) }}</span>
+            <span class="amount paid">💵 ¥{{ formatPrice(problem.payment) }}</span>
           </div>
           <div class="transaction-row highlight">
             <span>应找：</span>
-            <span class="amount change">💰 ¥{{ (problem.change / 100).toFixed(2) }}</span>
+            <span class="amount change">💰 ¥{{ formatPrice(problem.change) }}</span>
           </div>
         </div>
       </div>
@@ -47,7 +47,7 @@
           >
             <div class="currency-icon">{{ denom.icon }}</div>
             <div class="currency-info">
-              <span class="currency-value">¥{{ (denom.value / 100).toFixed(2) }}</span>
+              <span class="currency-value">¥{{ formatPrice(denom.value) }}</span>
               <span class="currency-count" v-if="getCoinCount(denom.value) > 0">
                 x{{ getCoinCount(denom.value) }}
               </span>
@@ -69,17 +69,17 @@
             class="selected-item"
           >
             <span class="item-icon">{{ getDenomination(parseInt(value))?.icon || '💰' }}</span>
-            <span class="item-value">¥{{ (parseInt(value) / 100).toFixed(2) }}</span>
+            <span class="item-value">¥{{ formatPrice(parseInt(value)) }}</span>
             <span class="item-count">x{{ count }}</span>
             <button class="remove-btn" @click="removeCoin(parseInt(value))">×</button>
           </div>
         </div>
         <div class="current-total">
           当前总额：<span :class="{ correct: currentTotal === problem?.change, incorrect: currentTotal > problem?.change }">
-            ¥{{ (currentTotal / 100).toFixed(2) }}
+            ¥{{ formatPrice(currentTotal) }}
           </span>
-          <span v-if="remainingChange > 0" class="remaining">还需：¥{{ (remainingChange / 100).toFixed(2) }}</span>
-          <span v-else-if="remainingChange < 0" class="overpaid text-red">多了：¥{{ (-remainingChange / 100).toFixed(2) }}</span>
+          <span v-if="remainingChange > 0" class="remaining">还需：¥{{ formatPrice(remainingChange) }}</span>
+          <span v-else-if="remainingChange < 0" class="overpaid text-red">多了：¥{{ formatPrice(-remainingChange) }}</span>
         </div>
       </div>
 
@@ -101,6 +101,12 @@
         <p>使用货币数：{{ result.coinCount }} 枚</p>
         <p>最优解：{{ result.optimalCount }} 枚</p>
         <p>用时：{{ result.timeUsed }} 秒</p>
+        <p class="reward-info">💰 奖励金币：<span class="highlight">{{ result.rewards?.coins || 0 }}</span> | 📚 经验值：<span class="highlight">{{ result.rewards?.exp || 0 }}</span></p>
+      </div>
+      
+      <div v-else-if="result.status === 'wrong'" class="result-details">
+        <p class="text-red">找零金额不正确</p>
+        <p v-if="result.difference">差额：¥{{ absValue(result.difference) }}</p>
       </div>
 
       <div class="result-actions">
@@ -216,11 +222,19 @@ const submit = () => {
     if (coinCount <= optimalCount) stars = 3
     else if (coinCount <= optimalCount + 2) stars = 2
     
+    // 计算奖励
+    const timeUsed = cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value
+    const rewards = {
+      coins: stars * 10,
+      exp: stars * 5 + Math.max(0, 30 - timeUsed)
+    }
+    
     endGame('success', {
       stars,
       coinCount,
       optimalCount,
-      timeUsed: cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value
+      timeUsed,
+      rewards
     })
   } else {
     endGame('wrong', validation)
@@ -256,6 +270,19 @@ const back = () => {
 // 获取货币配置
 const getDenomination = (value) => {
   return cashierConfig.denominations.find(d => d.value === parseInt(value))
+}
+
+// 格式化价格（直接显示，单位是元）
+const formatPrice = (value) => {
+  if (value === null || value === undefined || isNaN(value)) {
+    return '0.00'
+  }
+  return Number(value).toFixed(2)
+}
+
+// 计算绝对值（用于模板）
+const absValue = (value) => {
+  return Math.abs(value).toFixed(2)
 }
 
 // 初始化
@@ -399,6 +426,8 @@ initGame()
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
+  justify-content: center;
+  min-width: 100px;
 }
 
 .currency-option:hover {
@@ -408,15 +437,24 @@ initGame()
 
 .currency-icon {
   font-size: 1.5rem;
+  flex-shrink: 0;
 }
 
 .currency-info {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .currency-value {
   font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.currency-count {
+  font-size: 0.8rem;
+  color: #fbbf24;
 }
 
 .currency-count {
@@ -552,6 +590,23 @@ initGame()
 
 .stars {
   font-size: 1.5rem;
+}
+
+.reward-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+}
+
+.highlight {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.text-red {
+  color: #ef4444;
+  font-weight: bold;
 }
 
 .result-actions {

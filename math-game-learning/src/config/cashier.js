@@ -4,12 +4,12 @@
 export const cashierConfig = {
   // 货币面额
   denominations: [
-    { value: 100, name: '100 元', color: '#ef4444', icon: '💯' },
-    { value: 50, name: '50 元', color: '#f97316', icon: '5️⃣0️⃣' },
-    { value: 20, name: '20 元', color: '#84cc16', icon: '2️⃣0️⃣' },
-    { value: 10, name: '10 元', color: '#06b6d4', icon: '🔟' },
-    { value: 5, name: '5 元', color: '#8b5cf6', icon: '5️⃣' },
-    { value: 1, name: '1 元', color: '#64748b', icon: '1️⃣' }
+    { value: 100, name: '100 元', color: '#ef4444', icon: '¥100' },
+    { value: 50, name: '50 元', color: '#f97316', icon: '¥50' },
+    { value: 20, name: '20 元', color: '#84cc16', icon: '¥20' },
+    { value: 10, name: '10 元', color: '#06b6d4', icon: '¥10' },
+    { value: 5, name: '5 元', color: '#8b5cf6', icon: '¥5' },
+    { value: 1, name: '1 元', color: '#64748b', icon: '¥1' }
   ],
 
   // 难度配置

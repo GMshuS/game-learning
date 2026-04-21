@@ -116,21 +116,47 @@ export const useGameStore = defineStore('game', {
      * 增加经验值
      */
     addExp(amount) {
-      if (this.player && this.player.addExp(amount)) {
-        this.saveGame()
-        return true // 升级了
+      if (!this.player) return false
+      
+      // 使用 $patch 确保响应式更新
+      const oldExp = this.player.exp
+      const oldLevel = this.player.level
+      let newExp = oldExp + amount
+      let newLevel = oldLevel
+      let leveledUp = false
+      
+      const expNeeded = newLevel * 100
+      if (newExp >= expNeeded) {
+        newExp -= expNeeded
+        newLevel++
+        leveledUp = true
       }
-      return false
+      
+      this.$patch({
+        player: {
+          exp: newExp,
+          level: newLevel
+        }
+      })
+      
+      this.saveGame()
+      return leveledUp
     },
 
     /**
      * 增加金币
      */
     addCoins(amount) {
-      if (this.player) {
-        this.player.addCoins(amount)
-        this.saveGame()
-      }
+      if (!this.player) return
+      
+      // 使用 $patch 确保响应式更新
+      this.$patch({
+        player: {
+          coins: this.player.coins + amount
+        }
+      })
+      
+      this.saveGame()
     },
 
     /**

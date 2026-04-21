@@ -1,10 +1,21 @@
 <template>
   <div class="battle-game">
-    <!-- Phaser 游戏容器 -->
-    <div ref="gameContainer" class="phaser-container"></div>
+    <!-- 冒险模式玩法说明 -->
+    <GameTutorial
+      v-if="showTutorial"
+      title="⚔️ 冒险模式玩法说明"
+      :steps="adventureTutorialSteps"
+      @close="closeTutorial"
+    />
     
     <!-- 返回按钮 -->
     <button class="btn-back" @click="back">← 返回</button>
+    
+    <!-- 玩法说明按钮 -->
+    <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
+    
+    <!-- Phaser 游戏容器 -->
+    <div ref="gameContainer" class="phaser-container"></div>
   </div>
 </template>
 
@@ -13,6 +24,36 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import Phaser from 'phaser'
 import BattleScene from '../scenes/BattleScene'
 import { getRandomMonster } from '../config/monsters'
+import GameTutorial from './GameTutorial.vue'
+
+const showTutorial = ref(false)
+
+const adventureTutorialSteps = [
+  {
+    title: '选择关卡',
+    description: '在世界地图上选择已解锁的区域进入关卡，每个区域有不同的难度等级。'
+  },
+  {
+    title: '回答数学问题',
+    description: '屏幕会显示数学题目和 4 个选项，点击正确答案对怪物造成伤害。'
+  },
+  {
+    title: '战斗机制',
+    description: '答对题目对怪物造成 10 点伤害，答错自己受到 5 点伤害。在 60 秒内答对题目可以获得额外连击奖励！'
+  },
+  {
+    title: '连击奖励',
+    description: '连续答对题目可以增加连击数，连击数越高，获胜后获得的经验和金币奖励越多！'
+  },
+  {
+    title: '取得胜利',
+    description: '将怪物的血量归零即可获胜，获得经验和金币奖励。如果自己的血量归零或时间用完则挑战失败。'
+  }
+]
+
+const closeTutorial = () => {
+  showTutorial.value = false
+}
 
 const props = defineProps({
   player: {
@@ -463,5 +504,24 @@ function createBattleScene(emit, player, monster, streak) {
 
 .btn-back:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-help {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.btn-help:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 </style>
