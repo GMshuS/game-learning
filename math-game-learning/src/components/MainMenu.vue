@@ -76,7 +76,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['startAdventure', 'startShop', 'openSettings', 'openAchievements', 'quit'])
+const emit = defineEmits(['startAdventure', 'startShop', 'startChallengeCenter', 'openSettings', 'openAchievements', 'quit'])
 
 const isLoading = ref(true)
 const selectedOption = ref(null)
@@ -97,6 +97,14 @@ const menuOptions = computed(() => [
     description: '经营文具店，练习收银找零',
     color: '#f093fb',
     gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+  },
+  {
+    id: 'challenge',
+    label: '挑战中心',
+    icon: '🎮',
+    description: '速算竞技、数学工坊、卡牌对战',
+    color: '#06b6d4',
+    gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
   },
   {
     id: 'achievements',
@@ -139,6 +147,9 @@ const confirmOption = () => {
         break
       case 'shop':
         emit('startShop')
+        break
+      case 'challenge':
+        emit('startChallengeCenter')
         break
       case 'achievements':
         emit('openAchievements')

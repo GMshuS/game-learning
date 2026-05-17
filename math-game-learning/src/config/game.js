@@ -18,7 +18,8 @@ export const gameConfig = {
   // 游戏模式
   modes: {
     ADVENTURE: 'adventure',
-    SHOP: 'shop'
+    SHOP: 'shop',
+    CHALLENGE_CENTER: 'challenge_center'
   },
   
   // 难度级别

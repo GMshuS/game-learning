@@ -15,7 +15,15 @@ export const useGameStore = defineStore('game', {
     inventory: null,
     settings: null,
     isLoaded: false,
-    currentMode: null // 'adventure' | 'shop' | null
+    currentMode: null, // 'adventure' | 'shop' | 'challenge_center' | null
+    playerGems: 0, // 钻石
+    playerStars: 0, // 星星
+    // 新玩法数据
+    speedChallenge: null,
+    workshop: null,
+    cardBattle: null,
+    leaderboard: null,
+    notifications: []
   }),
 
   getters: {
@@ -38,7 +46,11 @@ export const useGameStore = defineStore('game', {
 
     // 库存相关
     equipment: (state) => state.inventory?.equipment || {},
-    items: (state) => state.inventory?.items || []
+    items: (state) => state.inventory?.items || [],
+
+    // 钻石和星星
+    playerGems: (state) => state.playerGems || 0,
+    playerStars: (state) => state.playerStars || 0
   },
 
   actions: {
@@ -54,6 +66,17 @@ export const useGameStore = defineStore('game', {
         this.inventory = gameData.inventory
         this.settings = gameData.settings
         this.isLoaded = true
+        
+        // 加载双货币
+        this.playerGems = gameData.player?.gems || 0
+        this.playerStars = gameData.player?.stars || 0
+        
+        // 加载新玩法数据（向后兼容）
+        this.speedChallenge = gameData.speedChallenge || this.getDefaultSpeedChallenge()
+        this.workshop = gameData.workshop || this.getDefaultWorkshop()
+        this.cardBattle = gameData.cardBattle || this.getDefaultCardBattle()
+        this.leaderboard = gameData.leaderboard || this.getDefaultLeaderboard()
+        this.notifications = gameData.notifications || []
       }
       
       return this.isLoaded
@@ -71,6 +94,13 @@ export const useGameStore = defineStore('game', {
       this.settings = gameData.settings
       this.isLoaded = true
       this.currentMode = null
+      this.playerGems = 0
+      this.playerStars = 0
+      this.speedChallenge = this.getDefaultSpeedChallenge()
+      this.workshop = this.getDefaultWorkshop()
+      this.cardBattle = this.getDefaultCardBattle()
+      this.leaderboard = this.getDefaultLeaderboard()
+      this.notifications = []
     },
 
     /**
@@ -247,6 +277,114 @@ export const useGameStore = defineStore('game', {
         return this.inventory.addCollectible(collectible)
       }
       return false
+    },
+
+    /**
+     * 增加钻石
+     */
+    addGems(amount) {
+      if (!this.player) return
+      this.$patch({
+        playerGems: this.playerGems + amount
+      })
+      this.saveGame()
+    },
+
+    /**
+     * 消费钻石
+     */
+    spendGems(amount) {
+      if (this.playerGems >= amount) {
+        this.$patch({
+          playerGems: this.playerGems - amount
+        })
+        this.saveGame()
+        return true
+      }
+      return false
+    },
+
+    /**
+     * 增加星星
+     */
+    addStars(amount) {
+      if (!this.player) return
+      this.$patch({
+        playerStars: this.playerStars + amount
+      })
+      this.saveGame()
+    },
+
+    /**
+     * 获取默认速算数据
+     */
+    getDefaultSpeedChallenge() {
+      return {
+        bestScores: {}, // { mode: { score, rating, date } }
+        totalGames: 0,
+        totalCorrect: 0
+      }
+    },
+
+    /**
+     * 获取默认工坊数据
+     */
+    getDefaultWorkshop() {
+      return {
+        materials: {}, // { materialId: quantity }
+        craftedItems: [], // { itemId, quantity, listedAt, price }
+        listedItems: [] // { itemId, price, listedAt, sold }
+      }
+    },
+
+    /**
+     * 获取默认卡牌数据
+     */
+    getDefaultCardBattle() {
+      return {
+        collection: [], // { cardId, quantity }
+        deck: [], // cardId[]
+        battleStats: { wins: 0, losses: 0, totalBattles: 0 }
+      }
+    },
+
+    /**
+     * 获取默认排行榜数据
+     */
+    getDefaultLeaderboard() {
+      return {
+        virtualPlayers: [],
+        playerBest: {}, // { mode: { score, date } }
+        lastGenerated: null
+      }
+    },
+
+    /**
+     * 保存游戏（扩展）
+     */
+    async saveGame() {
+      if (this.player && this.progress && this.inventory && this.settings) {
+        // 保存玩家货币到 player 对象
+        const playerData = {
+          ...this.player,
+          gems: this.playerGems,
+          stars: this.playerStars
+        }
+        
+        storageManager.saveGame(
+          playerData,
+          this.progress,
+          this.inventory,
+          this.settings,
+          {
+            speedChallenge: this.speedChallenge,
+            workshop: this.workshop,
+            cardBattle: this.cardBattle,
+            leaderboard: this.leaderboard,
+            notifications: this.notifications
+          }
+        )
+      }
     }
   }
 })

@@ -11,7 +11,13 @@ const STORAGE_KEYS = {
   PROGRESS: 'math_game_progress',
   INVENTORY: 'math_game_inventory',
   SETTINGS: 'math_game_settings',
-  VERSION: 'math_game_version'
+  VERSION: 'math_game_version',
+  // 新增玩法数据
+  SPEED_CHALLENGE: 'math_game_speed_challenge',
+  WORKSHOP: 'math_game_workshop',
+  CARD_BATTLE: 'math_game_card_battle',
+  LEADERBOARD: 'math_game_leaderboard',
+  NOTIFICATIONS: 'math_game_notifications'
 }
 
 const VERSION = '1.0.0'
@@ -138,11 +144,29 @@ class StorageManager {
   /**
    * 保存完整游戏存档
    */
-  saveGame(player, progress, inventory, settings) {
+  saveGame(player, progress, inventory, settings, extraData = {}) {
     this.savePlayer(player)
     this.saveProgress(progress)
     this.saveInventory(inventory)
     this.saveSettings(settings)
+    
+    // 保存新增玩法数据
+    if (extraData.speedChallenge) {
+      localStorage.setItem(STORAGE_KEYS.SPEED_CHALLENGE, JSON.stringify(extraData.speedChallenge))
+    }
+    if (extraData.workshop) {
+      localStorage.setItem(STORAGE_KEYS.WORKSHOP, JSON.stringify(extraData.workshop))
+    }
+    if (extraData.cardBattle) {
+      localStorage.setItem(STORAGE_KEYS.CARD_BATTLE, JSON.stringify(extraData.cardBattle))
+    }
+    if (extraData.leaderboard) {
+      localStorage.setItem(STORAGE_KEYS.LEADERBOARD, JSON.stringify(extraData.leaderboard))
+    }
+    if (extraData.notifications) {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(extraData.notifications))
+    }
+    
     this.updateVersion()
   }
 
@@ -150,13 +174,41 @@ class StorageManager {
    * 加载完整游戏存档
    */
   loadGame() {
-    return {
+    const baseData = {
       player: this.loadPlayer(),
       progress: this.loadProgress(),
       inventory: this.loadInventory(),
       settings: this.loadSettings(),
       version: this.checkVersion()
     }
+    
+    // 加载新增玩法数据（向后兼容：旧存档返回 null）
+    try {
+      const speedChallengeData = localStorage.getItem(STORAGE_KEYS.SPEED_CHALLENGE)
+      baseData.speedChallenge = speedChallengeData ? JSON.parse(speedChallengeData) : null
+    } catch { baseData.speedChallenge = null }
+    
+    try {
+      const workshopData = localStorage.getItem(STORAGE_KEYS.WORKSHOP)
+      baseData.workshop = workshopData ? JSON.parse(workshopData) : null
+    } catch { baseData.workshop = null }
+    
+    try {
+      const cardBattleData = localStorage.getItem(STORAGE_KEYS.CARD_BATTLE)
+      baseData.cardBattle = cardBattleData ? JSON.parse(cardBattleData) : null
+    } catch { baseData.cardBattle = null }
+    
+    try {
+      const leaderboardData = localStorage.getItem(STORAGE_KEYS.LEADERBOARD)
+      baseData.leaderboard = leaderboardData ? JSON.parse(leaderboardData) : null
+    } catch { baseData.leaderboard = null }
+    
+    try {
+      const notificationsData = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)
+      baseData.notifications = notificationsData ? JSON.parse(notificationsData) : null
+    } catch { baseData.notifications = null }
+    
+    return baseData
   }
 
   /**

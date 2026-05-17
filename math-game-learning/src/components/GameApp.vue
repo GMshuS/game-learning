@@ -10,6 +10,8 @@
       :currentMode="currentMode"
       :playerName="playerInfo.name"
       :playerCoins="playerInfo.coins"
+      :playerGems="playerInfo.gems"
+      :playerStars="playerInfo.stars"
       :playerLevel="playerInfo.level"
       @navigate="goBack"
       @openMenu="goToMenu"
@@ -26,6 +28,7 @@
         :playerCoins="playerInfo.coins"
         @startAdventure="startAdventure"
         @startShop="startShop"
+        @startChallengeCenter="startChallengeCenter"
         @openAchievements="openAchievements"
         @openSettings="openSettings"
       />
@@ -79,6 +82,57 @@
         @close="closeSettings"
         @update="updateSettings"
       />
+
+      <!-- 挑战中心/游戏大厅 -->
+      <GameHall
+        v-if="currentView === 'challenge'"
+        @startSpeedChallenge="startSpeedChallenge"
+        @startWorkshop="startWorkshop"
+        @startCardBattle="startCardBattle"
+        @openLeaderboard="openLeaderboard"
+        @back="goBack"
+      />
+
+      <!-- 速算竞技场 -->
+      <SpeedChallenge
+        v-if="currentView === 'speedChallenge'"
+        @challengeEnd="onChallengeEnd"
+        @back="goBack"
+      />
+
+      <!-- 数学工坊 -->
+      <Workshop
+        v-if="currentView === 'workshop'"
+        @back="goBack"
+      />
+
+      <!-- 卡牌对战 -->
+      <CardBattle
+        v-if="currentView === 'cardBattle'"
+        @battleEnd="onCardBattleEnd"
+        @openCollection="openCardCollection"
+        @back="goBack"
+      />
+
+      <!-- 卡牌收藏 -->
+      <CardCollection
+        v-if="currentView === 'cardCollection'"
+        @back="goBack"
+        @openPack="openCardPack"
+      />
+
+      <!-- 开卡包 -->
+      <CardPack
+        v-if="currentView === 'cardPack'"
+        @packOpened="onPackOpened"
+        @back="goBack"
+      />
+
+      <!-- 排行榜 -->
+      <Leaderboard
+        v-if="currentView === 'leaderboard'"
+        @back="goBack"
+      />
     </main>
 
     <!-- 音频控制器 -->
@@ -102,6 +156,13 @@ import CashierGame from './CashierGame.vue'
 import AchievementView from './AchievementView.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import AudioControls from './AudioControls.vue'
+import GameHall from './GameHall.vue'
+import SpeedChallenge from './SpeedChallenge.vue'
+import Workshop from './Workshop.vue'
+import CardBattle from './CardBattle.vue'
+import CardCollection from './CardCollection.vue'
+import CardPack from './CardPack.vue'
+import Leaderboard from './Leaderboard.vue'
 
 const gameStore = useGameStore()
 const audioStore = useAudioStore()
@@ -136,6 +197,8 @@ const playerInfo = computed(() => ({
   name: gameStore.playerName,
   level: gameStore.playerLevel,
   coins: gameStore.playerCoins,
+  gems: gameStore.playerGems,
+  stars: gameStore.playerStars,
   grade: gameStore.playerGrade
 }))
 
@@ -146,6 +209,12 @@ const currentMode = computed(() => {
   }
   if (currentView.value === 'shop' || currentView.value === 'cashier') {
     return 'shop'
+  }
+  if (currentView.value === 'challenge' || currentView.value === 'speedChallenge' ||
+      currentView.value === 'workshop' || currentView.value === 'cardBattle' ||
+      currentView.value === 'cardCollection' || currentView.value === 'cardPack' ||
+      currentView.value === 'leaderboard') {
+    return 'challenge_center'
   }
   return 'menu'
 })
@@ -281,20 +350,83 @@ const onBattleEnd = (result) => {
 // 收银游戏完成处理
 const onCashierComplete = (result) => {
   if (result.status === 'success') {
-    // 使用 CashierGame 中计算的奖励
     if (result.rewards && result.rewards.coins) {
       gameStore.addCoins(result.rewards.coins)
       gameStore.addExp(result.rewards.exp)
     } else {
-      // 备用计算方式
       const coins = result.stars * 10
       const exp = result.stars * 5 + Math.max(0, 30 - result.timeUsed)
       gameStore.addCoins(coins)
       gameStore.addExp(exp)
     }
   }
-  // 不在这里调用 goBack()，让玩家看到结果
-  // 玩家可以点击"再来一题"或"结束游戏"按钮
+}
+
+// 导航到挑战中心
+const startChallengeCenter = () => {
+  previousView.value = currentView.value
+  currentView.value = 'challenge'
+  gameStore.setGameMode('challenge_center')
+  audioStore.playBgm('main')
+}
+
+// 导航到速算竞技
+const startSpeedChallenge = () => {
+  previousView.value = currentView.value
+  currentView.value = 'speedChallenge'
+}
+
+// 导航到数学工坊
+const startWorkshop = () => {
+  previousView.value = currentView.value
+  currentView.value = 'workshop'
+}
+
+// 导航到卡牌对战
+const startCardBattle = () => {
+  previousView.value = currentView.value
+  currentView.value = 'cardBattle'
+}
+
+// 打开卡牌收藏
+const openCardCollection = () => {
+  previousView.value = currentView.value
+  currentView.value = 'cardCollection'
+}
+
+// 打开卡包
+const openCardPack = () => {
+  previousView.value = currentView.value
+  currentView.value = 'cardPack'
+}
+
+// 打开排行榜
+const openLeaderboard = () => {
+  previousView.value = currentView.value
+  currentView.value = 'leaderboard'
+}
+
+// 速算结束处理
+const onChallengeEnd = (result) => {
+  if (result.rewards) {
+    if (result.rewards.coins) gameStore.addCoins(result.rewards.coins)
+    if (result.rewards.gems) gameStore.addGems(result.rewards.gems)
+    if (result.rewards.exp) gameStore.addExp(result.rewards.exp)
+  }
+  goBack()
+}
+
+// 卡牌对战结束处理
+const onCardBattleEnd = (result) => {
+  if (result.rewards) {
+    if (result.rewards.coins) gameStore.addCoins(result.rewards.coins)
+    if (result.rewards.gems) gameStore.addGems(result.rewards.gems)
+  }
+}
+
+// 卡包开启处理
+const onPackOpened = (cards) => {
+  // 卡牌已添加到收藏，刷新显示
 }
 
 onMounted(async () => {

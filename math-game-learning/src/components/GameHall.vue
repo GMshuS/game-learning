@@ -1,0 +1,198 @@
+<template>
+  <div class="game-hall">
+    <div class="hall-header">
+      <h2>🎮 挑战中心</h2>
+      <button class="btn-back" @click="$emit('back')">← 返回</button>
+    </div>
+
+    <div class="hall-cards">
+      <!-- 速算竞技 -->
+      <div class="hall-card speed-card" @click="$emit('startSpeedChallenge')">
+        <div class="card-icon">⚡</div>
+        <h3>速算竞技场</h3>
+        <p>限时答题，挑战手速</p>
+        <div class="card-status">
+          <span>最佳: {{ bestSpeedScore }}</span>
+        </div>
+      </div>
+
+      <!-- 数学工坊 -->
+      <div class="hall-card workshop-card" @click="$emit('startWorkshop')">
+        <div class="card-icon">🔨</div>
+        <h3>数学工坊</h3>
+        <p>收集材料，制作出售</p>
+        <div class="card-status">
+          <span>待售: {{ listedCount }} 件</span>
+        </div>
+      </div>
+
+      <!-- 卡牌对战 -->
+      <div class="hall-card card-card" @click="$emit('startCardBattle')">
+        <div class="card-icon">🃏</div>
+        <h3>卡牌对战</h3>
+        <p>收集卡牌，策略对决</p>
+        <div class="card-status">
+          <span>收藏: {{ cardCollectionCount }} 张</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hall-footer">
+      <button class="btn-leaderboard" @click="$emit('openLeaderboard')">
+        🏆 排行榜
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useGameStore } from '../store/gameStore'
+
+const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'openLeaderboard', 'back'])
+
+const gameStore = useGameStore()
+
+const bestSpeedScore = computed(() => {
+  const best = gameStore.speedChallenge?.bestScores?.base || null
+  return best ? `${best.score}分` : '未挑战'
+})
+
+const listedCount = computed(() => {
+  return gameStore.workshop?.listedItems?.filter(item => !item.sold).length || 0
+})
+
+const cardCollectionCount = computed(() => {
+  return gameStore.cardBattle?.collection?.reduce((sum, c) => sum + (c.quantity || 0), 0) || 0
+})
+</script>
+
+<style scoped>
+.game-hall {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: #fff;
+  overflow-y: auto;
+}
+
+.hall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.hall-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.btn-back {
+  padding: 0.5rem 1.2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.hall-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.hall-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.hall-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.speed-card:hover {
+  border-color: #f59e0b;
+}
+
+.workshop-card:hover {
+  border-color: #10b981;
+}
+
+.card-card:hover {
+  border-color: #8b5cf6;
+}
+
+.card-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.hall-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.4rem;
+}
+
+.hall-card p {
+  margin: 0 0 1.5rem 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
+.card-status {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+}
+
+.hall-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-leaderboard {
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  border-radius: 25px;
+  color: #000;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-leaderboard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+@media (max-width: 768px) {
+  .game-hall {
+    padding: 1rem;
+  }
+  
+  .hall-cards {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
