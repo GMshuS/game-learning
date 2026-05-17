@@ -13,6 +13,7 @@ export default class WorldMapScene extends Phaser.Scene {
     this.selectedArea = null
     this.unlockedAreas = []
     this.currentAreaId = null
+    this.dialogContainer = null
   }
 
   init(data) {
@@ -82,28 +83,43 @@ export default class WorldMapScene extends Phaser.Scene {
   createMapNodes(width, height) {
     this.areas = getAllAreas()
     
-    const nodeSpacing = (height - 200) / this.areas.length
-    const centerX = width / 2
-    let startY = 120
+    // 使用折线路径布局，交替左右位置避免重叠
+    const pathLayout = [
+      { x: width * 0.3, y: height * 0.2 },
+      { x: width * 0.7, y: height * 0.33 },
+      { x: width * 0.5, y: height * 0.46 },
+      { x: width * 0.3, y: height * 0.59 },
+      { x: width * 0.7, y: height * 0.72 }
+    ]
     
     this.areas.forEach((area, index) => {
-      const x = centerX
-      const y = startY + index * nodeSpacing
+      const { x, y } = pathLayout[index] || { x: width / 2, y: 120 + index * 100 }
       
       const isUnlocked = this.unlockedAreas.includes(area.id)
       const isCurrent = this.currentAreaId === area.id
+      
+      // 绘制连接线
+      if (index > 0) {
+        const prev = pathLayout[index - 1]
+        const lineGraphics = this.add.graphics()
+        lineGraphics.lineStyle(2, 0x667eea, 0.3)
+        lineGraphics.beginPath()
+        lineGraphics.moveTo(prev.x, prev.y)
+        lineGraphics.lineTo(x, y)
+        lineGraphics.strokePath()
+      }
       
       // 创建节点容器
       const container = this.add.container(x, y)
       
       // 节点背景（圆形）
-      const circle = this.add.circle(0, 0, 50, isUnlocked ? this.hexToColor(area.color) : 0x444444)
+      const circle = this.add.circle(0, 0, 40, isUnlocked ? this.hexToColor(area.color) : 0x444444)
       circle.setStrokeStyle(isCurrent ? 4 : 2, isCurrent ? 0xffffff : 0x666666)
       container.add(circle)
       
       // 区域图标
       const icon = this.add.text(0, 0, this.getAreaIcon(index), {
-        font: 'bold 28px Arial',
+        font: 'bold 24px Arial',
         color: isUnlocked ? '#ffffff' : '#888888'
       }).setOrigin(0.5)
       container.add(icon)
@@ -111,51 +127,35 @@ export default class WorldMapScene extends Phaser.Scene {
       // 锁定图标
       if (!isUnlocked) {
         const lockIcon = this.add.text(0, 0, '🔒', {
-          font: 'bold 24px Arial'
+          font: 'bold 22px Arial'
         }).setOrigin(0.5)
         container.add(lockIcon)
       }
       
       // 区域名称
-      const nameLabel = this.add.text(0, 70, area.name, {
-        font: 'bold 20px Microsoft YaHei',
+      const nameLabel = this.add.text(0, 55, area.name, {
+        font: 'bold 16px Microsoft YaHei',
         color: isUnlocked ? '#ffffff' : '#888888',
         stroke: '#000000',
-        strokeThickness: 4
+        strokeThickness: 3
       }).setOrigin(0.5)
       container.add(nameLabel)
       
-      // 区域描述
-      const descLabel = this.add.text(0, 95, area.description, {
-        font: '14px Microsoft YaHei',
-        color: isUnlocked ? '#cccccc' : '#666666'
-      }).setOrigin(0.5)
-      container.add(descLabel)
-      
-      // 关卡进度
+      // 点击事件（挂在 circle 上确保交互准确）
       if (isUnlocked) {
-        const progressLabel = this.add.text(0, 120, `${area.levels} 关卡`, {
-          font: '12px Microsoft YaHei',
-          color: '#667eea'
-        }).setOrigin(0.5)
-        container.add(progressLabel)
-      }
-      
-      // 点击事件
-      if (isUnlocked) {
-        container.setInteractive({ useHandCursor: true })
+        circle.setInteractive({ useHandCursor: true })
         
-        container.on('pointerover', () => {
+        circle.on('pointerover', () => {
           if (!isCurrent) {
-            circle.setScale(1.1)
+            circle.setScale(1.15)
           }
         })
         
-        container.on('pointerout', () => {
+        circle.on('pointerout', () => {
           circle.setScale(1)
         })
         
-        container.on('pointerdown', () => {
+        circle.on('pointerdown', () => {
           this.selectArea(area)
         })
       }
@@ -174,23 +174,19 @@ export default class WorldMapScene extends Phaser.Scene {
    * 创建返回按钮
    */
   createBackButton(width, height) {
-    const backBtn = this.add.container(width - 80, height - 50)
-    
-    const bg = this.add.circle(0, 0, 40, 0x667eea)
+    const bg = this.add.circle(width - 80, height - 50, 40, 0x667eea)
     bg.setStrokeStyle(2, 0xffffff)
-    backBtn.add(bg)
     
-    const icon = this.add.text(0, 0, '←', {
+    const icon = this.add.text(width - 80, height - 50, '←', {
       font: 'bold 24px Arial',
       color: '#ffffff'
     }).setOrigin(0.5)
-    backBtn.add(icon)
     
-    backBtn.setInteractive({ useHandCursor: true })
+    bg.setInteractive({ useHandCursor: true })
     
-    backBtn.on('pointerover', () => bg.setScale(1.1))
-    backBtn.on('pointerout', () => bg.setScale(1))
-    backBtn.on('pointerdown', () => {
+    bg.on('pointerover', () => bg.setScale(1.1))
+    bg.on('pointerout', () => bg.setScale(1))
+    bg.on('pointerdown', () => {
       this.scene.stop('WorldMapScene')
     })
   }
@@ -199,8 +195,8 @@ export default class WorldMapScene extends Phaser.Scene {
    * 创建提示文字
    */
   createHintText(width, height) {
-    this.add.text(width / 2, height - 30, '点击区域进入冒险', {
-      font: '16px Microsoft YaHei',
+    this.add.text(width / 2, height - 30, '点击区域查看详情，再选择"进入冒险"', {
+      font: '14px Microsoft YaHei',
       color: '#888888'
     }).setOrigin(0.5)
   }
@@ -224,12 +220,7 @@ export default class WorldMapScene extends Phaser.Scene {
     
     this.selectedArea = area
     
-    // 触发选择回调
-    if (this.onAreaSelect) {
-      this.onAreaSelect(area)
-    }
-    
-    // 显示区域选择提示
+    // 显示区域选择提示（不触发回调，等用户点击"进入冒险"才触发）
     this.showAreaSelectDialog(area)
   }
 
@@ -237,89 +228,113 @@ export default class WorldMapScene extends Phaser.Scene {
    * 显示区域选择对话框
    */
   showAreaSelectDialog(area) {
+    // 先关闭之前的对话框
+    if (this.dialogContainer) {
+      this.dialogContainer.destroy()
+      this.dialogContainer = null
+    }
+    
     const { width, height } = this.scale
     
-    // 创建对话框背景
+    // 创建对话框容器
     const dialogWidth = 400
-    const dialogHeight = 200
+    const dialogHeight = 250
     const dialogX = width / 2
     const dialogY = height / 2
     
-    const bg = this.add.roundRect(
-      dialogX - dialogWidth / 2,
-      dialogY - dialogHeight / 2,
-      dialogWidth,
-      dialogHeight,
-      16,
-      0x1a1a2e
-    )
+    this.dialogContainer = this.add.container(dialogX, dialogY)
+    
+    // 半透明遮罩
+    const mask = this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0.5)
+    mask.setInteractive()
+    mask.on('pointerdown', () => {
+      this.closeDialog()
+    })
+    this.dialogContainer.add(mask)
+    
+    // 对话框背景 - 相对于容器中心点
+    const bg = this.add.rectangle(0, 0, dialogWidth, dialogHeight, 0x1a1a2e)
     bg.setStrokeStyle(3, this.hexToColor(area.color))
-    bg.setShadow(10, 10, 0x000000, 0.5)
+    this.dialogContainer.add(bg)
     
     // 区域名称
-    this.add.text(dialogX, dialogY - 60, area.name, {
+    this.dialogContainer.add(this.add.text(0, -80, area.name, {
       font: 'bold 28px Microsoft YaHei',
       color: '#ffffff'
-    }).setOrigin(0.5)
+    }).setOrigin(0.5))
     
     // 区域描述
-    this.add.text(dialogX, dialogY - 20, area.description, {
+    this.dialogContainer.add(this.add.text(0, -40, area.description, {
       font: '16px Microsoft YaHei',
       color: '#cccccc'
-    }).setOrigin(0.5)
+    }).setOrigin(0.5))
     
     // 关卡信息
-    this.add.text(dialogX, dialogY + 20, `关卡数：${area.levels}`, {
+    this.dialogContainer.add(this.add.text(0, 0, `关卡数：${area.levels}`, {
       font: '16px Microsoft YaHei',
       color: area.color
-    }).setOrigin(0.5)
+    }).setOrigin(0.5))
     
-    // 进入按钮
-    const enterBtn = this.add.container(dialogX, dialogY + 70)
+    // 进入按钮 - 直接使用矩形而非容器
+    const btnX = 0
+    const btnY = 60
+    const btnWidth = 200
+    const btnHeight = 50
     
-    const btnBg = this.add.roundRect(-100, -25, 200, 50, 25, this.hexToColor(area.color))
-    btnBg.setStrokeStyle(2, 0xffffff)
-    enterBtn.add(btnBg)
-    
-    const btnText = this.add.text(0, 0, '进入冒险', {
+    const enterBtnBg = this.add.rectangle(btnX, btnY, btnWidth, btnHeight, this.hexToColor(area.color))
+    enterBtnBg.setStrokeStyle(2, 0xffffff)
+    this.dialogContainer.add(enterBtnBg)
+
+    const enterBtnText = this.add.text(btnX, btnY, '进入冒险', {
       font: 'bold 20px Microsoft YaHei',
       color: '#ffffff'
     }).setOrigin(0.5)
-    enterBtn.add(btnText)
+    this.dialogContainer.add(enterBtnText)
     
-    enterBtn.setInteractive({ useHandCursor: true })
+    // 使背景矩形可交互
+    enterBtnBg.setInteractive({ useHandCursor: true })
     
-    enterBtn.on('pointerover', () => btnBg.setScale(1.05))
-    enterBtn.on('pointerout', () => btnBg.setScale(1))
-    enterBtn.on('pointerdown', () => {
+    enterBtnBg.on('pointerover', () => enterBtnBg.setScale(1.05))
+    enterBtnBg.on('pointerout', () => enterBtnBg.setScale(1))
+    enterBtnBg.on('pointerdown', () => {
       this.enterArea(area)
     })
     
     // 关闭按钮
-    const closeBtn = this.add.text(dialogX + dialogWidth / 2 - 30, dialogY - dialogHeight / 2 + 20, '✕', {
+    const closeBtnX = dialogWidth / 2 - 20
+    const closeBtnY = -dialogHeight / 2 + 20
+    
+    const closeBtn = this.add.text(closeBtnX, closeBtnY, '✕', {
       font: 'bold 20px Arial',
       color: '#888888'
     }).setOrigin(0.5)
     
     closeBtn.setInteractive({ useHandCursor: true })
     closeBtn.on('pointerdown', () => {
-      bg.destroy()
-      dialogX // Prevent unused variable warning
-      // 清理对话框所有子元素
-      this.children.removeAll()
-      this.create() // 重新创建场景
+      this.closeDialog()
     })
+    
+    this.dialogContainer.add(closeBtn)
+  }
+  
+  closeDialog() {
+    if (this.dialogContainer) {
+      this.dialogContainer.destroy()
+      this.dialogContainer = null
+    }
   }
 
   /**
    * 进入区域
    */
   enterArea(area) {
-    // 触发场景切换或回调
+    // 关闭对话框
+    this.closeDialog()
+    // 触发选择回调
+    if (this.onAreaSelect) {
+      this.onAreaSelect(area)
+    }
     this.scene.stop('WorldMapScene')
-    
-    // 这里可以启动关卡选择场景
-    console.log('进入区域:', area)
   }
 
   /**

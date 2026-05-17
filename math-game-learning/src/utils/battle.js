@@ -126,7 +126,9 @@ export class BattleState {
     
     this.monster = {
       ...monster,
-      currentHp: monster.hp
+      attack: monster.attack || 5,
+      defense: monster.defense || 1,
+      currentHp: monster.hp || 50
     }
     
     this.turn = 1
@@ -163,17 +165,13 @@ export class BattleState {
       )
       
       this.battleResult = determineBattleResult(this.player.hp, this.monster.currentHp)
+      
+      this.turn++
+      this.isPlayerTurn = true
     } else {
       // 答错，怪物反击
-      return this.monsterAttack()
-    }
-    
-    this.turn++
-    this.isPlayerTurn = false
-    
-    // 如果战斗未结束，怪物回合
-    if (this.battleResult === 'ongoing') {
-      setTimeout(() => this.monsterAttack(), 1000)
+      const result = this.monsterAttack()
+      return result
     }
     
     return this.getState()

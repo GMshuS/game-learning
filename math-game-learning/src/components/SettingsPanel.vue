@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   settings: {
@@ -189,6 +189,16 @@ const emit = defineEmits(['update', 'close', 'export', 'import', 'reset'])
 
 const activeTab = ref('general')
 const localSettings = ref({ ...props.settings })
+
+watch(() => props.settings, (newSettings) => {
+  Object.keys(newSettings).forEach(key => {
+    if (key === 'musicVolume' || key === 'soundVolume') {
+      localSettings.value[key] = Math.round(newSettings[key])
+    } else {
+      localSettings.value[key] = newSettings[key]
+    }
+  })
+}, { deep: true })
 
 const tabs = [
   { id: 'general', name: '通用设置', icon: '⚙️' },
@@ -219,6 +229,7 @@ const languages = [
 ]
 
 const updateSetting = (key, value) => {
+  localSettings.value[key] = value
   emit('update', { ...localSettings.value })
 }
 
@@ -360,6 +371,8 @@ const resetSettings = () => {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  color: #fff;
+  font-size: 1rem;
 }
 
 .setting-item input[type="checkbox"] {
@@ -375,6 +388,11 @@ const resetSettings = () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   cursor: pointer;
+}
+
+.setting-item select option {
+  color: #fff;
+  background: #1a1a2e;
 }
 
 .setting-item.slider {
@@ -442,12 +460,13 @@ const resetSettings = () => {
 
 .difficulty-card h4 {
   margin: 0 0 0.3rem 0;
+  color: #fff;
 }
 
 .difficulty-card p {
   margin: 0;
   font-size: 0.8rem;
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .data-actions {

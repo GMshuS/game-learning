@@ -6,6 +6,26 @@
     </div>
 
     <div class="hall-cards">
+      <!-- 冒险模式 -->
+      <div class="hall-card adventure-card" @click="$emit('startAdventure')">
+        <div class="card-icon">⚔️</div>
+        <h3>冒险模式</h3>
+        <p>挑战数学怪物，提升角色等级</p>
+        <div class="card-status">
+          <span>关卡: {{ adventureProgress }}</span>
+        </div>
+      </div>
+
+      <!-- 经营商店 -->
+      <div class="hall-card shop-card" @click="$emit('startShop')">
+        <div class="card-icon">🏪</div>
+        <h3>经营商店</h3>
+        <p>经营文具店，练习收银找零</p>
+        <div class="card-status">
+          <span>金币: {{ shopCoins }}</span>
+        </div>
+      </div>
+
       <!-- 速算竞技 -->
       <div class="hall-card speed-card" @click="$emit('startSpeedChallenge')">
         <div class="card-icon">⚡</div>
@@ -49,9 +69,19 @@
 import { computed } from 'vue'
 import { useGameStore } from '../store/gameStore'
 
-const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'openLeaderboard', 'back'])
+const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'startAdventure', 'startShop', 'openLeaderboard', 'back'])
 
 const gameStore = useGameStore()
+
+const adventureProgress = computed(() => {
+  const area = gameStore.currentArea || 'area_1'
+  const areaNum = area.replace('area_', '')
+  return `第${areaNum}关`
+})
+
+const shopCoins = computed(() => {
+  return gameStore.playerCoins || 0
+})
 
 const bestSpeedScore = computed(() => {
   const best = gameStore.speedChallenge?.bestScores?.base || null
@@ -126,6 +156,14 @@ const cardCollectionCount = computed(() => {
 .hall-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.adventure-card:hover {
+  border-color: #764ba2;
+}
+
+.shop-card:hover {
+  border-color: #f5576c;
 }
 
 .speed-card:hover {

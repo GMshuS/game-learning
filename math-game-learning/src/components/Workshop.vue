@@ -1,8 +1,18 @@
 <template>
   <div class="workshop">
+    <GameTutorial
+      v-if="showTutorial"
+      title="🔨 数学工坊玩法说明"
+      :steps="workshopTutorialSteps"
+      @close="closeTutorial"
+    />
+
     <div class="ws-header">
       <h2>🔨 数学工坊</h2>
-      <button class="btn-back" @click="$emit('back')">← 返回</button>
+      <div class="header-actions">
+        <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
+        <button class="btn-back" @click="$emit('back')">← 返回</button>
+      </div>
     </div>
 
     <div class="ws-content">
@@ -15,9 +25,9 @@
             <div class="mat-name">{{ mat.name }}</div>
             <div class="mat-qty">×{{ mat.quantity }}</div>
           </div>
-          <div v-if="store.materialList.length === 0" class="empty-msg">
-            答题获取材料
-          </div>
+        </div>
+        <div class="get-material-btn" @click="generateQuestion">
+          答题获取材料
         </div>
       </div>
 
@@ -86,6 +96,9 @@
             {{ opt }}
           </button>
         </div>
+        <div v-if="questionResult" :class="['question-result', resultType]">
+          {{ questionResult }}
+        </div>
       </div>
     </div>
 
@@ -113,16 +126,48 @@ import { ref, computed, onMounted } from 'vue'
 import { useWorkshopStore } from '../store/workshopStore'
 import { useGameStore } from '../store/gameStore'
 import workshopConfig from '../config/workshop'
+import GameTutorial from './GameTutorial.vue'
 
 const emit = defineEmits(['back'])
 
 const store = useWorkshopStore()
 const gameStore = useGameStore()
 
+const showTutorial = ref(false)
+
+const workshopTutorialSteps = [
+  {
+    title: '答题获取材料',
+    description: '点击"答题获取材料"按钮，回答数学题目。答对后随机获得一种材料，材料稀有度越高获得概率越低。'
+  },
+  {
+    title: '材料类型',
+    description: '共有6种材料：木材、石头、铁矿（普通，60%）、水晶、金矿（稀有，30%）、魔法粉尘（史诗，10%）。'
+  },
+  {
+    title: '制作物品',
+    description: '在配方区查看所需材料，材料充足时点击"制作"按钮。配方按年级解锁，高年级可制作更高级的物品。'
+  },
+  {
+    title: '上架售卖',
+    description: '制作好的成品在成品背包中，点击"上架"按钮设置售价（最低10金币）后即可上架待售。'
+  },
+  {
+    title: '销售结算',
+    description: '顾客会定期购买待售物品，售价越接近基础价格越容易售出。点击"撤回"可退回成品重新定价。'
+  }
+]
+
+const closeTutorial = () => {
+  showTutorial.value = false
+}
+
 const showQuestionDialog = ref(false)
 const questionText = ref('')
 const questionOptions = ref([])
 const questionAnswer = ref(0)
+const questionResult = ref('')
+const resultType = ref('success')
 
 const showListDialog = ref(false)
 const listingRecipeId = ref('')
@@ -145,6 +190,7 @@ function getRecipeName(id) {
 
 function handleCraft(recipeId) {
   if (store.craftRecipe(recipeId)) {
+    gameStore.workshop = store.getSaveData()
     gameStore.saveGame()
   }
 }
@@ -159,6 +205,7 @@ function openListDialog(recipeId) {
 function confirmList() {
   if (listingPrice.value >= 10) {
     store.listItem(listingRecipeId.value, listingPrice.value)
+    gameStore.workshop = store.getSaveData()
     gameStore.saveGame()
     showListDialog.value = false
   }
@@ -166,14 +213,15 @@ function confirmList() {
 
 function handleWithdraw(idx) {
   store.withdrawItem(idx)
+  gameStore.workshop = store.getSaveData()
   gameStore.saveGame()
 }
 
 function generateQuestion() {
   const grade = gameStore.playerGrade || 1
   const maxNum = grade <= 2 ? 20 : grade <= 4 ? 100 : 1000
-  const a = Math.floor(Math.random() * maxNum) + 1
-  const b = Math.floor(Math.random() * maxNum) + 1
+  let a = Math.floor(Math.random() * maxNum) + 1
+  let b = Math.floor(Math.random() * maxNum) + 1
   const ops = ['+', '-']
   if (grade >= 3) ops.push('×')
   if (grade >= 4) ops.push('÷')
@@ -184,7 +232,14 @@ function generateQuestion() {
     case '+': answer = a + b; break
     case '-': answer = a - b; break
     case '×': answer = a * b; break
-    case '÷': { const d = Math.floor(Math.random() * 10) + 1; answer = d; break }
+    case '÷': {
+      const maxDiv = grade <= 2 ? 5 : grade <= 4 ? 9 : 12
+      b = Math.floor(Math.random() * maxDiv) + 2
+      const quotient = Math.floor(Math.random() * 10) + 1
+      a = b * quotient
+      answer = quotient
+      break
+    }
   }
 
   questionText.value = `${a} ${op} ${b} = ?`
@@ -203,21 +258,27 @@ function generateQuestion() {
 function answerQuestion(selected) {
   if (selected === questionAnswer.value) {
     const reward = store.rewardMaterial()
+    gameStore.workshop = store.getSaveData()
     gameStore.saveGame()
-    alert(`答对了！获得 ${reward.material.icon} ${reward.material.name} ×${reward.amount}`)
+    questionResult.value = `答对了！获得 ${reward.material.icon} ${reward.material.name} ×${reward.amount}`
+    resultType.value = 'success'
   } else {
-    alert('答错了，再试一次！')
+    questionResult.value = '答错了，再试一次！'
+    resultType.value = 'error'
   }
-  closeQuestion()
+  setTimeout(closeQuestion, 1500)
 }
 
 function closeQuestion() {
   showQuestionDialog.value = false
+  questionResult.value = ''
 }
 
 onMounted(() => {
+  store.loadData(gameStore.workshop)
   // 结算销售
   store.settleSales()
+  gameStore.workshop = store.getSaveData()
   gameStore.saveGame()
 })
 </script>
@@ -240,6 +301,12 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .ws-header h2 { margin: 0; font-size: 1.6rem; }
 
 .btn-back {
@@ -249,6 +316,21 @@ onMounted(() => {
   border-radius: 20px;
   color: #fff;
   cursor: pointer;
+}
+
+.btn-help {
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.btn-help:hover {
+  background: rgba(102, 126, 234, 0.5);
 }
 
 .ws-content { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -333,7 +415,22 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.empty-msg { opacity: 0.5; padding: 1rem; text-align: center; }
+.get-material-btn {
+  margin-top: 0.8rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+.get-material-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
 
 .modal-overlay {
   position: fixed;
@@ -371,6 +468,22 @@ onMounted(() => {
 }
 
 .q-opt:hover { background: rgba(255,255,255,0.2); }
+
+.question-result {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+.question-result.success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+.question-result.error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
 
 .price-input {
   display: flex;

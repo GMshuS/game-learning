@@ -199,14 +199,15 @@ export default class BattleScene extends Phaser.Scene {
     const qY = height * 0.55
     
     // 题目背景
-    const qBg = this.add.roundRect(qX - qWidth / 2, qY - 40, qWidth, 80, 16, 0x2d3748)
+    const qBg = this.add.rectangle(qX, qY, qWidth, 100, 0x2d3748)
     qBg.setStrokeStyle(3, 0x667eea)
     
     // 题目文字
     this.questionText = this.add.text(qX, qY, this.currentQuestion?.question || '', {
-      font: 'bold 28px Microsoft YaHei',
+      font: 'bold 24px Microsoft YaHei',
       color: '#ffffff',
-      wordWrap: { width: qWidth - 40 }
+      wordWrap: { width: qWidth - 40, useAdvancedWrap: true },
+      align: 'center'
     }).setOrigin(0.5)
   }
 
@@ -225,32 +226,34 @@ export default class BattleScene extends Phaser.Scene {
     this.optionButtons = []
     
     options.forEach((option, index) => {
-      const x = startX + index * (optionWidth + spacing)
+      const x = startX + index * (optionWidth + spacing) + optionWidth / 2
       
       // 按钮背景
-      const bg = this.add.roundRect(x, optionY, optionWidth, optionHeight, 10, 0x667eea)
+      const bg = this.add.rectangle(x, optionY, optionWidth, optionHeight, 0x667eea)
       bg.setStrokeStyle(2, 0xffffff)
       bg.setInteractive({ useHandCursor: true })
       
       // 选项文字
-      const text = this.add.text(x + optionWidth / 2, optionY + optionHeight / 2, `${option}`, {
+      const text = this.add.text(x, optionY, `${option}`, {
         font: 'bold 20px Microsoft YaHei',
         color: '#ffffff'
       }).setOrigin(0.5)
       
       // 选项标签（A, B, C, D）
       const labels = ['A', 'B', 'C', 'D']
-      const label = this.add.text(x + 10, optionY + 10, labels[index] || `${index + 1}`, {
+      const label = this.add.text(x - optionWidth / 2 + 10, optionY - optionHeight / 2 + 10, labels[index] || `${index + 1}`, {
         font: 'bold 12px Arial',
         color: '#cccccc'
       })
       
+      const buttonObj = { bg, text, option, label }
+      
       // 点击事件
-      bg.on('pointerdown', () => this.selectOption(option, bg, text))
+      bg.on('pointerdown', () => this.selectOption(buttonObj.option, bg, text))
       bg.on('pointerover', () => bg.setFillStyle(0x7c3aed))
       bg.on('pointerout', () => bg.setFillStyle(0x667eea))
       
-      this.optionButtons.push({ bg, text, option, label })
+      this.optionButtons.push(buttonObj)
     })
   }
 
@@ -317,9 +320,39 @@ export default class BattleScene extends Phaser.Scene {
    * 生成题目
    */
   generateQuestion() {
-    // 根据怪物难度确定题目难度
     const grade = Math.ceil(this.monster.difficulty / 2)
-    this.currentQuestion = generateQuestion(grade, 'random')
+    const q = generateQuestion(grade, 'random')
+    
+    const answer = Number(q.answer)
+    const options = new Set([answer])
+    
+    let attempts = 0
+    while (options.size < 4 && attempts < 100) {
+      const offset = Math.floor(Math.random() * 20) - 10
+      const wrong = answer + offset
+      if (wrong !== answer) {
+        options.add(wrong)
+      }
+      attempts++
+    }
+    
+    let fallback = 1
+    while (options.size < 4) {
+      options.add(answer + fallback * 7)
+      fallback++
+    }
+    
+    this.currentQuestion = {
+      ...q,
+      answer: Number(q.answer),
+      options: Array.from(options).sort(() => Math.random() - 0.5)
+    }
+    
+    console.log('[DEBUG] generateQuestion:', {
+      answer: this.currentQuestion.answer,
+      options: this.currentQuestion.options,
+      hasCorrect: this.currentQuestion.options.includes(this.currentQuestion.answer)
+    })
   }
 
   /**
@@ -331,7 +364,15 @@ export default class BattleScene extends Phaser.Scene {
       opt.bg.disableInteractive()
     })
     
-    const isCorrect = selectedAnswer === this.currentQuestion.answer
+    const isCorrect = Number(selectedAnswer) === Number(this.currentQuestion.answer)
+    
+    console.log('[DEBUG] selectOption:', {
+      selected: selectedAnswer,
+      correct: this.currentQuestion.answer,
+      isCorrect,
+      selectedType: typeof selectedAnswer,
+      correctType: typeof this.currentQuestion.answer
+    })
     
     // 显示答案正确性
     if (isCorrect) {
@@ -416,6 +457,13 @@ export default class BattleScene extends Phaser.Scene {
         opt.bg.setInteractive({ useHandCursor: true })
       }
     })
+    
+    console.log('[DEBUG] updateOptions:', {
+      answer: this.currentQuestion.answer,
+      options: this.currentQuestion.options,
+      buttonOptions: this.optionButtons.map(opt => opt.option),
+      hasCorrect: this.currentQuestion.options.includes(this.currentQuestion.answer)
+    })
   }
 
   /**
@@ -472,20 +520,18 @@ export default class BattleScene extends Phaser.Scene {
     }
     
     // 继续按钮
-    const continueBtn = this.add.container(width / 2, height / 2 + 80)
-    
-    const btnBg = this.add.roundRect(-80, -25, 160, 50, 25, result === 'victory' ? 0x4ade80 : 0x666666)
+    const btnBg = this.add.rectangle(width / 2, height / 2 + 80, 160, 50, result === 'victory' ? 0x4ade80 : 0x666666)
     btnBg.setStrokeStyle(2, 0xffffff)
-    continueBtn.add(btnBg)
     
-    const btnText = this.add.text(0, 0, '继续', {
+    const btnText = this.add.text(width / 2, height / 2 + 80, '继续', {
       font: 'bold 20px Microsoft YaHei',
       color: '#ffffff'
     }).setOrigin(0.5)
-    continueBtn.add(btnText)
     
-    continueBtn.setInteractive({ useHandCursor: true })
-    continueBtn.on('pointerdown', () => {
+    btnBg.setInteractive({ useHandCursor: true })
+    btnBg.on('pointerover', () => btnBg.setScale(1.05))
+    btnBg.on('pointerout', () => btnBg.setScale(1))
+    btnBg.on('pointerdown', () => {
       if (this.onBattleEnd) {
         this.onBattleEnd({
           result,

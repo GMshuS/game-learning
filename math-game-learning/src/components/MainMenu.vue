@@ -76,28 +76,12 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['startAdventure', 'startShop', 'startChallengeCenter', 'openSettings', 'openAchievements', 'quit'])
+const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit'])
 
 const isLoading = ref(true)
 const selectedOption = ref(null)
 
 const menuOptions = computed(() => [
-  {
-    id: 'adventure',
-    label: '冒险模式',
-    icon: '⚔️',
-    description: '挑战数学怪物，提升角色等级',
-    color: '#667eea',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-  },
-  {
-    id: 'shop',
-    label: '经营商店',
-    icon: '🏪',
-    description: '经营文具店，练习收银找零',
-    color: '#f093fb',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-  },
   {
     id: 'challenge',
     label: '挑战中心',
@@ -142,12 +126,6 @@ const selectOption = (option) => {
 const confirmOption = () => {
   if (selectedOption.value) {
     switch (selectedOption.value.id) {
-      case 'adventure':
-        emit('startAdventure')
-        break
-      case 'shop':
-        emit('startShop')
-        break
       case 'challenge':
         emit('startChallengeCenter')
         break
@@ -158,14 +136,6 @@ const confirmOption = () => {
         emit('openSettings')
         break
     }
-  }
-}
-
-const quickStart = (mode) => {
-  if (mode === 'adventure') {
-    emit('startAdventure')
-  } else if (mode === 'shop') {
-    emit('startShop')
   }
 }
 

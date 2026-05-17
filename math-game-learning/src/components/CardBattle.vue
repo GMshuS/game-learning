@@ -1,10 +1,20 @@
 <template>
   <div class="card-battle">
+    <GameTutorial
+      v-if="showTutorial"
+      title="🃏 卡牌对战玩法说明"
+      :steps="cardBattleTutorialSteps"
+      @close="closeTutorial"
+    />
+
     <!-- 对战选择 -->
     <div v-if="!store.battle" class="battle-select">
       <div class="header">
         <h2>🃏 卡牌对战</h2>
-        <button class="btn-back" @click="$emit('back')">← 返回</button>
+        <div class="header-actions">
+          <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
+          <button class="btn-back" @click="$emit('back')">← 返回</button>
+        </div>
       </div>
 
       <div class="deck-info">
@@ -93,15 +103,49 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCardStore } from '../store/cardStore'
 import { getCardById, getCardsByGrade } from '../config/cards'
 import { useGameStore } from '../store/gameStore'
+import GameTutorial from './GameTutorial.vue'
 
 const emit = defineEmits(['back', 'openCollection', 'battleEnd'])
 
 const store = useCardStore()
 const gameStore = useGameStore()
+
+const showTutorial = ref(false)
+
+const cardBattleTutorialSteps = [
+  {
+    title: '卡组构建',
+    description: '从卡牌收藏中组建10-15张卡牌的卡组。卡牌按年级分组，只能使用对应年级的卡牌。点击"管理卡组"可以编辑你的卡组。'
+  },
+  {
+    title: '卡牌类型',
+    description: '共有5种卡牌：⚔️攻击（对AI造成伤害）、🛡️防御（减少受到伤害）、💚治疗（恢复HP）、✨特殊（额外效果）、📐方程（需解方程发动）。'
+  },
+  {
+    title: '对战流程',
+    description: '双方初始30HP，开局各抽3张牌。每回合抽1张牌，手牌上限5张。点击手牌出牌，轮到你的回合时才能出牌。'
+  },
+  {
+    title: '方程卡牌',
+    description: '方程卡牌（5-6年级）出牌时需要解方程，答对才能发动效果。例如"x + 5 = 12"，需要选择正确的x值。'
+  },
+  {
+    title: '难度选择',
+    description: '简单：AI随机出牌；中等：AI根据HP情况有基本策略；困难：AI计算所有卡牌效果后选择最优出牌。'
+  },
+  {
+    title: '胜负条件',
+    description: '将AI的HP归零即可获胜，获得金币奖励。己方HP归零则失败。战斗日志会记录每回合的出牌和效果。'
+  }
+]
+
+const closeTutorial = () => {
+  showTutorial.value = false
+}
 
 const difficulties = computed(() => {
   const grade = gameStore.playerGrade || 1
@@ -178,7 +222,29 @@ onMounted(() => {
 
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .header h2 { margin: 0; }
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .btn-back { padding: 0.5rem 1rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: #fff; cursor: pointer; }
+
+.btn-help {
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.btn-help:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
 
 .deck-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0.8rem; background: rgba(255,255,255,0.05); border-radius: 10px; }
 .btn-deck { padding: 0.4rem 1rem; background: #3b82f6; border: none; border-radius: 15px; color: #fff; cursor: pointer; }

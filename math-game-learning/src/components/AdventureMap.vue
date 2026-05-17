@@ -48,14 +48,11 @@ onMounted(() => {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
       },
-      scene: [
-        createWorldMapScene(emit)
-      ]
+      scene: [WorldMapScene]
     }
     
     game = new Phaser.Game(config)
     
-    // 启动世界地图场景
     game.scene.start('WorldMapScene', {
       unlockedAreas: props.unlockedAreas,
       currentAreaId: props.currentAreaId,
@@ -75,104 +72,6 @@ onUnmounted(() => {
 
 const back = () => {
   emit('back')
-}
-
-// 创建世界地图场景
-function createWorldMapScene(emit) {
-  return class extends Phaser.Scene {
-    constructor() {
-      super({ key: 'WorldMapScene' })
-    }
-    
-    init(data) {
-      this.unlockedAreas = data.unlockedAreas || ['area_1']
-      this.currentAreaId = data.currentAreaId || 'area_1'
-      this.onAreaSelect = data.onAreaSelect
-    }
-    
-    create() {
-      const { width, height } = this.scale
-      
-      // 背景
-      this.add.rectangle(0, 0, width, height, 0x1a1a2e).setOrigin(0)
-      
-      // 标题
-      this.add.text(width / 2, 30, '🗺️ 世界地图', {
-        font: 'bold 28px Microsoft YaHei',
-        color: '#ffffff'
-      }).setOrigin(0.5)
-      
-      // 绘制区域节点
-      const areas = [
-        { id: 'area_1', x: width * 0.3, y: height * 0.3, name: '森林入口', icon: '🌲', difficulty: 1 },
-        { id: 'area_2', x: width * 0.7, y: height * 0.4, name: '神秘洞穴', icon: '🕳️', difficulty: 2 },
-        { id: 'area_3', x: width * 0.5, y: height * 0.6, name: '数学城堡', icon: '🏰', difficulty: 3 },
-        { id: 'area_4', x: width * 0.2, y: height * 0.75, name: '魔法学院', icon: '🏛️', difficulty: 4 },
-        { id: 'area_5', x: width * 0.8, y: height * 0.75, name: '龙之巢穴', icon: '🐉', difficulty: 5 }
-      ]
-      
-      areas.forEach((area, index) => {
-        const isUnlocked = this.unlockedAreas.includes(area.id)
-        const isCurrent = this.currentAreaId === area.id
-        
-        // 绘制连接线
-        if (index > 0) {
-          const prevArea = areas[index - 1]
-          this.add.line(prevArea.x, prevArea.y, area.x - prevArea.x, area.y - prevArea.y, 0, 0, 0x667eea, 0.5)
-            .setOrigin(0)
-        }
-        
-        // 区域节点
-        const node = this.add.container(area.x, area.y)
-        
-        // 光晕
-        if (isCurrent) {
-          const halo = this.add.circle(0, 0, 50, 0x667eea, 0.3)
-          node.add(halo)
-        }
-        
-        // 节点背景
-        const bg = this.add.circle(0, 0, 40, isUnlocked ? 0x667eea : 0x4a5568)
-        if (!isUnlocked) {
-          bg.setAlpha(0.5)
-        }
-        node.add(bg)
-        
-        // 图标
-        const icon = this.add.text(0, 0, isUnlocked ? area.icon : '🔒', {
-          font: 'bold 24px Arial'
-        }).setOrigin(0.5)
-        node.add(icon)
-        
-        // 名称
-        const name = this.add.text(0, 55, area.name, {
-          font: 'bold 14px Microsoft YaHei',
-          color: isUnlocked ? '#ffffff' : '#888888'
-        }).setOrigin(0.5)
-        node.add(name)
-        
-        // 交互
-        if (isUnlocked) {
-          bg.setInteractive({ useHandCursor: true })
-          bg.on('pointerover', () => {
-            if (!isCurrent) bg.setScale(1.1)
-          })
-          bg.on('pointerout', () => {
-            bg.setScale(1)
-          })
-          bg.on('pointerdown', () => {
-            this.onAreaSelect?.(area)
-          })
-        }
-      })
-      
-      // 图例
-      const legendY = height - 60
-      this.add.text(20, legendY, '🟣 已解锁', { font: '12px Microsoft YaHei', color: '#ffffff' })
-      this.add.text(120, legendY, '⚪ 未解锁', { font: '12px Microsoft YaHei', color: '#888888' })
-      this.add.text(220, legendY, '⭐ 当前', { font: '12px Microsoft YaHei', color: '#667eea' })
-    }
-  }
 }
 </script>
 

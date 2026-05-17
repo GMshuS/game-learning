@@ -1,0 +1,22 @@
+# Shop Spec
+
+## Purpose
+
+Define the shop system requirements for the math game, including customer purchase logic and workshop item integration.
+
+## Requirements
+
+### Requirement: 工坊制品流入顾客购买池
+商店顾客系统必须将工坊上架制品纳入购买候选。
+
+#### Scenario: 顾客检查工坊制品
+- **WHEN** 顾客生成购买清单
+- **THEN** 检查待售队列中的工坊制品，若价格 ≤ 顾客预算且类型偏好匹配，则加入购买候选
+
+#### Scenario: 购买决策
+- **WHEN** 顾客有系统商品和工坊制品两个购买候选
+- **THEN** 根据 spendRate 和价格综合决定购买哪一个
+
+#### Scenario: 购买工坊制品
+- **WHEN** 顾客购买工坊制品
+- **THEN** 制品状态变为 sold，玩家获得对应金币，顾客满意度增加

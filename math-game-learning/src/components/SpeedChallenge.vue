@@ -1,10 +1,20 @@
 <template>
   <div class="speed-challenge">
+    <GameTutorial
+      v-if="showTutorial"
+      title="⚡ 速算竞技场玩法说明"
+      :steps="speedTutorialSteps"
+      @close="closeTutorial"
+    />
+
     <!-- 模式选择 -->
     <div v-if="!store.isPlaying && !store.gameResult" class="mode-select">
       <div class="header">
         <h2>⚡ 速算竞技场</h2>
-        <button class="btn-back" @click="$emit('back')">← 返回</button>
+        <div class="header-actions">
+          <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
+          <button class="btn-back" @click="$emit('back')">← 返回</button>
+        </div>
       </div>
 
       <div class="mode-cards">
@@ -99,12 +109,42 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSpeedChallengeStore } from '../store/speedChallengeStore'
 import { speedChallengeConfig } from '../config/speedChallenge'
 import { useGameStore } from '../store/gameStore'
+import GameTutorial from './GameTutorial.vue'
 
 const emit = defineEmits(['back', 'challengeEnd'])
 
 const store = useSpeedChallengeStore()
 const gameStore = useGameStore()
 let timer = null
+
+const showTutorial = ref(false)
+
+const speedTutorialSteps = [
+  {
+    title: '选择模式',
+    description: '速算竞技场有三种模式：基础速算、闪电抢答和生存模式，每种模式有不同的规则和挑战。'
+  },
+  {
+    title: '基础速算',
+    description: '60秒计时，答对一题得10分，连续答对可获得连击加分（每连击+10%）。在时间内尽可能多答题！'
+  },
+  {
+    title: '闪电抢答',
+    description: '45秒内与AI对手竞速，答对一题得15分，连击加成15%。注意AI进度条，AI达到100%则挑战失败！'
+  },
+  {
+    title: '生存模式',
+    description: '没有计时限制，但有3条命。答对一题得20分，连击加成20%。答错扣一条命，3条命用完游戏结束。'
+  },
+  {
+    title: '计分与奖励',
+    description: '根据得分获得D/S评级，得分可兑换金币（0.5金币/分），达到300/500/800分还可获得钻石奖励！'
+  }
+]
+
+const closeTutorial = () => {
+  showTutorial.value = false
+}
 
 const modes = [
   { id: 'base', icon: '⏱️', name: '基础速算', description: '60秒内尽可能多答题' },
@@ -166,6 +206,12 @@ onUnmounted(() => stopTimer())
   margin-bottom: 2rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .header h2 { margin: 0; font-size: 1.8rem; }
 
 .btn-back {
@@ -175,6 +221,21 @@ onUnmounted(() => stopTimer())
   border-radius: 20px;
   color: #fff;
   cursor: pointer;
+}
+
+.btn-help {
+  padding: 0.5rem 1.2rem;
+  background: rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.btn-help:hover {
+  background: rgba(102, 126, 234, 0.5);
 }
 
 .mode-cards {
