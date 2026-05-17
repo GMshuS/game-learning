@@ -226,6 +226,58 @@ class StorageManager {
   }
 
   /**
+   * 清理并修复损坏的设置数据
+   */
+  migrateSettings() {
+    const data = localStorage.getItem(STORAGE_KEYS.SETTINGS)
+    if (!data) return false
+    
+    try {
+      const settings = JSON.parse(data)
+      let migrated = false
+      
+      // 修复音量值：如果 > 1，说明存储的是百分比格式，需要转换为 0-1 范围
+      if (typeof settings.musicVolume === 'number' && settings.musicVolume > 1) {
+        while (settings.musicVolume > 1) {
+          settings.musicVolume = settings.musicVolume / 100
+        }
+        settings.musicVolume = Math.max(0, Math.min(1, settings.musicVolume))
+        migrated = true
+      }
+      
+      if (typeof settings.soundVolume === 'number' && settings.soundVolume > 1) {
+        while (settings.soundVolume > 1) {
+          settings.soundVolume = settings.soundVolume / 100
+        }
+        settings.soundVolume = Math.max(0, Math.min(1, settings.soundVolume))
+        migrated = true
+      }
+      
+      // 如果进行了修复，保存回 localStorage
+      if (migrated) {
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings))
+        console.log('Settings migrated - fixed volume values')
+      }
+      
+      return migrated
+    } catch (e) {
+      console.error('Settings migration failed:', e)
+      return false
+    }
+  }
+
+  /**
+   * 重置游戏（保留设置）
+   */
+  resetGameKeepSettings() {
+    Object.entries(STORAGE_KEYS).forEach(([key, value]) => {
+      if (key !== 'SETTINGS') {
+        localStorage.removeItem(value)
+      }
+    })
+  }
+
+  /**
    * 重置游戏
    */
   resetGame() {
