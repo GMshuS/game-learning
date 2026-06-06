@@ -107,6 +107,7 @@
         @startCardBattle="startCardBattle"
         @startAdventure="startAdventureFromHall"
         @startShop="startShopFromHall"
+        @startCashier="startCashierFromHall"
         @openLeaderboard="openLeaderboard"
         @back="goBack"
       />
@@ -267,8 +268,11 @@ const currentMode = computed(() => {
   if (currentView.value === 'adventure' || currentView.value === 'battle' || currentView.value === 'levelSelect') {
     return 'adventure'
   }
-  if (currentView.value === 'shop' || currentView.value === 'cashier') {
+  if (currentView.value === 'shop') {
     return 'shop'
+  }
+  if (currentView.value === 'cashier') {
+    return 'cashier'
   }
   if (currentView.value === 'challenge' || currentView.value === 'speedChallenge' ||
       currentView.value === 'workshop' || currentView.value === 'cardBattle' ||
@@ -633,6 +637,14 @@ const startShopFromHall = () => {
   currentView.value = 'shop'
   gameStore.setGameMode('shop')
   audioStore.playBgm('shop')
+}
+
+// 从挑战中心进入收银游戏
+const startCashierFromHall = () => {
+  previousView.value = 'challenge'
+  currentView.value = 'cashier'
+  gameStore.setGameMode('challenge_center')
+  audioStore.playBgm('main')
 }
 
 // 导航到速算竞技

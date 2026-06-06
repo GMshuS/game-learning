@@ -54,7 +54,8 @@ const modeLabels = {
   menu: '主菜单',
   adventure: '冒险模式',
   shop: '经营商店',
-  battle: '战斗中'
+  battle: '战斗中',
+  cashier: '收银游戏'
 }
 
 const currentModeLabel = computed(() => {

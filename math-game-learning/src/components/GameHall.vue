@@ -6,6 +6,26 @@
     </div>
 
     <div class="hall-cards">
+      <!-- 经营商店 -->
+      <div class="hall-card shop-card" @click="$emit('startShop')">
+        <div class="card-icon">🏪</div>
+        <h3>经营商店</h3>
+        <p>经营文具店，买卖商品赚取金币</p>
+        <div class="card-status">
+          <span>金币: {{ shopCoins }}</span>
+        </div>
+      </div>
+
+      <!-- 收银游戏 -->
+      <div class="hall-card cashier-card" @click="$emit('startCashier')">
+        <div class="card-icon">🧾</div>
+        <h3>收银游戏</h3>
+        <p>练习收银找零，赢取金币奖励</p>
+        <div class="card-status">
+          <span>{{ cashierBestScore }}</span>
+        </div>
+      </div>
+
       <!-- 冒险模式 -->
       <div class="hall-card adventure-card" @click="$emit('startAdventure')">
         <div class="card-icon">⚔️</div>
@@ -13,16 +33,6 @@
         <p>挑战数学怪物，提升角色等级</p>
         <div class="card-status">
           <span>关卡: {{ adventureProgress }}</span>
-        </div>
-      </div>
-
-      <!-- 经营商店 -->
-      <div class="hall-card shop-card" @click="$emit('startShop')">
-        <div class="card-icon">🏪</div>
-        <h3>经营商店</h3>
-        <p>经营文具店，练习收银找零</p>
-        <div class="card-status">
-          <span>金币: {{ shopCoins }}</span>
         </div>
       </div>
 
@@ -68,10 +78,12 @@
 <script setup>
 import { computed } from 'vue'
 import { useGameStore } from '../store/gameStore'
+import { useCashierStore } from '../store/cashierStore'
 
-const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'startAdventure', 'startShop', 'openLeaderboard', 'back'])
+const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'startAdventure', 'startShop', 'startCashier', 'openLeaderboard', 'back'])
 
 const gameStore = useGameStore()
+const cashierStore = useCashierStore()
 
 const adventureProgress = computed(() => {
   const area = gameStore.currentArea || 'area_1'
@@ -81,6 +93,12 @@ const adventureProgress = computed(() => {
 
 const shopCoins = computed(() => {
   return gameStore.playerCoins || 0
+})
+
+const cashierBestScore = computed(() => {
+  const scores = cashierStore.highScores
+  const best = Math.max(scores.easy, scores.medium, scores.hard)
+  return best > 0 ? `最佳: ${best}分` : '未挑战'
 })
 
 const bestSpeedScore = computed(() => {
@@ -164,6 +182,10 @@ const cardCollectionCount = computed(() => {
 
 .shop-card:hover {
   border-color: #f5576c;
+}
+
+.cashier-card:hover {
+  border-color: #f97316;
 }
 
 .speed-card:hover {
