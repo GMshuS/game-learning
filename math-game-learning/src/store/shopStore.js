@@ -4,6 +4,8 @@
 import { defineStore } from 'pinia'
 import { shopConfig, getProductById } from '../config/shop'
 import { generateCustomer } from '../config/customers'
+import { useSettingsStore } from './settingsStore'
+import { getGameConfig } from '../utils/gameContext'
 
 export const useShopStore = defineStore('shop', {
   state: () => ({
@@ -125,13 +127,16 @@ export const useShopStore = defineStore('shop', {
       if (item.quantity < quantity) return false
       
       const product = getProductById(productId)
-      const revenue = product.sellPrice * quantity
-      
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const coinRatio = gameConfig.scale.coinRatio || 1.0
+      const revenue = Math.floor(product.sellPrice * quantity * coinRatio)
+
       item.quantity -= quantity
       if (item.quantity === 0) {
         this.inventory.splice(index, 1)
       }
-      
+
       this.coins += revenue
       this.dailyStats.sales++
       this.dailyStats.revenue += revenue
@@ -177,15 +182,17 @@ export const useShopStore = defineStore('shop', {
           this.sell(item.product.id, 1)
         }
       }
-      
-      this.coins += customer.total
+
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const coinRatio = gameConfig.scale.coinRatio || 1.0
       this.dailyStats.customersServed++
       
       // 移除顾客
       this.customers = this.customers.filter(c => c.id !== customerId)
       
       return {
-        revenue: customer.total,
+        revenue: Math.floor(customer.total * coinRatio),
         satisfied: true
       }
     },
@@ -226,12 +233,15 @@ export const useShopStore = defineStore('shop', {
         this.upgrades.push(upgrade)
         
         // 应用升级效果
+        // TODO: 实现库存上限扩容逻辑 — 可通过新增 state.maxStock 并在 restock 中检查
         if (upgrade.maxStockBonus) {
           // 增加最大库存
         }
+        // TODO: 实现顾客吸引率加成 — 提高 spawnCustomer 频率或增加队列上限
         if (upgrade.customerAttractionBonus) {
           // 增加顾客吸引率
         }
+        // TODO: 实现结账速度加成 — 减少 customerPatience 衰减速率
         if (upgrade.checkoutSpeedBonus) {
           // 增加结账速度
         }

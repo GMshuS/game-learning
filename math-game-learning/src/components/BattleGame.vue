@@ -79,6 +79,10 @@ const props = defineProps({
   streak: {
     type: Number,
     default: 0
+  },
+  difficultyScale: {
+    type: Object,
+    default: null
   }
 })
 
@@ -111,6 +115,7 @@ onMounted(() => {
       monster,
       grade: props.grade,
       streak: props.streak,
+      difficultyScale: props.difficultyScale,
       onBattleEnd: (battleResult) => {
         emit('battleEnd', battleResult)
       }

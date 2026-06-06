@@ -57,6 +57,7 @@
         :monster="battleMonster"
         :grade="battleGrade"
         :streak="battleStreak"
+        :difficultyScale="battleDifficultyScale"
         @battleEnd="onBattleEnd"
         @back="goBack"
       />
@@ -174,6 +175,7 @@ import { useWorkshopStore } from '../store/workshopStore'
 import { useCardStore } from '../store/cardStore'
 import storageManager from '../utils/storage'
 import adventureConfig from '../config/adventure'
+import { getGameConfig } from '../utils/gameContext'
 
 // 导入组件
 import MainMenu from './MainMenu.vue'
@@ -231,6 +233,7 @@ const battlePlayer = computed(() => ({
 const battleMonster = ref(null)
 const battleGrade = ref(1)
 const battleStreak = ref(0)
+const battleDifficultyScale = ref(null)
 
 // 玩家库存（用于商店显示）
 const playerInventory = computed(() => {
@@ -256,7 +259,7 @@ const playerInfo = computed(() => ({
   coins: gameStore.playerCoins,
   gems: gameStore.playerGems,
   stars: gameStore.playerStars,
-  grade: gameStore.playerGrade
+  grade: settingsStore.grade
 }))
 
 // 当前模式
@@ -353,6 +356,18 @@ const startBattle = (area, level) => {
     maxHp: 20 + level.number * 5,
     icon: baseMonster.id === 'slime' ? '🟢' : baseMonster.id === 'goblin' ? '👺' : baseMonster.id === 'orc' ? '👹' : '🐉'
   }
+  
+  // 获取难度配置并应用到怪物
+  const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+  const scale = gameConfig.scale
+
+  battleMonster.value = {
+    ...battleMonster.value,
+    hp: Math.floor((20 + level.number * 5) * scale.monsterHpRatio),
+    currentHp: Math.floor((20 + level.number * 5) * scale.monsterHpRatio),
+    attack: Math.floor((5 + level.number * 2) * scale.monsterAttackRatio)
+  }
+  battleDifficultyScale.value = scale
   
   battleGrade.value = grade
   battleStreak.value = 0

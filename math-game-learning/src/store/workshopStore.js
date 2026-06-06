@@ -3,8 +3,10 @@
  */
 import { defineStore } from 'pinia'
 import { useGameStore } from './gameStore'
+import { useSettingsStore } from './settingsStore'
 import { useNotificationStore } from './notificationStore'
 import workshopConfig from '../config/workshop'
+import { getGameConfig } from '../utils/gameContext'
 
 export const useWorkshopStore = defineStore('workshop', {
   state: () => ({
@@ -22,8 +24,8 @@ export const useWorkshopStore = defineStore('workshop', {
     },
 
     availableRecipes: (state, getters) => {
-      const gameStore = useGameStore()
-      const grade = gameStore.playerGrade || 1
+      const settingsStore = useSettingsStore()
+      const grade = settingsStore.grade
       return workshopConfig.recipes.filter(r =>
         r.gradeRange[0] <= grade && r.gradeRange[1] >= grade
       )
@@ -70,11 +72,17 @@ export const useWorkshopStore = defineStore('workshop', {
      * 答题获得材料
      */
     rewardMaterial() {
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const materialRareRatio = gameConfig.scale.materialRareRatio || 1.0
+
       const reward = workshopConfig.questionReward
-      const rand = Math.random()
+      const adjustedEpicChance = reward.epic.chance * materialRareRatio
+      const adjustedRareChance = reward.rare.chance * materialRareRatio
+      let rand = Math.random()
       let rarity
-      if (rand < reward.epic.chance) rarity = 'epic'
-      else if (rand < reward.epic.chance + reward.rare.chance) rarity = 'rare'
+      if (rand < adjustedEpicChance) rarity = 'epic'
+      else if (rand < adjustedEpicChance + adjustedRareChance) rarity = 'rare'
       else rarity = 'common'
 
       const candidates = workshopConfig.materialTypes.filter(m => m.rarity === rarity)
@@ -177,7 +185,11 @@ export const useWorkshopStore = defineStore('workshop', {
         if (Math.random() < buyChance) {
           item.sold = true
           const finalPrice = Math.floor(adjustedPrice)
-          gameStore.addCoins(finalPrice)
+          const settingsStore = useSettingsStore()
+          const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+          const coinRatio = gameConfig.scale.coinRatio || 1.0
+          const finalCoins = Math.floor(finalPrice * coinRatio)
+          gameStore.addCoins(finalCoins)
 
           // 触发通知
           notificationStore.addNotification({

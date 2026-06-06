@@ -125,6 +125,8 @@ import {
   calculateOptimalChange,
   validateChange
 } from '../config/cashier'
+import { useSettingsStore } from '../store/settingsStore'
+import { getGameConfig } from '../utils/gameContext'
 
 const props = defineProps({
   difficulty: {
@@ -222,10 +224,13 @@ const submit = () => {
     if (coinCount <= optimalCount) stars = 3
     else if (coinCount <= optimalCount + 2) stars = 2
     
-    // 计算奖励
+    // 计算奖励（应用难度 coinRatio）
+    const settingsStore = useSettingsStore()
+    const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+    const coinRatio = gameConfig.scale.coinRatio || 1.0
     const timeUsed = cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value
     const rewards = {
-      coins: stars * 10,
+      coins: Math.floor(stars * 10 * coinRatio),
       exp: stars * 5 + Math.max(0, 30 - timeUsed)
     }
     

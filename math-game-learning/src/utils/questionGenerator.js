@@ -1,219 +1,26 @@
 /**
  * 数学题目生成器
  * 支持加减乘除、分数、小数、百分比等运算
+ * 题型生成逻辑委托给 src/questions/ 下的独立模块，通过注册表管理
  */
 import { getGradeRange, getGradeOperations } from '../config/grades'
+import { generate as registryGenerate } from '../questions/registry'
+
+// 导入所有题型以触发注册
+import '../questions/addition'
+import '../questions/subtraction'
+import '../questions/multiplication'
+import '../questions/division'
+import '../questions/mixed'
+import '../questions/fraction'
+import '../questions/decimal'
+import '../questions/percentage'
 
 /**
  * 生成随机数
  */
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-/**
- * 生成加法题目
- */
-function generateAddition(grade, range) {
-  const a = randomInt(range.min, range.max)
-  const b = randomInt(range.min, range.max)
-  return {
-    question: `${a} + ${b} = ?`,
-    answer: a + b,
-    type: 'add',
-    operands: [a, b],
-    operator: '+'
-  }
-}
-
-/**
- * 生成减法题目（确保结果非负）
- */
-function generateSubtraction(grade, range) {
-  const a = randomInt(range.min, range.max)
-  const b = randomInt(range.min, a) // 确保 a >= b
-  return {
-    question: `${a} - ${b} = ?`,
-    answer: a - b,
-    type: 'subtract',
-    operands: [a, b],
-    operator: '-'
-  }
-}
-
-/**
- * 生成乘法题目
- */
-function generateMultiplication(grade, range) {
-  // 乘除法使用较小的数字范围
-  const maxFactor = Math.min(12, Math.floor(range.max / 10))
-  const a = randomInt(2, maxFactor)
-  const b = randomInt(2, maxFactor)
-  return {
-    question: `${a} × ${b} = ?`,
-    answer: a * b,
-    type: 'multiply',
-    operands: [a, b],
-    operator: '×'
-  }
-}
-
-/**
- * 生成除法题目（确保整除）
- */
-function generateDivision(grade, range) {
-  const maxFactor = Math.min(12, Math.floor(range.max / 10))
-  const b = randomInt(2, maxFactor)
-  const answer = randomInt(2, maxFactor)
-  const a = b * answer // 确保整除
-  return {
-    question: `${a} ÷ ${b} = ?`,
-    answer: answer,
-    type: 'divide',
-    operands: [a, b],
-    operator: '÷'
-  }
-}
-
-/**
- * 生成混合运算题目
- */
-function generateMixedOperation(grade, range) {
-  const operations = grade >= 3 
-    ? ['+', '-', '×', '÷'] 
-    : ['+', '-']
-  
-  const op1 = operations[randomInt(0, operations.length - 1)]
-  const op2 = operations[randomInt(0, operations.length - 1)]
-  
-  let a, b, c, answer
-  
-  // 简化：使用较小数字
-  const smallRange = { min: 1, max: Math.min(20, range.max) }
-  
-  if (op1 === '×' || op1 === '÷') {
-    a = randomInt(2, 10)
-    if (op1 === '×') {
-      b = randomInt(2, 10)
-    } else {
-      b = randomInt(2, 5)
-      a = a * b
-    }
-  } else {
-    a = randomInt(smallRange.min, smallRange.max)
-    b = randomInt(smallRange.min, smallRange.max)
-  }
-  
-  if (op2 === '×' || op2 === '÷') {
-    c = randomInt(2, 10)
-    if (op2 === '÷') {
-      const temp = b
-      b = c * temp
-      c = temp
-    }
-  } else {
-    c = randomInt(smallRange.min, smallRange.max)
-  }
-  
-  // 计算答案
-  let firstResult
-  if (op1 === '+') firstResult = a + b
-  else if (op1 === '-') firstResult = a - b
-  else if (op1 === '×') firstResult = a * b
-  else firstResult = a / b
-  
-  if (op2 === '+') answer = firstResult + c
-  else if (op2 === '-') answer = firstResult - c
-  else if (op2 === '×') answer = firstResult * c
-  else answer = firstResult / c
-  
-  // 确保答案为整数且非负
-  if (!Number.isInteger(answer) || answer < 0) {
-    return generateMixedOperation(grade, range)
-  }
-  
-  return {
-    question: `${a} ${op1} ${b} ${op2} ${c} = ?`,
-    answer: answer,
-    type: 'mixed',
-    operands: [a, b, c],
-    operators: [op1, op2]
-  }
-}
-
-/**
- * 生成分数题目
- */
-function generateFraction(grade, range) {
-  const denominator = randomInt(2, 12)
-  const numerator1 = randomInt(1, denominator - 1)
-  const numerator2 = randomInt(1, denominator - 1)
-  
-  // 确保结果不超过 1 或为负数
-  const operation = Math.random() > 0.5 ? '+' : '-'
-  let answer
-  
-  if (operation === '+') {
-    answer = (numerator1 + numerator2) / denominator
-    if (numerator1 + numerator2 > denominator) {
-      // 结果大于 1，重新生成
-      return generateFraction(grade, range)
-    }
-  } else {
-    if (numerator1 < numerator2) {
-      return generateFraction(grade, range)
-    }
-    answer = (numerator1 - numerator2) / denominator
-  }
-  
-  return {
-    question: `${numerator1}/${denominator} ${operation === '+' ? '+' : '-'} ${numerator2}/${denominator} = ?`,
-    answer: answer,
-    type: 'fraction',
-    operands: [[numerator1, denominator], [numerator2, denominator]],
-    operator: operation
-  }
-}
-
-/**
- * 生成小数题目
- */
-function generateDecimal(grade, range) {
-  const decimalPlaces = grade >= 5 ? 1 : 2
-  const multiplier = Math.pow(10, decimalPlaces)
-  
-  const a = randomInt(1, range.max * multiplier) / multiplier
-  const b = randomInt(1, a * multiplier) / multiplier // 确保 a >= b
-  
-  const operation = Math.random() > 0.5 ? '+' : '-'
-  const answer = operation === '+' ? a + b : a - b
-  
-  return {
-    question: `${a.toFixed(decimalPlaces)} ${operation === '+' ? '+' : '-'} ${b.toFixed(decimalPlaces)} = ?`,
-    answer: parseFloat(answer.toFixed(decimalPlaces)),
-    type: 'decimal',
-    operands: [a, b],
-    operator: operation,
-    decimalPlaces
-  }
-}
-
-/**
- * 生成百分比题目
- */
-function generatePercentage(grade, range) {
-  const percentage = randomInt(1, 20) * 5 // 5%, 10%, 15%...
-  const number = randomInt(2, 20) * 10 // 20, 30, 40...
-  
-  const answer = (percentage / 100) * number
-  
-  return {
-    question: `${percentage}% of ${number} = ?`,
-    answer: answer,
-    type: 'percentage',
-    operands: [percentage, number],
-    operator: '%'
-  }
 }
 
 /**
@@ -276,8 +83,6 @@ export function generateQuestion(grade = 1, questionType = 'random') {
   const range = getGradeRange(grade)
   const operations = getGradeOperations(grade)
   
-  let generator
-  
   if (questionType === 'random') {
     // 根据年级随机选择题目类型
     const availableTypes = []
@@ -302,39 +107,17 @@ export function generateQuestion(grade = 1, questionType = 'random') {
     questionType = availableTypes[randomInt(0, availableTypes.length - 1)]
   }
   
-  switch (questionType) {
-    case 'add':
-      generator = generateAddition
-      break
-    case 'subtract':
-      generator = generateSubtraction
-      break
-    case 'multiply':
-      generator = generateMultiplication
-      break
-    case 'divide':
-      generator = generateDivision
-      break
-    case 'mixed':
-      generator = generateMixedOperation
-      break
-    case 'fraction':
-      generator = generateFraction
-      break
-    case 'decimal':
-      generator = generateDecimal
-      break
-    case 'percentage':
-      generator = generatePercentage
-      break
-    case 'word':
-      generator = generateWordProblem
-      break
-    default:
-      generator = generateAddition
-  }
+  let question
   
-  const question = generator(grade, range)
+  if (questionType === 'word') {
+    question = generateWordProblem(grade, range)
+  } else {
+    question = registryGenerate(questionType, grade, range)
+    if (!question) {
+      // fallback 到加法
+      question = registryGenerate('add', grade, range)
+    }
+  }
   question.grade = grade
   question.difficulty = getDifficulty(grade, questionType)
   question.id = generateQuestionId()

@@ -3,6 +3,8 @@
  */
 import { defineStore } from 'pinia'
 import { useGameStore } from './gameStore'
+import { useSettingsStore } from './settingsStore'
+import { getGameConfig } from '../utils/gameContext'
 import { speedChallengeConfig } from '../config/speedChallenge'
 
 export const useSpeedChallengeStore = defineStore('speedChallenge', {
@@ -18,6 +20,7 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
     lives: 3,
     aiProgress: 0, // 闪电模式 AI 进度
     currentQuestion: null,
+    difficultyScale: null,
     gameResult: null // 结算数据
   }),
 
@@ -33,6 +36,10 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
     startGame(mode) {
       const config = speedChallengeConfig.modes[mode]
       if (!config) return false
+
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      this.difficultyScale = gameConfig.scale
 
       this.currentMode = mode
       this.isPlaying = true
@@ -50,7 +57,7 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
         this.timeLeft = config.duration
         this.resetAI()
       } else if (mode === 'survival') {
-        this.lives = config.lives
+        this.lives = config.lives + (this.difficultyScale?.speedLivesBonus || 0)
         this.timeLeft = 0 // 生存模式无倒计时
       }
 
@@ -62,8 +69,8 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
      * 生成题目（年级适配）
      */
     generateQuestion() {
-      const gameStore = useGameStore()
-      const grade = gameStore.playerGrade || 1
+      const settingsStore = useSettingsStore()
+      const grade = settingsStore.grade
       const gradeCfg = speedChallengeConfig.gradeConfig[grade] || speedChallengeConfig.gradeConfig[1]
 
       const op = gradeCfg.operations[Math.floor(Math.random() * gradeCfg.operations.length)]
@@ -155,7 +162,8 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
       const config = this.modeConfig
       const aiTime = config.aiAnswerTime.min + Math.random() * (config.aiAnswerTime.max - config.aiAnswerTime.min)
       const aiSpeed = 1000 / aiTime // 每秒答题数
-      this.aiProgress += aiSpeed * 0.5 // 玩家每次答题 AI 也前进
+      const speedRatio = this.difficultyScale?.speedAISpeedRatio || 1.0
+      this.aiProgress += aiSpeed * 0.5 * speedRatio // 玩家每次答题 AI 也前进
     },
 
     /**
@@ -178,7 +186,8 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
         }
         // 闪电模式 AI 也随时间前进
         if (this.currentMode === 'blitz') {
-          this.aiProgress += 0.3
+          const speedRatio = this.difficultyScale?.speedAISpeedRatio || 1.0
+          this.aiProgress += 0.3 * speedRatio
           if (this.aiProgress >= 100) {
             this.endGame()
           }
@@ -192,7 +201,10 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
     endGame() {
       this.isPlaying = false
 
-      const coins = Math.floor(this.score * speedChallengeConfig.rewards.coinsPerPoint)
+      let coins = Math.floor(this.score * speedChallengeConfig.rewards.coinsPerPoint)
+      if (this.difficultyScale) {
+        coins = Math.floor(coins * this.difficultyScale.coinRatio)
+      }
       let gems = 0
       for (const threshold of speedChallengeConfig.rewards.gemThresholds) {
         if (this.score >= threshold.score) gems = threshold.gems

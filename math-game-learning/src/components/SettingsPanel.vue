@@ -168,6 +168,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useSettingsStore } from '../store/settingsStore'
+const settingsStore = useSettingsStore()
 
 const props = defineProps({
   settings: {
@@ -230,7 +232,10 @@ const languages = [
 
 const updateSetting = (key, value) => {
   localSettings.value[key] = value
+  // 双路径：emit 供父组件监听（如 GameApp.vue 中需要即时响应），store 写入负责持久化
+  // 两条路径确保数据同步，父组件可通过监听 update 事件做额外处理
   emit('update', { ...localSettings.value })
+  settingsStore.updateSetting(key, value)
 }
 
 const resetSettings = () => {

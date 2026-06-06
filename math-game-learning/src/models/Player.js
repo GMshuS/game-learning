@@ -5,7 +5,6 @@ export class Player {
   constructor(data = {}) {
     this.id = data.id || this.generateId()
     this.name = data.name || '冒险者'
-    this.grade = data.grade || 1  // 年级 1-6
     this.level = data.level || 1  // 角色等级
     this.exp = data.exp || 0      // 经验值
     this.coins = data.coins || 0  // 金币数量
@@ -84,7 +83,6 @@ export class Player {
     return {
       id: this.id,
       name: this.name,
-      grade: this.grade,
       level: this.level,
       exp: this.exp,
       coins: this.coins,

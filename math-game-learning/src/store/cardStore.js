@@ -3,7 +3,9 @@
  */
 import { defineStore } from 'pinia'
 import { useGameStore } from './gameStore'
+import { useSettingsStore } from './settingsStore'
 import { cards, rarityConfig, packConfig, getCardById, getCardsByGrade } from '../config/cards'
+import { getGameConfig } from '../utils/gameContext'
 
 export const useCardStore = defineStore('card', {
   state: () => ({
@@ -51,7 +53,8 @@ export const useCardStore = defineStore('card', {
         if (!gameStore.spendCoins(pack.price)) return []
       }
 
-      const grade = gameStore.playerGrade || 1
+      const settingsStore = useSettingsStore()
+      const grade = settingsStore.grade
       const gradeCards = getCardsByGrade(grade)
       const results = []
 
@@ -136,11 +139,16 @@ export const useCardStore = defineStore('card', {
     startBattle(difficulty = 'normal') {
       if (!this.deckValid) return false
 
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const aiLevel = gameConfig.scale.aiStrategyLevel || 'basic'
+
       const playerDeck = [...this.deck]
       const aiDeck = this.generateAIDeck()
 
       this.battle = {
         difficulty,
+        aiLevel,
         playerHP: 30,
         aiHP: 30,
         playerMaxHP: 30,
@@ -305,10 +313,10 @@ export const useCardStore = defineStore('card', {
      * AI 策略
      */
     getAIStrategy() {
-      const difficulty = this.battle.difficulty
-      switch (difficulty) {
-        case 'easy': return this.aiEasy
-        case 'hard': return this.aiHard
+      const aiLevel = this.battle?.aiLevel || 'basic'
+      switch (aiLevel) {
+        case 'random': return this.aiEasy
+        case 'optimal': return this.aiHard
         default: return this.aiNormal
       }
     },
@@ -389,7 +397,12 @@ export const useCardStore = defineStore('card', {
      */
     onBattleEnd(winner) {
       const gameStore = useGameStore()
-      const coins = winner === 'player' ? 30 : 10
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const coinRatio = gameConfig.scale.coinRatio || 1.0
+
+      let coins = winner === 'player' ? 30 : 10
+      coins = Math.floor(coins * coinRatio)
       const gems = winner === 'player' ? 1 : 0
 
       gameStore.addCoins(coins)

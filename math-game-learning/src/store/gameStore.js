@@ -7,6 +7,7 @@ import Player from '../models/Player'
 import GameProgress from '../models/GameProgress'
 import Inventory from '../models/Inventory'
 import Settings from '../models/Settings'
+import { useSettingsStore } from './settingsStore'
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -29,7 +30,10 @@ export const useGameStore = defineStore('game', {
   getters: {
     // 玩家相关
     playerName: (state) => state.player?.name || '冒险者',
-    playerGrade: (state) => state.player?.grade || 1,
+    playerGrade: (state) => {
+      const settingsStore = useSettingsStore()
+      return settingsStore.grade
+    },
     playerLevel: (state) => state.player?.level || 1,
     playerExp: (state) => state.player?.exp || 0,
     playerCoins: (state) => state.player?.coins || 0,
@@ -59,7 +63,13 @@ export const useGameStore = defineStore('game', {
      */
     async initGame() {
       const gameData = storageManager.loadGame()
-      
+
+      // 空值检查：当存档版本不匹配时 loadGame() 返回 null
+      if (!gameData) {
+        this.isLoaded = false
+        return false
+      }
+
       if (gameData.player) {
         this.player = gameData.player
         this.progress = gameData.progress

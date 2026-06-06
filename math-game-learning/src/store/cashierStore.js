@@ -2,6 +2,8 @@
  * 收银游戏 Store
  */
 import { defineStore } from 'pinia'
+import { useSettingsStore } from './settingsStore'
+import { getGameConfig } from '../utils/gameContext'
 
 export const useCashierStore = defineStore('cashier', {
   state: () => ({
@@ -11,7 +13,6 @@ export const useCashierStore = defineStore('cashier', {
     currentStreak: 0,
     totalEarnings: 0,
     lastResults: [],
-    difficulty: 'easy',
     highScores: {
       easy: 0,
       medium: 0,
@@ -40,6 +41,11 @@ export const useCashierStore = defineStore('cashier', {
      * 记录游戏结果
      */
     recordResult(result) {
+      const settingsStore = useSettingsStore()
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
+      const coinRatio = gameConfig.scale.coinRatio || 1.0
+      const cashierDifficulty = settingsStore.difficulty === 'normal' ? 'medium' : settingsStore.difficulty
+
       this.gamesPlayed++
       
       if (result.status === 'success') {
@@ -50,16 +56,17 @@ export const useCashierStore = defineStore('cashier', {
           this.bestStreak = this.currentStreak
         }
         
-        // 计算得分
+        // 计算得分（应用难度倍率）
         const score = this.calculateScore(result)
+        const adjustedScore = Math.floor(score * coinRatio)
         
         // 更新最高分
-        if (score > this.highScores[this.difficulty]) {
-          this.highScores[this.difficulty] = score
+        if (adjustedScore > this.highScores[cashierDifficulty]) {
+          this.highScores[cashierDifficulty] = adjustedScore
         }
         
-        // 增加收益
-        this.totalEarnings += result.stars * 10
+        // 增加收益（带难度倍率）
+        this.totalEarnings += Math.floor(result.stars * 10 * coinRatio)
       } else {
         this.currentStreak = 0
       }
@@ -98,8 +105,10 @@ export const useCashierStore = defineStore('cashier', {
      * 设置难度
      */
     setDifficulty(difficulty) {
-      if (['easy', 'medium', 'hard'].includes(difficulty)) {
-        this.difficulty = difficulty
+      const settingsStore = useSettingsStore()
+      const mappedDifficulty = difficulty === 'medium' ? 'normal' : difficulty
+      if (['easy', 'normal', 'hard'].includes(mappedDifficulty)) {
+        settingsStore.setDifficulty(mappedDifficulty)
       }
     },
     

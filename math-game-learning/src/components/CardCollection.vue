@@ -36,11 +36,13 @@ import { computed } from 'vue'
 import { useCardStore } from '../store/cardStore'
 import { cards, getCardById, rarityConfig, getCardsByGrade } from '../config/cards'
 import { useGameStore } from '../store/gameStore'
+import { useSettingsStore } from '../store/settingsStore'
 
 const emit = defineEmits(['back'])
 
 const store = useCardStore()
 const gameStore = useGameStore()
+const settingsStore = useSettingsStore()
 
 const rarities = [
   { id: 'common', label: '普通', color: '#94a3b8' },
@@ -50,7 +52,7 @@ const rarities = [
 ]
 
 function cardsByRarity(rarity) {
-  const grade = gameStore.playerGrade || 1
+  const grade = settingsStore.grade
   return cards.filter(c => c.rarity === rarity && c.grade[0] <= grade && c.grade[1] >= grade)
 }
 

@@ -107,12 +107,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useCardStore } from '../store/cardStore'
 import { getCardById, getCardsByGrade } from '../config/cards'
 import { useGameStore } from '../store/gameStore'
+import { useSettingsStore } from '../store/settingsStore'
 import GameTutorial from './GameTutorial.vue'
 
 const emit = defineEmits(['back', 'openCollection', 'battleEnd'])
 
 const store = useCardStore()
 const gameStore = useGameStore()
+const settingsStore = useSettingsStore()
 
 const showTutorial = ref(false)
 
@@ -148,7 +150,7 @@ const closeTutorial = () => {
 }
 
 const difficulties = computed(() => {
-  const grade = gameStore.playerGrade || 1
+  const grade = settingsStore.grade
   return [
     { id: 'easy', icon: '😊', name: '简单', desc: 'AI 随机出牌', recommended: grade <= 2 },
     { id: 'normal', icon: '🤔', name: '中等', desc: 'AI 有基本策略', recommended: grade >= 3 && grade <= 4 },

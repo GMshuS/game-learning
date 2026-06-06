@@ -125,6 +125,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useWorkshopStore } from '../store/workshopStore'
 import { useGameStore } from '../store/gameStore'
+import { useSettingsStore } from '../store/settingsStore'
 import workshopConfig from '../config/workshop'
 import GameTutorial from './GameTutorial.vue'
 
@@ -132,6 +133,7 @@ const emit = defineEmits(['back'])
 
 const store = useWorkshopStore()
 const gameStore = useGameStore()
+const settingsStore = useSettingsStore()
 
 const showTutorial = ref(false)
 
@@ -218,7 +220,7 @@ function handleWithdraw(idx) {
 }
 
 function generateQuestion() {
-  const grade = gameStore.playerGrade || 1
+  const grade = settingsStore.grade
   const maxNum = grade <= 2 ? 20 : grade <= 4 ? 100 : 1000
   let a = Math.floor(Math.random() * maxNum) + 1
   let b = Math.floor(Math.random() * maxNum) + 1

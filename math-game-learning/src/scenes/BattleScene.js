@@ -34,6 +34,7 @@ export default class BattleScene extends Phaser.Scene {
     this.streak = data.streak || 0
     this.onBattleEnd = data.onBattleEnd || null
     this.timeLimit = data.timeLimit || 60
+    this.difficultyScale = data.difficultyScale || null
   }
 
   create() {
@@ -277,6 +278,11 @@ export default class BattleScene extends Phaser.Scene {
     const timerX = width - 80
     const timerY = 50
     
+    // 应用难度倍率调整时间
+    if (this.difficultyScale?.battleTimeRatio) {
+      this.timeLimit = Math.round(this.timeLimit * this.difficultyScale.battleTimeRatio)
+    }
+    
     // 计时器背景
     const timerBg = this.add.circle(timerX, timerY, 35, 0x1a1a2e)
     timerBg.setStrokeStyle(3, 0x667eea)
@@ -437,8 +443,11 @@ export default class BattleScene extends Phaser.Scene {
     // 更新选项
     this.updateOptions()
     
-    // 重置计时器
-    this.timeLimit = 60
+    // 重置计时器（应用难度倍率）
+    const baseTime = 60
+    this.timeLimit = this.difficultyScale?.battleTimeRatio
+      ? Math.round(baseTime * this.difficultyScale.battleTimeRatio)
+      : baseTime
     this.timerText.setText(`${this.timeLimit}`)
     this.timerText.setColor('#ffffff')
   }
@@ -482,6 +491,12 @@ export default class BattleScene extends Phaser.Scene {
       60 - this.timeLimit,
       this.streak
     )
+    
+    // 应用难度倍率到奖励
+    if (this.difficultyScale) {
+      rewards.exp = Math.floor(rewards.exp * this.difficultyScale.expRatio)
+      rewards.coins = Math.floor(rewards.coins * this.difficultyScale.coinRatio)
+    }
     
     // 显示结果
     this.showResult(result, rewards)

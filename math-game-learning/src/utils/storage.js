@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'math_game_notifications'
 }
 
-const VERSION = '1.0.0'
+const VERSION = '2.0.0'
 
 class StorageManager {
   constructor() {
@@ -34,6 +34,9 @@ class StorageManager {
     const storedVersion = localStorage.getItem(STORAGE_KEYS.VERSION)
     if (!storedVersion) {
       return null
+    }
+    if (storedVersion !== this.currentVersion) {
+      console.warn('旧版本存档检测到(v{0})，已自动清理重置为新版本'.replace('{0}', storedVersion))
     }
     return storedVersion
   }
@@ -174,6 +177,13 @@ class StorageManager {
    * 加载完整游戏存档
    */
   loadGame() {
+    // 版本检测：旧版本存档自动清理重置
+    const storedVersion = this.checkVersion()
+    if (storedVersion !== null && storedVersion !== this.currentVersion) {
+      this.resetGame()
+      return null
+    }
+
     const baseData = {
       player: this.loadPlayer(),
       progress: this.loadProgress(),
@@ -215,7 +225,7 @@ class StorageManager {
    * 创建新游戏存档
    */
   createNewGame(playerName, grade = 1) {
-    const player = new Player({ name: playerName, grade })
+    const player = new Player({ name: playerName })
     const progress = new GameProgress({ unlockedAreas: ['area_1'] })
     const inventory = new Inventory()
     const settings = new Settings({ grade })
