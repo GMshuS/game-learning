@@ -73,6 +73,21 @@ export const questionTypeConfig = {
     label: '应用题',
     icon: '📝',
     color: '#f87171'
+  },
+  numberFill: {
+    label: '填空题',
+    icon: '⬜',
+    color: '#a78bfa'
+  },
+  estimate: {
+    label: '估算题',
+    icon: '≈',
+    color: '#34d399'
+  },
+  equation: {
+    label: '方程求解',
+    icon: '✕',
+    color: '#fbbf24'
   }
 }
 
@@ -95,12 +110,12 @@ export function getQuestionTypeConfig(type) {
  */
 export function getAvailableTypesForGrade(grade) {
   const typeMap = {
-    1: ['add', 'subtract', 'word'],
-    2: ['add', 'subtract', 'multiply', 'word'],
-    3: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word'],
-    4: ['add', 'subtract', 'multiply', 'divide', 'mixed'],
-    5: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'mixed'],
-    6: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'percentage', 'mixed']
+    1: ['add', 'subtract', 'word', 'numberFill'],
+    2: ['add', 'subtract', 'multiply', 'word', 'numberFill'],
+    3: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word', 'estimate'],
+    4: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word'],
+    5: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'mixed', 'word', 'equation'],
+    6: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'percentage', 'mixed', 'word', 'equation']
   }
   
   return typeMap[grade] || typeMap[1]

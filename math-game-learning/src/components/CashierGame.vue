@@ -137,6 +137,7 @@ const props = defineProps({
 
 const emit = defineEmits(['complete', 'back'])
 
+const settingsStore = useSettingsStore()
 const problem = ref(null)
 const selectedChange = ref({})
 const timeLeft = ref(60)
@@ -146,7 +147,8 @@ let timer = null
 
 // 初始化游戏
 const initGame = () => {
-  problem.value = generateCashierProblem(props.difficulty)
+  const grade = settingsStore.grade
+  problem.value = generateCashierProblem(props.difficulty, grade)
   selectedChange.value = {}
   isComplete.value = false
   result.value = null
@@ -225,7 +227,6 @@ const submit = () => {
     else if (coinCount <= optimalCount + 2) stars = 2
     
     // 计算奖励（应用难度 coinRatio）
-    const settingsStore = useSettingsStore()
     const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
     const coinRatio = gameConfig.scale.coinRatio || 1.0
     const timeUsed = cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value

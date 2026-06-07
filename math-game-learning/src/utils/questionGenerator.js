@@ -5,6 +5,8 @@
  */
 import { getGradeRange, getGradeOperations } from '../config/grades'
 import { generate as registryGenerate } from '../questions/registry'
+import { gradeQuestionWeights } from '../config/gradeQuestionWeights'
+import { getAvailableTypesForGrade } from '../config/questionTypes'
 
 // 导入所有题型以触发注册
 import '../questions/addition'
@@ -15,6 +17,10 @@ import '../questions/mixed'
 import '../questions/fraction'
 import '../questions/decimal'
 import '../questions/percentage'
+import '../questions/wordProblem'
+import '../questions/numberFill'
+import '../questions/estimate'
+import '../questions/equation'
 
 /**
  * 生成随机数
@@ -24,56 +30,20 @@ function randomInt(min, max) {
 }
 
 /**
- * 生成应用题（1-3 年级特色）
+ * 加权随机选择
+ * 根据权重对象返回一个键，权重越高被选中的概率越大
+ * @param {Object} weights - { type: weight, ... }
+ * @returns {string} 选中的类型键
  */
-function generateWordProblem(grade, range) {
-  const scenarios = [
-    {
-      type: 'add',
-      template: (a, b) => `小明有${a}个苹果，妈妈又给了他${b}个苹果，他现在一共有多少个苹果？`,
-      answer: (a, b) => a + b
-    },
-    {
-      type: 'subtract',
-      template: (a, b) => `小红有${a}颗糖果，她吃了${b}颗，还剩多少颗？`,
-      answer: (a, b) => a - b
-    },
-    {
-      type: 'multiply',
-      template: (a, b) => `每个铅笔盒有${a}支铅笔，有${b}个铅笔盒，一共有多少支铅笔？`,
-      answer: (a, b) => a * b
-    },
-    {
-      type: 'divide',
-      template: (a, b) => `有${a}块饼干，平均分给${b}个小朋友，每个小朋友分到几块？`,
-      answer: (a, b) => a / b
-    }
-  ]
-  
-  // 根据年级选择合适的场景
-  let availableScenarios = scenarios
-  if (grade < 3) {
-    availableScenarios = scenarios.filter(s => s.type === 'add' || s.type === 'subtract')
+function weightedRandom(weights) {
+  const entries = Object.entries(weights)
+  const totalWeight = entries.reduce((sum, [, w]) => sum + w, 0)
+  let random = Math.random() * totalWeight
+  for (const [type, weight] of entries) {
+    random -= weight
+    if (random <= 0) return type
   }
-  
-  const scenario = availableScenarios[randomInt(0, availableScenarios.length - 1)]
-  
-  let a, b
-  if (scenario.type === 'add' || scenario.type === 'subtract') {
-    a = randomInt(range.min, range.max)
-    b = scenario.type === 'subtract' ? randomInt(1, a) : randomInt(range.min, range.max)
-  } else {
-    a = randomInt(2, 10)
-    b = randomInt(2, 10)
-  }
-  
-  return {
-    question: scenario.template(a, b),
-    answer: scenario.answer(a, b),
-    type: 'word',
-    subType: scenario.type,
-    operands: [a, b]
-  }
+  return entries[entries.length - 1][0]
 }
 
 /**
@@ -84,39 +54,48 @@ export function generateQuestion(grade = 1, questionType = 'random') {
   const operations = getGradeOperations(grade)
   
   if (questionType === 'random') {
-    // 根据年级随机选择题目类型
-    const availableTypes = []
-    
-    if (operations.includes('add')) availableTypes.push('add')
-    if (operations.includes('subtract')) availableTypes.push('subtract')
-    if (operations.includes('multiply')) availableTypes.push('multiply')
-    if (operations.includes('divide')) availableTypes.push('divide')
-    if (operations.includes('fraction')) availableTypes.push('fraction')
-    if (operations.includes('decimal')) availableTypes.push('decimal')
-    if (operations.includes('percentage')) availableTypes.push('percentage')
-    
-    // 1-3 年级可以生成应用题
-    if (grade <= 3 && Math.random() < 0.3) {
-      availableTypes.push('word')
+    const gradeWeights = gradeQuestionWeights[grade]
+    if (gradeWeights) {
+      // 使用权重策略选择题型
+      const availableTypes = getAvailableTypesForGrade(grade)
+      const filteredWeights = {}
+      for (const type of availableTypes) {
+        if (gradeWeights[type] !== undefined) {
+          filteredWeights[type] = gradeWeights[type]
+        }
+      }
+      if (Object.keys(filteredWeights).length > 0) {
+        questionType = weightedRandom(filteredWeights)
+      } else {
+        // Fallback: 等概率选择可用题型
+        questionType = availableTypes[randomInt(0, availableTypes.length - 1)]
+      }
+    } else {
+      // Fallback: 权重配置不存在，回退到原有等概率逻辑
+      const availableTypes = []
+      if (operations.includes('add')) availableTypes.push('add')
+      if (operations.includes('subtract')) availableTypes.push('subtract')
+      if (operations.includes('multiply')) availableTypes.push('multiply')
+      if (operations.includes('divide')) availableTypes.push('divide')
+      if (operations.includes('fraction')) availableTypes.push('fraction')
+      if (operations.includes('decimal')) availableTypes.push('decimal')
+      if (operations.includes('percentage')) availableTypes.push('percentage')
+      // 1-3 年级可以生成应用题
+      if (grade <= 3 && Math.random() < 0.3) {
+        availableTypes.push('word')
+      }
+      if (grade >= 3 && operations.includes('multiply') && operations.includes('add')) {
+        availableTypes.push('mixed')
+      }
+      questionType = availableTypes[randomInt(0, availableTypes.length - 1)]
     }
-    
-    if (grade >= 3 && operations.includes('multiply') && operations.includes('add')) {
-      availableTypes.push('mixed')
-    }
-    
-    questionType = availableTypes[randomInt(0, availableTypes.length - 1)]
   }
   
-  let question
-  
-  if (questionType === 'word') {
-    question = generateWordProblem(grade, range)
-  } else {
-    question = registryGenerate(questionType, grade, range)
-    if (!question) {
-      // fallback 到加法
-      question = registryGenerate('add', grade, range)
-    }
+  // 统一走注册表生成题目（word 类型已通过 src/questions/wordProblem.js 注册）
+  let question = registryGenerate(questionType, grade, range)
+  if (!question) {
+    // fallback 到加法
+    question = registryGenerate('add', grade, range)
   }
   question.grade = grade
   question.difficulty = getDifficulty(grade, questionType)
@@ -148,34 +127,61 @@ function generateQuestionId() {
 
 /**
  * 生成一组题目
+ * 当 types 数组不为空时，按权重配置分发题型（而非等概率）；
+ * 为空时由 generateQuestion(grade, 'random') 按全量权重分发。
  */
 export function generateQuestionSet(grade, count = 10, options = {}) {
   const {
     types = [],
     difficulty = 'random'
   } = options
-  
+
+  // --- 确定题型选择策略 ---
+  let pickType
+  if (types.length > 0) {
+    const gradeWeights = gradeQuestionWeights[grade]
+    if (gradeWeights) {
+      // 从 gradeWeights 中过滤出只包含 types 指定且有权重的条目
+      const filteredWeights = {}
+      for (const t of types) {
+        if (gradeWeights[t] !== undefined) {
+          filteredWeights[t] = gradeWeights[t]
+        }
+      }
+      if (Object.keys(filteredWeights).length > 0) {
+        pickType = () => weightedRandom(filteredWeights)
+      } else {
+        // 备选：指定题型都无权重时回退等概率
+        pickType = () => types[randomInt(0, types.length - 1)]
+      }
+    } else {
+      // 年级权重配置不存在时回退等概率
+      pickType = () => types[randomInt(0, types.length - 1)]
+    }
+  } else {
+    // types 为空 → 委托 generateQuestion 使用完整权重
+    pickType = () => 'random'
+  }
+
   const questions = []
-  
+
   for (let i = 0; i < count; i++) {
     let question
     let attempts = 0
-    
+
     do {
-      const type = types.length > 0 
-        ? types[randomInt(0, types.length - 1)] 
-        : 'random'
+      const type = pickType()
       question = generateQuestion(grade, type)
       attempts++
     } while (
-      difficulty !== 'random' && 
-      question.difficulty !== difficulty && 
+      difficulty !== 'random' &&
+      question.difficulty !== difficulty &&
       attempts < 10
     )
-    
+
     questions.push(question)
   }
-  
+
   return questions
 }
 

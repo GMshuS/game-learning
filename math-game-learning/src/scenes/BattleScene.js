@@ -31,6 +31,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     
     this.monster = data.monster || getRandomMonster(data.grade || 1)
+    this.grade = data.grade || 1
     this.streak = data.streak || 0
     this.onBattleEnd = data.onBattleEnd || null
     this.timeLimit = data.timeLimit || 60
@@ -326,8 +327,7 @@ export default class BattleScene extends Phaser.Scene {
    * 生成题目
    */
   generateQuestion() {
-    const grade = Math.ceil(this.monster.difficulty / 2)
-    const q = generateQuestion(grade, 'random')
+    const q = generateQuestion(this.grade, 'random')
     
     const answer = Number(q.answer)
     const options = new Set([answer])
@@ -335,7 +335,7 @@ export default class BattleScene extends Phaser.Scene {
     let attempts = 0
     while (options.size < 4 && attempts < 100) {
       const offset = Math.floor(Math.random() * 20) - 10
-      const wrong = answer + offset
+      const wrong = Math.max(0, answer + offset)
       if (wrong !== answer) {
         options.add(wrong)
       }

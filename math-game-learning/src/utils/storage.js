@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'math_game_notifications'
 }
 
-const VERSION = '2.0.0'
+const VERSION = '3.0.0'
 
 class StorageManager {
   constructor() {

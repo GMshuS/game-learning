@@ -239,7 +239,7 @@ const updateSetting = (key, value) => {
 }
 
 const resetSettings = () => {
-  localSettings.value = {
+  const defaults = {
     sound: true,
     music: true,
     musicVolume: 50,
@@ -249,7 +249,14 @@ const resetSettings = () => {
     language: 'zh-CN',
     showTutorial: true
   }
+  localSettings.value = { ...defaults }
   emit('update', { ...localSettings.value })
+  // 显式持久化到 localStorage，不依赖父组件转发
+  Object.entries(defaults).forEach(([key, value]) => {
+    // musicVolume/soundVolume 组件中存 0-100，store 存 0-1
+    const storeValue = (key === 'musicVolume' || key === 'soundVolume') ? value / 100 : value
+    settingsStore.updateSetting(key, storeValue)
+  })
 }
 </script>
 
@@ -393,6 +400,18 @@ const resetSettings = () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.setting-item select:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.setting-item select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
 }
 
 .setting-item select option {
@@ -456,6 +475,8 @@ const resetSettings = () => {
 .difficulty-card.selected {
   border-color: #667eea;
   background: rgba(102, 126, 234, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
 .difficulty-icon {

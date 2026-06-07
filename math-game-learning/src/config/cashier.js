@@ -32,19 +32,42 @@ export const cashierConfig = {
       timeLimit: 60,
       items: 3
     }
+  },
+
+  // 年级自适应配置
+  gradeAdaptation: {
+    1: { maxTotal: 20, maxDenomination: 10, items: 1 },
+    2: { maxTotal: 50, maxDenomination: 20, items: 1 },
+    3: { maxTotal: 100, maxDenomination: 50, items: 2 },
+    4: { maxTotal: 100, maxDenomination: 100, items: 2 },
+    5: { maxTotal: 200, maxDenomination: 100, items: 3 },
+    6: { maxTotal: 500, maxDenomination: 100, items: 3 }
   }
 }
 
 /**
  * 生成收银题目
+ * @param {string} difficulty - 难度标识 ('easy' | 'medium' | 'hard')
+ * @param {number} grade - 年级 (1-6)，可选，用于年级自适应
  */
-export function generateCashierProblem(difficulty = 'easy') {
-  const config = cashierConfig.difficulties[difficulty]
+export function generateCashierProblem(difficulty = 'easy', grade) {
+  const baseConfig = cashierConfig.difficulties[difficulty]
+  const adaptation = grade ? cashierConfig.gradeAdaptation[grade] : null
+  
+  // 合并年级自适应配置与基础难度配置
+  const config = {
+    items: adaptation ? adaptation.items : baseConfig.items,
+    maxTotal: adaptation ? adaptation.maxTotal : baseConfig.maxTotal,
+    maxDenomination: adaptation ? adaptation.maxDenomination : null,
+    timeLimit: baseConfig.timeLimit
+  }
+  
   const items = []
   
   // 生成商品
   for (let i = 0; i < config.items; i++) {
-    const price = Math.floor(Math.random() * (config.maxTotal / config.items)) + 1
+    const maxPrice = Math.floor(config.maxTotal / config.items)
+    const price = Math.floor(Math.random() * maxPrice) + 1
     const quantity = Math.floor(Math.random() * 3) + 1
     items.push({
       name: generateItemName(),
@@ -56,14 +79,20 @@ export function generateCashierProblem(difficulty = 'easy') {
   // 计算总价
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   
+  // 根据年级自适应过滤可用面额
+  let availableDenominations = cashierConfig.denominations
+  if (config.maxDenomination) {
+    availableDenominations = cashierConfig.denominations.filter(d => d.value <= config.maxDenomination)
+  }
+  
   // 生成顾客支付金额（总是大于总价）
   const minPayment = total
-  const paymentOptions = cashierConfig.denominations
+  const paymentOptions = availableDenominations
     .filter(d => d.value >= minPayment)
     .map(d => d.value)
   
   // 添加一些组合支付
-  for (const d of cashierConfig.denominations) {
+  for (const d of availableDenominations) {
     const multiple = Math.ceil(minPayment / d.value) * d.value
     if (multiple >= minPayment && !paymentOptions.includes(multiple)) {
       paymentOptions.push(multiple)
@@ -78,7 +107,8 @@ export function generateCashierProblem(difficulty = 'easy') {
     total,
     payment,
     change,
-    difficulty
+    difficulty,
+    grade
   }
 }
 
