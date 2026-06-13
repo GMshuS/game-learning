@@ -1,0 +1,24 @@
+问题来源: 速算竞技场模式 Bug
+- 闪电抢答模式答完一题即结束
+- 生存模式显示3条命但实际红心数量不匹配
+
+问题原因:
+1. speedChallengeStore.js 中 updateAI() 将 aiAnswerTime(秒) 误作毫秒计算: 1000/aiTime → 应为 1/aiTime，导致 AI 进度单次跳跃 100~250%，答完第一题游戏即强制结束
+2. startGame() 为生存模式错误叠加了 difficultyScale.speedLivesBonus(简单+1)，导致 4 条命而非 3 条
+3. SpeedChallenge.vue 硬编码 3 计算已损耗命数，与实际 lives 不匹配
+
+修改说明:
+- speedChallengeStore.js: 修复 AI 速度计算(1000/aiTime → 1/aiTime)
+- speedChallengeStore.js: 生存模式固定使用 config.lives(3 条命)，不再加难度加成
+- speedChallengeStore.js: 新增 maxLives 状态追踪初始生命值
+- SpeedChallenge.vue: 黑心数量改用 store.maxLives - store.lives 动态计算
+
+测试建议:
+1. 进入闪电抢答模式，验证 AI 进度不再瞬间满格，可正常多轮答题
+2. 分别用简单/普通/困难三种难度测试生存模式，应始终显示 3 条命(3 颗红心)
+3. 答错扣命，验证红心减少、黑心增加
+4. 命耗尽后验证游戏正常结束
+---
+修改文件列表:
+- src/store/speedChallengeStore.js
+- src/components/SpeedChallenge.vue

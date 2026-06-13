@@ -85,31 +85,56 @@ export function generateCashierProblem(difficulty = 'easy', grade) {
     availableDenominations = cashierConfig.denominations.filter(d => d.value <= config.maxDenomination)
   }
   
-  // 生成顾客支付金额（总是大于总价）
-  const minPayment = total
-  const paymentOptions = availableDenominations
-    .filter(d => d.value >= minPayment)
-    .map(d => d.value)
+  // 生成顾客付款的钞票组合（真实面额）
+  const paymentInfo = generatePaymentBills(total, grade || 1)
   
-  // 添加一些组合支付
-  for (const d of availableDenominations) {
-    const multiple = Math.ceil(minPayment / d.value) * d.value
-    if (multiple >= minPayment && !paymentOptions.includes(multiple)) {
-      paymentOptions.push(multiple)
-    }
-  }
-  
-  const payment = paymentOptions[Math.floor(Math.random() * paymentOptions.length)] || minPayment
-  const change = payment - total
+  const change = paymentInfo.payment - total
   
   return {
     items,
     total,
-    payment,
+    payment: paymentInfo.payment,
+    paymentBills: paymentInfo.bills,
     change,
+    availableDenominations,
     difficulty,
     grade
   }
+}
+
+/**
+ * 生成顾客付款的钞票组合
+ * 用真实面额生成1-3张钞票，模拟真实付钱场景
+ */
+export function generatePaymentBills(total, grade) {
+  const allDenoms = [100, 50, 20, 10, 5, 1]
+
+  let maxBills = 3
+  if (grade <= 2) maxBills = 2
+  if (grade === 1) maxBills = 1
+
+  const counts = {}
+  let sum = 0
+  let billCount = 0
+
+  while (sum < total && billCount < maxBills) {
+    const remaining = maxBills - billCount
+    const needed = total - sum
+    const suitable = allDenoms.filter(v => v >= Math.ceil(needed / remaining))
+    const pool = suitable.length > 0 ? suitable : allDenoms
+    const bill = pool[Math.floor(Math.random() * pool.length)]
+    counts[bill] = (counts[bill] || 0) + 1
+    sum += bill
+    billCount++
+    if (sum >= total) break
+  }
+
+  while (sum < total) {
+    counts[1] = (counts[1] || 0) + 1
+    sum += 1
+  }
+
+  return { bills: counts, payment: sum }
 }
 
 /**

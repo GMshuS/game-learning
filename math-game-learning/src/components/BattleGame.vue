@@ -25,6 +25,7 @@ import Phaser from 'phaser'
 import BattleScene from '../scenes/BattleScene'
 import { getRandomMonster } from '../config/monsters'
 import GameTutorial from './GameTutorial.vue'
+import { useInventoryStore } from '../store/inventoryStore'
 
 const showTutorial = ref(false)
 
@@ -88,12 +89,17 @@ const props = defineProps({
 
 const emit = defineEmits(['battleEnd', 'back'])
 
+const inventoryStore = useInventoryStore()
+
 const gameContainer = ref(null)
 let game = null
 
 onMounted(() => {
   if (gameContainer.value) {
     const monster = props.monster || getRandomMonster(props.grade)
+    
+    // 从 inventoryStore 读取已装备的战斗道具
+    const battleItems = inventoryStore.getEquippedBattleItems
     
     const config = {
       type: Phaser.AUTO,
@@ -116,8 +122,12 @@ onMounted(() => {
       grade: props.grade,
       streak: props.streak,
       difficultyScale: props.difficultyScale,
+      battleItems,
       onBattleEnd: (battleResult) => {
         emit('battleEnd', battleResult)
+      },
+      onItemUsed: (itemId) => {
+        inventoryStore.consumeBattleItem(itemId)
       }
     })
   }

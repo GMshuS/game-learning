@@ -18,7 +18,8 @@ export const useAchievementStore = defineStore('achievement', {
       equipment: 0,
       areasUnlocked: 0,
       currentStreak: 0,
-      bestStreak: 0
+      bestStreak: 0,
+      collectibles: 0
     },
     notifications: [],   // 成就解锁通知
     totalRewards: {
@@ -116,6 +117,8 @@ export const useAchievementStore = defineStore('achievement', {
           currentValue = this.stats.equipment
         } else if (req.type === 'areas_unlocked') {
           currentValue = this.stats.areasUnlocked
+        } else if (req.type === 'collectibles') {
+          currentValue = this.stats.collectibles || 0
         } else {
           currentValue = this.progress[req.type] || 0
         }
@@ -222,7 +225,8 @@ export const useAchievementStore = defineStore('achievement', {
         equipment: 0,
         areasUnlocked: 0,
         currentStreak: 0,
-        bestStreak: 0
+        bestStreak: 0,
+        collectibles: 0
       }
       this.notifications = []
       this.totalRewards = {

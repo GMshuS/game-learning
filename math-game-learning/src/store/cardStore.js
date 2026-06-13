@@ -12,7 +12,8 @@ export const useCardStore = defineStore('card', {
     collection: [], // { cardId, quantity }
     deck: [], // cardId[]
     // 对战状态
-    battle: null // { playerHP, aiHP, playerHand, aiHand, playerDeck, aiDeck, turn, phase }
+    battle: null, // { playerHP, aiHP, playerHand, aiHand, playerDeck, aiDeck, turn, phase }
+    _aiTimer: null  // AI 行动定时器 ID（非响应式清理用）
   }),
 
   getters: {
@@ -138,6 +139,12 @@ export const useCardStore = defineStore('card', {
      */
     startBattle(difficulty = 'normal') {
       if (!this.deckValid) return false
+
+      // 清理残留的 AI 定时器
+      if (this._aiTimer) {
+        clearTimeout(this._aiTimer)
+        this._aiTimer = null
+      }
 
       const settingsStore = useSettingsStore()
       const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
@@ -369,7 +376,12 @@ export const useCardStore = defineStore('card', {
       if (this.battle.turn === 'player') {
         this.battle.turn = 'ai'
         this.battle.phase = 'ai_turn'
-        setTimeout(() => this.aiTurn(), 800)
+        // 清理旧定时器，存储新定时器 ID 以便组件卸载时清理
+        if (this._aiTimer) clearTimeout(this._aiTimer)
+        this._aiTimer = setTimeout(() => {
+          this._aiTimer = null
+          this.aiTurn()
+        }, 800)
       }
     },
 
@@ -396,6 +408,12 @@ export const useCardStore = defineStore('card', {
      * 对战结束
      */
     onBattleEnd(winner) {
+      // 清理 AI 定时器
+      if (this._aiTimer) {
+        clearTimeout(this._aiTimer)
+        this._aiTimer = null
+      }
+
       const gameStore = useGameStore()
       const settingsStore = useSettingsStore()
       const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)

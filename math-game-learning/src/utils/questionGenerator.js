@@ -2,6 +2,9 @@
  * 数学题目生成器
  * 支持加减乘除、分数、小数、百分比等运算
  * 题型生成逻辑委托给 src/questions/ 下的独立模块，通过注册表管理
+ *
+ * ⚠️ 功能重叠提示：本模块与 src/utils/questionBank.js 均包含题目生成逻辑。
+ *    建议长期统一入口，将 questionBank.js 的独立生成逻辑迁移到注册表模式中。
  */
 import { getGradeRange, getGradeOperations } from '../config/grades'
 import { generate as registryGenerate } from '../questions/registry'
@@ -122,7 +125,7 @@ function getDifficulty(grade, type) {
  * 生成题目 ID
  */
 function generateQuestionId() {
-  return 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+  return 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11)
 }
 
 /**

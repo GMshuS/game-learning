@@ -18,6 +18,7 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
     correctCount: 0,
     wrongCount: 0,
     lives: 3,
+    maxLives: 3, // 生存模式初始生命值（用于 UI 渲染黑心）
     aiProgress: 0, // 闪电模式 AI 进度
     currentQuestion: null,
     difficultyScale: null,
@@ -25,7 +26,7 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
   }),
 
   getters: {
-    comboMultiplier: (state) => 1 + state.combo * speedChallengeConfig.modes[state.currentMode]?.comboBonus || 0,
+    comboMultiplier: (state) => 1 + state.combo * (speedChallengeConfig.modes[state.currentMode]?.comboBonus ?? 0),
     modeConfig: (state) => speedChallengeConfig.modes[state.currentMode] || null
   },
 
@@ -57,7 +58,8 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
         this.timeLeft = config.duration
         this.resetAI()
       } else if (mode === 'survival') {
-        this.lives = config.lives + (this.difficultyScale?.speedLivesBonus || 0)
+        this.lives = config.lives // 固定 3 条命，不受难度加成影响
+        this.maxLives = this.lives // 保存初始生命值用于 UI 渲染
         this.timeLeft = 0 // 生存模式无倒计时
       }
 
@@ -161,7 +163,7 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
     updateAI() {
       const config = this.modeConfig
       const aiTime = config.aiAnswerTime.min + Math.random() * (config.aiAnswerTime.max - config.aiAnswerTime.min)
-      const aiSpeed = 1000 / aiTime // 每秒答题数
+      const aiSpeed = 1 / aiTime // 每秒答题数（aiTime 单位是秒）
       const speedRatio = this.difficultyScale?.speedAISpeedRatio || 1.0
       this.aiProgress += aiSpeed * 0.5 * speedRatio // 玩家每次答题 AI 也前进
     },

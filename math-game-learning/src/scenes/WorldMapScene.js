@@ -34,9 +34,6 @@ export default class WorldMapScene extends Phaser.Scene {
     // 创建世界地图节点
     this.createMapNodes(width, height)
     
-    // 添加返回按钮
-    this.createBackButton(width, height)
-    
     // 添加说明文字
     this.createHintText(width, height)
   }
@@ -167,27 +164,6 @@ export default class WorldMapScene extends Phaser.Scene {
         isUnlocked,
         isCurrent
       })
-    })
-  }
-
-  /**
-   * 创建返回按钮
-   */
-  createBackButton(width, height) {
-    const bg = this.add.circle(width - 80, height - 50, 40, 0x667eea)
-    bg.setStrokeStyle(2, 0xffffff)
-    
-    const icon = this.add.text(width - 80, height - 50, '←', {
-      font: 'bold 24px Arial',
-      color: '#ffffff'
-    }).setOrigin(0.5)
-    
-    bg.setInteractive({ useHandCursor: true })
-    
-    bg.on('pointerover', () => bg.setScale(1.1))
-    bg.on('pointerout', () => bg.setScale(1))
-    bg.on('pointerdown', () => {
-      this.scene.stop('WorldMapScene')
     })
   }
 

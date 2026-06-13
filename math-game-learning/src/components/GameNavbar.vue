@@ -19,6 +19,9 @@
         <span class="coin-icon">💰</span>
         <span class="coin-amount">{{ playerCoins }}</span>
       </div>
+      <button class="btn-backpack" @click="openInventory" title="背包">
+        🎒
+      </button>
       <button class="btn-settings" @click="openSettings" title="设置">
         ⚙️
       </button>
@@ -48,14 +51,16 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['navigate', 'openMenu', 'openSettings'])
+const emit = defineEmits(['navigate', 'openMenu', 'openSettings', 'openInventory'])
 
 const modeLabels = {
   menu: '主菜单',
   adventure: '冒险模式',
   shop: '经营商店',
   battle: '战斗中',
-  cashier: '收银游戏'
+  cashier: '收银游戏',
+  challenge_center: '挑战中心',
+  inventory: '背包'
 }
 
 const currentModeLabel = computed(() => {
@@ -72,6 +77,10 @@ const openMenu = () => {
 
 const openSettings = () => {
   emit('openSettings')
+}
+
+const openInventory = () => {
+  emit('openInventory')
 }
 </script>
 
@@ -150,6 +159,25 @@ const openSettings = () => {
 
 .coin-icon {
   font-size: 1.1rem;
+}
+
+.btn-backpack {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-backpack:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .btn-settings {

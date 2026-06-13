@@ -52,15 +52,11 @@ export const useSettingsStore = defineStore('settings', {
         this.music = settings.music ?? true
         // 规范化音量值：确保在 0-1 范围内
         let musicVol = settings.musicVolume ?? 0.5
-        console.log('Loaded musicVolume from storage:', musicVol)
         while (musicVol > 1) musicVol = musicVol / 100
         this.musicVolume = Math.max(0, Math.min(1, musicVol))
-        console.log('Normalized musicVolume:', this.musicVolume)
         let soundVol = settings.soundVolume ?? 0.7
-        console.log('Loaded soundVolume from storage:', soundVol)
         while (soundVol > 1) soundVol = soundVol / 100
         this.soundVolume = Math.max(0, Math.min(1, soundVol))
-        console.log('Normalized soundVolume:', this.soundVolume)
         this.difficulty = settings.difficulty ?? 'normal'
         this.grade = settings.grade ?? 1
         this.language = settings.language ?? 'zh-CN'

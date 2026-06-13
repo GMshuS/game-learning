@@ -1,0 +1,24 @@
+🐛 fix(shop): 点击"下一位"按钮直接生成新顾客，不再返回空状态
+
+问题来源：
+  玩家反馈 - 文具商店结算后点击"下一位"回到空状态，需再次点击"来一位顾客"
+
+问题原因：
+  "下一位"按钮点击时直接调用 shopStore.clearCustomer() 仅清空数据，
+  未生成新顾客，导致界面退回空状态。
+
+修改说明：
+  1. ShopView.vue: "下一位"按钮的点击处理从 shopStore.clearCustomer()
+     改为调用 inviteCustomer()，自动生成下一位顾客和题目
+  2. shopStore.js: generateCustomer() 开头增加 _paidAmount/_change
+     清理，防止年级切换时高年级找零字段残留导致异常
+
+测试建议：
+  1. 在文具商店答题（正确/错误均可），确认底部出现"下一位"按钮
+  2. 点击"下一位"，确认直接出现新顾客和新题目，无需再次点击"来一位顾客"
+  3. 切换年级（1-6年级）后继续答题，确认各年级题目正常
+
+---
+修改文件列表:
+src/components/ShopView.vue
+src/store/shopStore.js

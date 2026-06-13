@@ -122,20 +122,6 @@ export const useGameStore = defineStore('game', {
     },
 
     /**
-     * 保存游戏
-     */
-    async saveGame() {
-      if (this.player && this.progress && this.inventory && this.settings) {
-        storageManager.saveGame(
-          this.player,
-          this.progress,
-          this.inventory,
-          this.settings
-        )
-      }
-    },
-
-    /**
      * 设置当前游戏模式
      */
     setGameMode(mode) {

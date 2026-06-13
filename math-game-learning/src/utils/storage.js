@@ -148,29 +148,38 @@ class StorageManager {
    * 保存完整游戏存档
    */
   saveGame(player, progress, inventory, settings, extraData = {}) {
-    this.savePlayer(player)
-    this.saveProgress(progress)
-    this.saveInventory(inventory)
-    this.saveSettings(settings)
-    
-    // 保存新增玩法数据
-    if (extraData.speedChallenge) {
-      localStorage.setItem(STORAGE_KEYS.SPEED_CHALLENGE, JSON.stringify(extraData.speedChallenge))
+    try {
+      this.savePlayer(player)
+      this.saveProgress(progress)
+      this.saveInventory(inventory)
+      this.saveSettings(settings)
+      
+      // 保存新增玩法数据
+      if (extraData.speedChallenge) {
+        localStorage.setItem(STORAGE_KEYS.SPEED_CHALLENGE, JSON.stringify(extraData.speedChallenge))
+      }
+      if (extraData.workshop) {
+        localStorage.setItem(STORAGE_KEYS.WORKSHOP, JSON.stringify(extraData.workshop))
+      }
+      if (extraData.cardBattle) {
+        localStorage.setItem(STORAGE_KEYS.CARD_BATTLE, JSON.stringify(extraData.cardBattle))
+      }
+      if (extraData.leaderboard) {
+        localStorage.setItem(STORAGE_KEYS.LEADERBOARD, JSON.stringify(extraData.leaderboard))
+      }
+      if (extraData.notifications) {
+        localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(extraData.notifications))
+      }
+      
+      this.updateVersion()
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        console.warn('localStorage 容量不足，请清理数据或导出存档。', e)
+        // 不中断程序，静默失败
+      } else {
+        throw e
+      }
     }
-    if (extraData.workshop) {
-      localStorage.setItem(STORAGE_KEYS.WORKSHOP, JSON.stringify(extraData.workshop))
-    }
-    if (extraData.cardBattle) {
-      localStorage.setItem(STORAGE_KEYS.CARD_BATTLE, JSON.stringify(extraData.cardBattle))
-    }
-    if (extraData.leaderboard) {
-      localStorage.setItem(STORAGE_KEYS.LEADERBOARD, JSON.stringify(extraData.leaderboard))
-    }
-    if (extraData.notifications) {
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(extraData.notifications))
-    }
-    
-    this.updateVersion()
   }
 
   /**

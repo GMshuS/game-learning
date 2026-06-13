@@ -16,6 +16,7 @@
       @navigate="goBack"
       @openMenu="goToMenu"
       @openSettings="openSettings"
+      @openInventory="openInventoryFromNavbar"
     />
 
     <!-- 主内容区 -->
@@ -72,6 +73,20 @@
         @back="goBack"
       />
 
+      <!-- 背包视图 -->
+      <InventoryView
+        v-if="currentView === 'inventory'"
+        @back="goBack"
+        @openBattlePrepare="openBattlePrepareFromInventory"
+      />
+
+      <!-- 战斗准备 -->
+      <BattlePrepare
+        v-if="currentView === 'battlePrepare'"
+        @back="goBack"
+        @startBattle="onBattlePrepareStart"
+      />
+
       <!-- 收银游戏 -->
       <CashierGame
         v-if="currentView === 'cashier'"
@@ -82,9 +97,9 @@
       <!-- 成就视图 -->
       <AchievementView
         v-show="showAchievements"
-        :unlockedAchievements="[]"
-        :totalRewards="{ coins: 0, exp: 0 }"
-        :completionRate="0"
+        :unlockedAchievements="achievementStore.unlockedAchievements"
+        :totalRewards="achievementStore.totalRewards"
+        :completionRate="achievementStore.completionRate"
         @close="closeAchievements"
       />
 
@@ -174,7 +189,9 @@ import { useSaveDataStore } from '../store/saveDataStore'
 import { useQuestionStore } from '../store/questionStore'
 import { useWorkshopStore } from '../store/workshopStore'
 import { useCardStore } from '../store/cardStore'
+import { useInventoryStore } from '../store/inventoryStore'
 import storageManager from '../utils/storage'
+import audioManager from '../utils/audioManager'
 import adventureConfig from '../config/adventure'
 import { getGameConfig } from '../utils/gameContext'
 
@@ -196,6 +213,8 @@ import CardCollection from './CardCollection.vue'
 import CardPack from './CardPack.vue'
 import Leaderboard from './Leaderboard.vue'
 import LevelSelect from './LevelSelect.vue'
+import InventoryView from './InventoryView.vue'
+import BattlePrepare from './BattlePrepare.vue'
 
 const gameStore = useGameStore()
 const audioStore = useAudioStore()
@@ -210,6 +229,7 @@ const saveDataStore = useSaveDataStore()
 const questionStore = useQuestionStore()
 const workshopStore = useWorkshopStore()
 const cardStore = useCardStore()
+const inventoryStore = useInventoryStore()
 
 const currentView = ref('menu')
 const previousView = ref(null)
@@ -219,6 +239,7 @@ const unlockedAreas = ref(['area_1'])
 const currentAreaId = ref('area_1')
 const selectedArea = ref(null)
 const selectedLevel = ref(null)
+const equippedBattleItems = ref([])
 
 // 战斗数据（用于传递给 BattleGame）
 const battlePlayer = computed(() => ({
@@ -265,11 +286,14 @@ const playerInfo = computed(() => ({
 
 // 当前模式
 const currentMode = computed(() => {
-  if (currentView.value === 'adventure' || currentView.value === 'battle' || currentView.value === 'levelSelect') {
+  if (currentView.value === 'adventure' || currentView.value === 'battle' || currentView.value === 'levelSelect' || currentView.value === 'battlePrepare') {
     return 'adventure'
   }
   if (currentView.value === 'shop') {
     return 'shop'
+  }
+  if (currentView.value === 'inventory') {
+    return 'inventory'
   }
   if (currentView.value === 'cashier') {
     return 'cashier'
@@ -300,17 +324,10 @@ const handleBuy = ({ items, total }) => {
     return
   }
   
-  // 添加所有物品到库存
-  if (gameStore.inventory) {
-    items.forEach(({ product, quantity }) => {
-      gameStore.inventory.addItem({
-        id: product.id,
-        name: product.name,
-        icon: product.icon,
-        quantity: quantity
-      })
-    })
-  }
+  // 使用 inventoryStore 添加物品到背包
+  items.forEach(({ product, quantity }) => {
+    inventoryStore.addItem(product, quantity)
+  })
   
   // 保存游戏
   gameStore.saveGame()
@@ -329,19 +346,50 @@ const showLevelSelect = (area) => {
   currentView.value = 'levelSelect'
 }
 
-// 从关卡选择进入战斗
+// 从关卡选择进入战斗（先进入战斗准备界面）
 const onLevelSelect = ({ area, level }) => {
   selectedLevel.value = level
-  startBattle(area, level)
+  selectedArea.value = area
+  previousView.value = currentView.value
+  currentView.value = 'battlePrepare'
+}
+
+// 从战斗准备界面进入战斗
+const onBattlePrepareStart = () => {
+  if (!selectedArea.value || !selectedLevel.value) {
+    alert('请先从冒险模式选择关卡')
+    return
+  }
+  startBattle(selectedArea.value, selectedLevel.value)
+}
+
+// 从导航栏打开背包
+const openInventoryFromNavbar = () => {
+  previousView.value = currentView.value
+  currentView.value = 'inventory'
+}
+
+// 从背包视图打开战斗准备
+const openBattlePrepareFromInventory = () => {
+  previousView.value = currentView.value
+  currentView.value = 'battlePrepare'
 }
 
 // 开始战斗
+
+// 怪物平衡参数
+const MONSTER_BASE_HP = 20        // 基础血量
+const MONSTER_HP_PER_LEVEL = 5    // 每级血量增量
+const MONSTER_BASE_ATTACK = 5     // 基础攻击
+const MONSTER_ATTACK_PER_LEVEL = 2 // 每级攻击增量
+const MONSTER_MAX_DIFFICULTY = 5  // 最大怪物难度等级
+
 const startBattle = (area, level) => {
   previousView.value = currentView.value
   
   // 根据区域和关卡计算怪物和年级
   const grade = area.gradeRange[0]
-  const monsterDifficulty = Math.min(5, Math.ceil(level.number / 2))
+  const monsterDifficulty = Math.min(MONSTER_MAX_DIFFICULTY, Math.ceil(level.number / 2))
   
   // 从配置中获取怪物
   const monsters = adventureConfig.monsters
@@ -349,15 +397,17 @@ const startBattle = (area, level) => {
   const baseMonster = monsters[monsterIndex]
   
   // 根据关卡调整怪物血量
+  const baseHp = MONSTER_BASE_HP + level.number * MONSTER_HP_PER_LEVEL
+  const baseAttack = MONSTER_BASE_ATTACK + level.number * MONSTER_ATTACK_PER_LEVEL
   battleMonster.value = {
     ...baseMonster,
-    hp: 20 + level.number * 5,
-    currentHp: 20 + level.number * 5,
-    attack: 5 + level.number * 2,
+    hp: baseHp,
+    currentHp: baseHp,
+    attack: baseAttack,
     defense: Math.max(1, Math.floor(level.number / 3)),
     difficulty: monsterDifficulty,
     color: area.color,
-    maxHp: 20 + level.number * 5,
+    maxHp: baseHp,
     icon: baseMonster.id === 'slime' ? '🟢' : baseMonster.id === 'goblin' ? '👺' : baseMonster.id === 'orc' ? '👹' : '🐉'
   }
   
@@ -367,9 +417,9 @@ const startBattle = (area, level) => {
 
   battleMonster.value = {
     ...battleMonster.value,
-    hp: Math.floor((20 + level.number * 5) * scale.monsterHpRatio),
-    currentHp: Math.floor((20 + level.number * 5) * scale.monsterHpRatio),
-    attack: Math.floor((5 + level.number * 2) * scale.monsterAttackRatio)
+    hp: Math.floor(baseHp * scale.monsterHpRatio),
+    currentHp: Math.floor(baseHp * scale.monsterHpRatio),
+    attack: Math.floor(baseAttack * scale.monsterAttackRatio)
   }
   battleDifficultyScale.value = scale
   
@@ -428,11 +478,36 @@ const goToMenu = () => {
 // 更新设置
 const updateSettings = (newSettings) => {
   Object.entries(newSettings).forEach(([key, value]) => {
-    // 转换音量值
+    // 转换音量值（UI 显示 0-100，store 存 0-1）
     if ((key === 'musicVolume' || key === 'soundVolume') && typeof value === 'number') {
       value = value / 100
     }
+    // 先更新 store 持久化
     settingsStore.updateSetting(key, value)
+
+    // 同步到音频播放系统
+    switch (key) {
+      case 'musicVolume':
+        audioStore.setBgmVolume(value)
+        break
+      case 'soundVolume':
+        audioStore.setSfxVolume(value)
+        break
+      case 'music':
+        if (value) {
+          if (!audioManager.bgmEnabled) audioManager.toggleBgm()
+        } else {
+          if (audioManager.bgmEnabled) audioManager.toggleBgm()
+        }
+        break
+      case 'sound':
+        if (value) {
+          if (!audioManager.sfxEnabled) audioManager.toggleSfx()
+        } else {
+          if (audioManager.sfxEnabled) audioManager.toggleSfx()
+        }
+        break
+    }
   })
 }
 
@@ -495,6 +570,20 @@ const handleImport = () => {
       // 验证数据格式
       if (!importData.version || !importData.settings) {
         throw new Error('无效的数据文件格式')
+      }
+
+      // 字段类型校验（防止恶意构造的 JSON）
+      if (typeof importData.version !== 'string') {
+        throw new Error('数据版本格式不正确')
+      }
+      if (importData.settings && typeof importData.settings !== 'object') {
+        throw new Error('设置数据格式不正确')
+      }
+      if (importData.player && typeof importData.player !== 'object') {
+        throw new Error('玩家数据格式不正确')
+      }
+      if (importData.progress && typeof importData.progress !== 'object') {
+        throw new Error('进度数据格式不正确')
       }
       
       // 导入设置
@@ -572,6 +661,7 @@ const handleReset = () => {
       questionStore.$reset()
       workshopStore.$reset()
       cardStore.$reset()
+      inventoryStore.$reset()
 
       alert('游戏进度已重置！页面将刷新。')
       location.reload()
@@ -650,6 +740,7 @@ const startCashierFromHall = () => {
 // 导航到速算竞技
 const startSpeedChallenge = () => {
   previousView.value = currentView.value
+  speedChallengeStore.$reset()
   currentView.value = 'speedChallenge'
 }
 
@@ -683,14 +774,10 @@ const openLeaderboard = () => {
   currentView.value = 'leaderboard'
 }
 
-// 速算结束处理
+// 速算结束处理（奖励发放已在 store.endGame() 中完成）
+// 不调用 goBack()，让 SpeedChallenge 组件展示结算界面
 const onChallengeEnd = (result) => {
-  if (result.rewards) {
-    if (result.rewards.coins) gameStore.addCoins(result.rewards.coins)
-    if (result.rewards.gems) gameStore.addGems(result.rewards.gems)
-    if (result.rewards.exp) gameStore.addExp(result.rewards.exp)
-  }
-  goBack()
+  // 结算结果已由 store.endGame() 处理，无需额外操作
 }
 
 // 卡牌对战结束处理
@@ -720,6 +807,12 @@ onMounted(async () => {
   
   audioStore.init()
   settingsStore.loadSettings()
+  
+  // 同步已持久化的设置到音频系统
+  audioStore.setBgmVolume(settingsStore.musicVolume)
+  audioStore.setSfxVolume(settingsStore.soundVolume)
+  if (!settingsStore.music && audioManager.bgmEnabled) audioManager.toggleBgm()
+  if (!settingsStore.sound && audioManager.sfxEnabled) audioManager.toggleSfx()
   
   // 播放主菜单音乐
   audioStore.playBgm('main')

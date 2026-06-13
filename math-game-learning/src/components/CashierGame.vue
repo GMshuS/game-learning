@@ -16,7 +16,11 @@
         <div class="customer-info">
           <span class="customer-avatar">👤</span>
           <div class="customer-text">
-            <p class="customer-statement">我买了这些东西，一共 {{ formatPrice(problem.total) }} 元，给你 {{ formatPrice(problem.payment) }} 元</p>
+            <p class="customer-statement">
+              我买了这些东西，一共 {{ formatPrice(problem.total) }} 元，
+              我给你 <span class="bill-list">{{ formatBills(problem.paymentBills) }}</span>，
+              你算算该找我多少钱？
+            </p>
           </div>
         </div>
         <div class="transaction-info">
@@ -26,11 +30,10 @@
           </div>
           <div class="transaction-row">
             <span>实收：</span>
-            <span class="amount paid">💵 ¥{{ formatPrice(problem.payment) }}</span>
-          </div>
-          <div class="transaction-row highlight">
-            <span>应找：</span>
-            <span class="amount change">💰 ¥{{ formatPrice(problem.change) }}</span>
+            <span class="amount paid">
+              💵 ¥{{ formatPrice(problem.payment) }}
+              <span class="bill-breakdown">（{{ formatBills(problem.paymentBills) }}）</span>
+            </span>
           </div>
         </div>
       </div>
@@ -40,7 +43,7 @@
         <h3>选择找零货币</h3>
         <div class="currency-grid">
           <div
-            v-for="denom in cashierConfig.denominations"
+            v-for="denom in (problem.availableDenominations || cashierConfig.denominations)"
             :key="denom.value"
             class="currency-option"
             @click="addCoin(denom.value)"
@@ -78,8 +81,6 @@
           当前总额：<span :class="{ correct: currentTotal === problem?.change, incorrect: currentTotal > problem?.change }">
             ¥{{ formatPrice(currentTotal) }}
           </span>
-          <span v-if="remainingChange > 0" class="remaining">还需：¥{{ formatPrice(remainingChange) }}</span>
-          <span v-else-if="remainingChange < 0" class="overpaid text-red">多了：¥{{ formatPrice(-remainingChange) }}</span>
         </div>
       </div>
 
@@ -106,7 +107,8 @@
       
       <div v-else-if="result.status === 'wrong'" class="result-details">
         <p class="text-red">找零金额不正确</p>
-        <p v-if="result.difference">差额：¥{{ absValue(result.difference) }}</p>
+        <p v-if="result.problem">应收 ¥{{ formatPrice(result.problem.total) }}，实收 ¥{{ formatPrice(result.problem.payment) }}，应找 ¥{{ formatPrice(result.problem.change) }}</p>
+        <p v-if="result.difference">你的找零差额：¥{{ absValue(result.difference) }}</p>
       </div>
 
       <div class="result-actions">
@@ -118,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import {
   cashierConfig,
   generateCashierProblem,
@@ -278,6 +280,15 @@ const getDenomination = (value) => {
   return cashierConfig.denominations.find(d => d.value === parseInt(value))
 }
 
+// 格式化钞票组合：{20: 2, 5: 1} => "2张¥20.00，1张¥5.00"
+const formatBills = (bills) => {
+  if (!bills) return ''
+  return Object.entries(bills)
+    .sort(([a], [b]) => parseInt(b) - parseInt(a))
+    .map(([value, count]) => `${count}张¥${formatPrice(parseInt(value))}`)
+    .join('，')
+}
+
 // 格式化价格（直接显示，单位是元）
 const formatPrice = (value) => {
   if (value === null || value === undefined || isNaN(value)) {
@@ -290,6 +301,14 @@ const formatPrice = (value) => {
 const absValue = (value) => {
   return Math.abs(value).toFixed(2)
 }
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+})
 
 // 初始化
 initGame()
@@ -406,6 +425,16 @@ initGame()
 .amount.paid { color: #4ade80; }
 .amount.change { color: #fff; }
 
+.bill-list {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.bill-breakdown {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
 .currency-section {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 15px;
@@ -456,11 +485,6 @@ initGame()
 .currency-value {
   font-weight: bold;
   font-size: 0.9rem;
-}
-
-.currency-count {
-  font-size: 0.8rem;
-  color: #fbbf24;
 }
 
 .currency-count {

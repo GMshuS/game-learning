@@ -10,7 +10,7 @@
       <div class="hall-card shop-card" @click="$emit('startShop')">
         <div class="card-icon">🏪</div>
         <h3>经营商店</h3>
-        <p>经营文具店，买卖商品赚取金币</p>
+        <p>数学购物挑战，计算总价赢取道具</p>
         <div class="card-status">
           <span>金币: {{ shopCoins }}</span>
         </div>
@@ -76,11 +76,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '../store/gameStore'
 import { useCashierStore } from '../store/cashierStore'
 
-const emit = defineEmits(['startSpeedChallenge', 'startWorkshop', 'startCardBattle', 'startAdventure', 'startShop', 'startCashier', 'openLeaderboard', 'back'])
+// ⚠️ 架构建议：以下 computed 直接访问 gameStore 深层嵌套属性（如 gameStore.speedChallenge?.bestScores?.base）。
+//    建议在对应 Store 中暴露 getter（如 speedChallengeStore.bestScore），降低组件与 Store 内部结构的耦合度。
 
 const gameStore = useGameStore()
 const cashierStore = useCashierStore()

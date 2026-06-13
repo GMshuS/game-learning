@@ -220,6 +220,16 @@ export const achievementConfig = {
       rewards: { coins: 500, exp: 1000 },
       rarity: 'epic'
     },
+    {
+      id: 'collector_starter',
+      name: '小小收藏家',
+      description: '集齐故事书和字典',
+      category: 'collection',
+      icon: '📚',
+      requirement: { type: 'collectibles', count: 2 },
+      rewards: { coins: 200, exp: 400 },
+      rarity: 'rare'
+    },
 
     // 特殊成就
     {

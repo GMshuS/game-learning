@@ -232,10 +232,8 @@ const languages = [
 
 const updateSetting = (key, value) => {
   localSettings.value[key] = value
-  // 双路径：emit 供父组件监听（如 GameApp.vue 中需要即时响应），store 写入负责持久化
-  // 两条路径确保数据同步，父组件可通过监听 update 事件做额外处理
+  // 仅 emit 给父组件，由父组件统一处理值转换和持久化
   emit('update', { ...localSettings.value })
-  settingsStore.updateSetting(key, value)
 }
 
 const resetSettings = () => {
@@ -547,7 +545,6 @@ const resetSettings = () => {
 .btn-danger {
   width: 100%;
   padding: 0.8rem;
-  border: none;
   border-radius: 10px;
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid #ef4444;

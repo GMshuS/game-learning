@@ -43,7 +43,7 @@
         <div class="score">得分: {{ store.score }}</div>
         <div class="combo" v-if="store.combo > 1">🔥 {{ store.combo }}连击</div>
         <div class="lives" v-if="store.currentMode === 'survival'">
-          ❤️ {{ '❤️'.repeat(store.lives) }}{{ '🖤'.repeat(3 - store.lives) }}
+          ❤️ {{ '❤️'.repeat(store.lives) }}{{ '🖤'.repeat(store.maxLives - store.lives) }}
         </div>
         <div class="ai-bar" v-if="store.currentMode === 'blitz'">
           <div class="ai-label">AI 对手</div>
@@ -98,7 +98,7 @@
       </div>
       <div class="result-actions">
         <button class="btn-retry" @click="startMode(store.currentMode)">再来一次</button>
-        <button class="btn-back-result" @click="$emit('back')">返回大厅</button>
+        <button class="btn-back-result" @click="goBackToModeSelect">返回模式选择</button>
       </div>
     </div>
   </div>
@@ -183,6 +183,11 @@ function stopTimer() {
     clearInterval(timer)
     timer = null
   }
+}
+
+function goBackToModeSelect() {
+  store.$reset()
+  stopTimer()
 }
 
 onUnmounted(() => stopTimer())
