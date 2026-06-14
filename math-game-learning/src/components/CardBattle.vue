@@ -25,9 +25,10 @@
       <div class="difficulty-select">
         <h3>选择难度</h3>
         <div class="diff-options">
-          <div v-for="diff in difficulties" :key="diff.id" class="diff-card"
-               :class="{ recommended: diff.recommended }"
-               @click="startBattle(diff.id)">
+          <div
+            v-for="diff in difficulties" :key="diff.id" class="diff-card"
+            :class="{ recommended: diff.recommended }"
+            @click="startBattle(diff.id)">
             <div class="diff-icon">{{ diff.icon }}</div>
             <h4>{{ diff.name }}</h4>
             <p>{{ diff.desc }}</p>
@@ -44,7 +45,7 @@
         <div class="hp-bar">
           <span>AI</span>
           <div class="hp-track">
-            <div class="hp-fill ai-hp" :style="{ width: (store.battle.aiHP / store.battle.aiMaxHP * 100) + '%' }"></div>
+            <div class="hp-fill ai-hp" :style="{ width: (store.battle.aiHP / store.battle.aiMaxHP * 100) + '%' }" />
           </div>
           <span>{{ store.battle.aiHP }}/{{ store.battle.aiMaxHP }}</span>
         </div>
@@ -63,7 +64,7 @@
         <div class="hp-bar">
           <span>你</span>
           <div class="hp-track">
-            <div class="hp-fill player-hp" :style="{ width: (store.battle.playerHP / store.battle.playerMaxHP * 100) + '%' }"></div>
+            <div class="hp-fill player-hp" :style="{ width: (store.battle.playerHP / store.battle.playerMaxHP * 100) + '%' }" />
           </div>
           <span>{{ store.battle.playerHP }}/{{ store.battle.playerMaxHP }}</span>
         </div>
@@ -80,12 +81,13 @@
 
         <!-- 手牌 -->
         <div class="player-hand">
-          <div v-for="(cardId, i) in store.battle.playerHand" :key="i" class="hand-card"
-               :class="{ disabled: store.battle.turn !== 'player' || store.battle.phase !== 'play' }"
-               @click="store.battle.phase === 'play' && store.battle.turn === 'player' ? store.playCard(i) : null">
+          <div
+            v-for="(cardId, i) in store.battle.playerHand" :key="i" class="hand-card"
+            :class="{ disabled: store.battle.turn !== 'player' || store.battle.phase !== 'play' }"
+            @click="store.battle.phase === 'play' && store.battle.turn === 'player' ? store.playCard(i) : null">
             <div class="card-name">{{ getCardName(cardId) }}</div>
             <div class="card-type">{{ getCardTypeIcon(cardId) }}</div>
-            <div class="card-value" v-if="getCardValue(cardId) > 0">{{ getCardValue(cardId) }}</div>
+            <div v-if="getCardValue(cardId) > 0" class="card-value">{{ getCardValue(cardId) }}</div>
           </div>
         </div>
       </div>
@@ -103,20 +105,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useCardStore } from '../store/cardStore'
-import { getCardById, getCardsByGrade } from '../config/cards'
-import { useGameStore } from '../store/gameStore'
-import { useSettingsStore } from '../store/settingsStore'
-import GameTutorial from './GameTutorial.vue'
+import { ref, computed, onMounted } from 'vue';
+import { useCardStore } from '../store/cardStore';
+import { getCardById, getCardsByGrade } from '../config/cards';
+import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
+import GameTutorial from './GameTutorial.vue';
 
-const emit = defineEmits(['back', 'openCollection', 'battleEnd'])
+const emit = defineEmits(['back', 'openCollection', 'battleEnd']);
 
-const store = useCardStore()
-const gameStore = useGameStore()
-const settingsStore = useSettingsStore()
+const store = useCardStore();
+const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
 
-const showTutorial = ref(false)
+const showTutorial = ref(false);
 
 const cardBattleTutorialSteps = [
   {
@@ -143,72 +145,72 @@ const cardBattleTutorialSteps = [
     title: '胜负条件',
     description: '将AI的HP归零即可获胜，获得金币奖励。己方HP归零则失败。战斗日志会记录每回合的出牌和效果。'
   }
-]
+];
 
 const closeTutorial = () => {
-  showTutorial.value = false
-}
+  showTutorial.value = false;
+};
 
 const difficulties = computed(() => {
-  const grade = settingsStore.grade
+  const grade = settingsStore.grade;
   return [
     { id: 'easy', icon: '😊', name: '简单', desc: 'AI 随机出牌', recommended: grade <= 2 },
     { id: 'normal', icon: '🤔', name: '中等', desc: 'AI 有基本策略', recommended: grade >= 3 && grade <= 4 },
     { id: 'hard', icon: '😈', name: '困难', desc: 'AI 最优决策', recommended: grade >= 5 }
-  ]
-})
+  ];
+});
 
 function startBattle(diff) {
   if (store.startBattle(diff)) {
     // ok
   } else {
-    alert('卡组无效！需要 10-15 张卡牌')
+    alert('卡组无效！需要 10-15 张卡牌');
   }
 }
 
 function getCardName(id) {
-  const card = getCardById(id)
-  return card ? card.name : '?'
+  const card = getCardById(id);
+  return card ? card.name : '?';
 }
 
 function getCardTypeIcon(id) {
-  const card = getCardById(id)
-  if (!card) return '?'
+  const card = getCardById(id);
+  if (!card) return '?';
   switch (card.type) {
-    case 'attack': return '⚔️'
-    case 'defense': return '🛡️'
-    case 'heal': return '💚'
-    case 'special': return '✨'
-    case 'equation': return '📐'
-    default: return '?'
+  case 'attack': return '⚔️';
+  case 'defense': return '🛡️';
+  case 'heal': return '💚';
+  case 'special': return '✨';
+  case 'equation': return '📐';
+  default: return '?';
   }
 }
 
 function getCardValue(id) {
-  const card = getCardById(id)
-  return card ? card.value : 0
+  const card = getCardById(id);
+  return card ? card.value : 0;
 }
 
 function getEquation() {
-  const card = getCardById(store.battle.playedCard)
-  return card ? card.equation : ''
+  const card = getCardById(store.battle.playedCard);
+  return card ? card.equation : '';
 }
 
 function getEquationOptions() {
-  const card = getCardById(store.battle.playedCard)
-  if (!card) return []
-  const answer = card.answer
-  const opts = new Set([answer])
+  const card = getCardById(store.battle.playedCard);
+  if (!card) return [];
+  const answer = card.answer;
+  const opts = new Set([answer]);
   while (opts.size < 4) {
-    opts.add(answer + Math.floor(Math.random() * 10) - 5)
+    opts.add(answer + Math.floor(Math.random() * 10) - 5);
   }
-  return [...opts].filter(v => v >= 0).sort(() => Math.random() - 0.5).slice(0, 4)
+  return [...opts].filter(v => v >= 0).sort(() => Math.random() - 0.5).slice(0, 4);
 }
 
 onMounted(() => {
-  if (!gameStore.cardBattle) gameStore.cardBattle = gameStore.getDefaultCardBattle()
-  store.loadData(gameStore.cardBattle)
-})
+  if (!gameStore.cardBattle) gameStore.cardBattle = gameStore.getDefaultCardBattle();
+  store.loadData(gameStore.cardBattle);
+});
 </script>
 
 <style scoped>

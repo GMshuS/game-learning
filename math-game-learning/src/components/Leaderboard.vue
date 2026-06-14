@@ -18,7 +18,7 @@
     </div>
 
     <div class="lb-content">
-      <div class="lb-player-entry" v-if="playerBest">
+      <div v-if="playerBest" class="lb-player-entry">
         <div class="lb-rank lb-player-best">🌟</div>
         <div class="lb-name">你</div>
         <div class="lb-score">{{ playerBest.score }} 分</div>
@@ -41,112 +41,112 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useGameStore } from '../store/gameStore'
-import leaderboardConfig from '../config/leaderboard'
+import { ref, computed, onMounted } from 'vue';
+import { useGameStore } from '../store/gameStore';
+import leaderboardConfig from '../config/leaderboard';
 
-const emit = defineEmits(['back'])
+const emit = defineEmits(['back']);
 
-const gameStore = useGameStore()
-const activeMode = ref('speed_base')
+const gameStore = useGameStore();
+const activeMode = ref('speed_base');
 
 const modeTabs = [
   { id: 'speed_base', label: '基础速算' },
   { id: 'speed_blitz', label: '闪电抢答' },
   { id: 'speed_survival', label: '生存模式' }
-]
+];
 
 const playerBest = computed(() => {
-  return gameStore.leaderboard?.playerBest?.[activeMode.value] || null
-})
+  return gameStore.leaderboard?.playerBest?.[activeMode.value] || null;
+});
 
 const sortedEntries = computed(() => {
-  const entries = gameStore.leaderboard?.virtualPlayers || []
+  const entries = gameStore.leaderboard?.virtualPlayers || [];
   return [...entries]
     .filter(e => e.mode === activeMode.value)
     .sort((a, b) => b.score - a.score)
-    .slice(0, leaderboardConfig.VIRTUAL_PLAYER_COUNT)
-})
+    .slice(0, leaderboardConfig.VIRTUAL_PLAYER_COUNT);
+});
 
 const rankClass = (index) => {
-  if (index === 0) return 'rank-gold'
-  if (index === 1) return 'rank-silver'
-  if (index === 2) return 'rank-bronze'
-  return ''
-}
+  if (index === 0) return 'rank-gold';
+  if (index === 1) return 'rank-silver';
+  if (index === 2) return 'rank-bronze';
+  return '';
+};
 
 const formatDate = (timestamp) => {
-  if (!timestamp) return ''
-  const d = new Date(timestamp)
-  return `${d.getMonth() + 1}/${d.getDate()}`
-}
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
 
 function generateVirtualPlayers() {
-  const now = Date.now()
-  const range = leaderboardConfig.scoreRanges[activeMode.value]
-  if (!range) return
+  const now = Date.now();
+  const range = leaderboardConfig.scoreRanges[activeMode.value];
+  if (!range) return;
 
-  const existing = gameStore.leaderboard?.virtualPlayers?.filter(e => e.mode === activeMode.value) || []
-  if (existing.length >= leaderboardConfig.VIRTUAL_PLAYER_COUNT) return
+  const existing = gameStore.leaderboard?.virtualPlayers?.filter(e => e.mode === activeMode.value) || [];
+  if (existing.length >= leaderboardConfig.VIRTUAL_PLAYER_COUNT) return;
 
-  const players = []
-  const usedNames = new Set(existing.map(e => e.name))
+  const players = [];
+  const usedNames = new Set(existing.map(e => e.name));
 
   for (let i = 0; i < leaderboardConfig.VIRTUAL_PLAYER_COUNT; i++) {
-    let name
+    let name;
     do {
-      name = leaderboardConfig.virtualPlayerNames[Math.floor(Math.random() * leaderboardConfig.virtualPlayerNames.length)]
-    } while (usedNames.has(name))
-    usedNames.add(name)
+      name = leaderboardConfig.virtualPlayerNames[Math.floor(Math.random() * leaderboardConfig.virtualPlayerNames.length)];
+    } while (usedNames.has(name));
+    usedNames.add(name);
 
-    const score = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+    const score = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
     players.push({
       id: `vp_${activeMode.value}_${i}`,
       name,
       score,
       mode: activeMode.value,
       createdAt: now
-    })
+    });
   }
 
   if (!gameStore.leaderboard) {
-    gameStore.leaderboard = gameStore.getDefaultLeaderboard()
+    gameStore.leaderboard = gameStore.getDefaultLeaderboard();
   }
-  gameStore.leaderboard.virtualPlayers.push(...players)
-  gameStore.leaderboard.lastGenerated = now
-  gameStore.saveGame()
+  gameStore.leaderboard.virtualPlayers.push(...players);
+  gameStore.leaderboard.lastGenerated = now;
+  gameStore.saveGame();
 }
 
 function updatePlayerBest(mode, score) {
-  const current = gameStore.leaderboard?.playerBest?.[mode]
+  const current = gameStore.leaderboard?.playerBest?.[mode];
   if (!current || score > current.score) {
     if (!gameStore.leaderboard) {
-      gameStore.leaderboard = gameStore.getDefaultLeaderboard()
+      gameStore.leaderboard = gameStore.getDefaultLeaderboard();
     }
-    gameStore.leaderboard.playerBest[mode] = { score, date: Date.now() }
+    gameStore.leaderboard.playerBest[mode] = { score, date: Date.now() };
 
     // 动态难度：虚拟玩家分数增长
-    const range = leaderboardConfig.scoreRanges[mode]
+    const range = leaderboardConfig.scoreRanges[mode];
     if (range && gameStore.leaderboard.virtualPlayers) {
       gameStore.leaderboard.virtualPlayers.forEach(vp => {
         if (vp.mode === mode) {
-          const growth = 1 + Math.random() * (leaderboardConfig.SCORE_GROWTH.max - leaderboardConfig.SCORE_GROWTH.min) + leaderboardConfig.SCORE_GROWTH.min - 1
-          vp.score = Math.floor(vp.score * growth)
+          const growth = 1 + Math.random() * (leaderboardConfig.SCORE_GROWTH.max - leaderboardConfig.SCORE_GROWTH.min) + leaderboardConfig.SCORE_GROWTH.min - 1;
+          vp.score = Math.floor(vp.score * growth);
         }
-      })
+      });
     }
-    gameStore.saveGame()
+    gameStore.saveGame();
   }
 }
 
 onMounted(() => {
   if (!gameStore.leaderboard) {
-    gameStore.leaderboard = gameStore.getDefaultLeaderboard()
+    gameStore.leaderboard = gameStore.getDefaultLeaderboard();
   }
-  generateVirtualPlayers()
-})
+  generateVirtualPlayers();
+});
 
-defineExpose({ updatePlayerBest })
+defineExpose({ updatePlayerBest });
 </script>
 
 <style scoped>

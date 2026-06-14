@@ -47,34 +47,34 @@ export const rewardConfig = {
       hard: { coins: 800, exp: 1500 }
     }
   }
-}
+};
 
 /**
  * 获取每日奖励
  */
 export function getDailyReward(day) {
-  const index = (day - 1) % rewardConfig.dailyRewards.length
-  return rewardConfig.dailyRewards[index]
+  const index = (day - 1) % rewardConfig.dailyRewards.length;
+  return rewardConfig.dailyRewards[index];
 }
 
 /**
  * 获取等级奖励
  */
 export function getLevelReward(level) {
-  return rewardConfig.levelRewards.find(r => r.level === level)
+  return rewardConfig.levelRewards.find(r => r.level === level);
 }
 
 /**
  * 获取连胜奖励
  */
 export function getStreakReward(streak) {
-  const rewards = rewardConfig.streakRewards.slice().reverse()
+  const rewards = rewardConfig.streakRewards.slice().reverse();
   for (const reward of rewards) {
     if (streak >= reward.streak) {
-      return reward
+      return reward;
     }
   }
-  return null
+  return null;
 }
 
-export default rewardConfig
+export default rewardConfig;

@@ -12,7 +12,7 @@ export const breakpoints = {
   xl: 1280,
   // 大桌面
   '2xl': 1536
-}
+};
 
 /**
  * 响应式样式工具类
@@ -57,29 +57,29 @@ export const responsiveStyles = {
     xl: '1140px',
     '2xl': '1320px'
   }
-}
+};
 
 /**
  * 媒体查询生成器
  */
 export function mediaQuery(minWidth, maxWidth = null) {
-  let query = '@media screen and (min-width: ' + minWidth + 'px)'
+  let query = '@media screen and (min-width: ' + minWidth + 'px)';
   if (maxWidth) {
-    query = '@media screen and (min-width: ' + minWidth + 'px) and (max-width: ' + maxWidth + 'px)'
+    query = '@media screen and (min-width: ' + minWidth + 'px) and (max-width: ' + maxWidth + 'px)';
   }
-  return query
+  return query;
 }
 
 /**
  * 获取当前断点名称
  */
 export function getBreakpointName(width) {
-  if (width >= breakpoints['2xl']) return '2xl'
-  if (width >= breakpoints.xl) return 'xl'
-  if (width >= breakpoints.lg) return 'lg'
-  if (width >= breakpoints.md) return 'md'
-  if (width >= breakpoints.sm) return 'sm'
-  return 'xs'
+  if (width >= breakpoints['2xl']) return '2xl';
+  if (width >= breakpoints.xl) return 'xl';
+  if (width >= breakpoints.lg) return 'lg';
+  if (width >= breakpoints.md) return 'md';
+  if (width >= breakpoints.sm) return 'sm';
+  return 'xs';
 }
 
 /**
@@ -273,7 +273,7 @@ export function generateResponsiveClasses() {
 .safe-right {
   padding-right: env(safe-area-inset-right);
 }
-`
+`;
 }
 
 export default {
@@ -282,4 +282,4 @@ export default {
   mediaQuery,
   getBreakpointName,
   generateResponsiveClasses
-}
+};

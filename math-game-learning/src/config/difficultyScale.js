@@ -10,10 +10,10 @@
  * - 所有倍率设有 clamp 防止极端值
  */
 
-const RATIO_CLAMP = { min: 0.3, max: 3.0 }
+const RATIO_CLAMP = { min: 0.3, max: 3.0 };
 
 function clamp(val) {
-  return Math.max(RATIO_CLAMP.min, Math.min(RATIO_CLAMP.max, val))
+  return Math.max(RATIO_CLAMP.min, Math.min(RATIO_CLAMP.max, val));
 }
 
 export const difficultyScale = {
@@ -44,7 +44,7 @@ export const difficultyScale = {
 
     /* 提示相关 */
     showHints: true,
-    hintLevel: 'detailed',             // 详细提示
+    hintLevel: 'detailed'             // 详细提示
   },
 
   normal: {
@@ -63,7 +63,7 @@ export const difficultyScale = {
     coinRatio: clamp(1.0),
     gemThresholdRatio: clamp(1.0),
     showHints: true,
-    hintLevel: 'normal',
+    hintLevel: 'normal'
   },
 
   hard: {
@@ -82,9 +82,9 @@ export const difficultyScale = {
     coinRatio: clamp(1.5),
     gemThresholdRatio: clamp(1.3),
     showHints: false,
-    hintLevel: 'none',
-  },
-}
+    hintLevel: 'none'
+  }
+};
 
 /**
  * 获取当前难度的缩放配置
@@ -92,7 +92,7 @@ export const difficultyScale = {
  * @returns {object} 难度倍率配置对象
  */
 export function getDifficultyScale(difficulty) {
-  return difficultyScale[difficulty] || difficultyScale.normal
+  return difficultyScale[difficulty] || difficultyScale.normal;
 }
 
 /**
@@ -101,15 +101,15 @@ export function getDifficultyScale(difficulty) {
  * @returns {Array<{label: string, value: string}>}
  */
 export function getDifficultyDetails(difficulty) {
-  const scale = getDifficultyScale(difficulty)
+  const scale = getDifficultyScale(difficulty);
   return [
     { label: '怪物血量', value: `${Math.round(scale.monsterHpRatio * 100)}%` },
     { label: '怪物攻击', value: `${Math.round(scale.monsterAttackRatio * 100)}%` },
     { label: '战斗时间', value: `${Math.round(scale.battleTimeRatio * 100)}%` },
     { label: 'AI 速度', value: `${Math.round(scale.speedAISpeedRatio * 100)}%` },
     { label: '经验获取', value: `${Math.round(scale.expRatio * 100)}%` },
-    { label: '金币获取', value: `${Math.round(scale.coinRatio * 100)}%` },
-  ]
+    { label: '金币获取', value: `${Math.round(scale.coinRatio * 100)}%` }
+  ];
 }
 
-export default difficultyScale
+export default difficultyScale;

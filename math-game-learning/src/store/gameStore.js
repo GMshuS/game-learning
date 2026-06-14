@@ -1,13 +1,23 @@
 /**
  * 游戏主 Store - 管理游戏全局状态
  */
-import { defineStore } from 'pinia'
-import storageManager from '../utils/storage'
-import Player from '../models/Player'
-import GameProgress from '../models/GameProgress'
-import Inventory from '../models/Inventory'
-import Settings from '../models/Settings'
-import { useSettingsStore } from './settingsStore'
+import { defineStore } from 'pinia';
+import storageManager from '../utils/storage';
+import { useSettingsStore } from './settingsStore';
+import { useBattleStore } from './battleStore';
+import { useShopStore } from './shopStore';
+import { useAchievementStore } from './achievementStore';
+import { useEquipmentStore } from './equipmentStore';
+import { useSpeedChallengeStore } from './speedChallengeStore';
+import { useCashierStore } from './cashierStore';
+import { useSaveDataStore } from './saveDataStore';
+import { useQuestionStore } from './questionStore';
+import { useWorkshopStore } from './workshopStore';
+import { useCardStore } from './cardStore';
+import { useInventoryStore } from './inventoryStore';
+import { useEnglishSpeedSpellStore } from './englishSpeedSpellStore';
+import { useMathKnowledgeStore } from './mathKnowledgeStore';
+import { useEnglishKnowledgeStore } from './englishKnowledgeStore';
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -24,15 +34,16 @@ export const useGameStore = defineStore('game', {
     workshop: null,
     cardBattle: null,
     leaderboard: null,
-    notifications: []
+    notifications: [],
+    englishSpeedSpell: null
   }),
 
   getters: {
     // 玩家相关
     playerName: (state) => state.player?.name || '冒险者',
-    playerGrade: (state) => {
-      const settingsStore = useSettingsStore()
-      return settingsStore.grade
+    playerGrade: (_state) => {
+      const settingsStore = useSettingsStore();
+      return settingsStore.grade;
     },
     playerLevel: (state) => state.player?.level || 1,
     playerExp: (state) => state.player?.exp || 0,
@@ -50,11 +61,8 @@ export const useGameStore = defineStore('game', {
 
     // 库存相关
     equipment: (state) => state.inventory?.equipment || {},
-    items: (state) => state.inventory?.items || [],
+    items: (state) => state.inventory?.items || []
 
-    // 钻石和星星
-    playerGems: (state) => state.playerGems || 0,
-    playerStars: (state) => state.playerStars || 0
   },
 
   actions: {
@@ -62,70 +70,95 @@ export const useGameStore = defineStore('game', {
      * 初始化游戏 - 从存储加载数据
      */
     async initGame() {
-      const gameData = storageManager.loadGame()
+      const gameData = storageManager.loadGame();
 
       // 空值检查：当存档版本不匹配时 loadGame() 返回 null
       if (!gameData) {
-        this.isLoaded = false
-        return false
+        this.isLoaded = false;
+        return false;
       }
 
       if (gameData.player) {
-        this.player = gameData.player
-        this.progress = gameData.progress
-        this.inventory = gameData.inventory
-        this.settings = gameData.settings
-        this.isLoaded = true
+        this.player = gameData.player;
+        this.progress = gameData.progress;
+        this.inventory = gameData.inventory;
+        this.settings = gameData.settings;
+        this.isLoaded = true;
         
         // 加载双货币
-        this.playerGems = gameData.player?.gems || 0
-        this.playerStars = gameData.player?.stars || 0
+        this.playerGems = gameData.player?.gems || 0;
+        this.playerStars = gameData.player?.stars || 0;
         
         // 加载新玩法数据（向后兼容）
-        this.speedChallenge = gameData.speedChallenge || this.getDefaultSpeedChallenge()
-        this.workshop = gameData.workshop || this.getDefaultWorkshop()
-        this.cardBattle = gameData.cardBattle || this.getDefaultCardBattle()
-        this.leaderboard = gameData.leaderboard || this.getDefaultLeaderboard()
-        this.notifications = gameData.notifications || []
+        this.speedChallenge = gameData.speedChallenge || this.getDefaultSpeedChallenge();
+        this.workshop = gameData.workshop || this.getDefaultWorkshop();
+        this.cardBattle = gameData.cardBattle || this.getDefaultCardBattle();
+        this.leaderboard = gameData.leaderboard || this.getDefaultLeaderboard();
+        this.notifications = gameData.notifications || [];
+        this.englishSpeedSpell = gameData.englishSpeedSpell || null;
       }
       
-      return this.isLoaded
+      return this.isLoaded;
     },
 
     /**
      * 创建新游戏
      */
     async newGame(playerName, grade = 1) {
-      const gameData = storageManager.createNewGame(playerName, grade)
+      const gameData = storageManager.createNewGame(playerName, grade);
       
-      this.player = gameData.player
-      this.progress = gameData.progress
-      this.inventory = gameData.inventory
-      this.settings = gameData.settings
-      this.isLoaded = true
-      this.currentMode = null
-      this.playerGems = 0
-      this.playerStars = 0
-      this.speedChallenge = this.getDefaultSpeedChallenge()
-      this.workshop = this.getDefaultWorkshop()
-      this.cardBattle = this.getDefaultCardBattle()
-      this.leaderboard = this.getDefaultLeaderboard()
-      this.notifications = []
+      this.player = gameData.player;
+      this.progress = gameData.progress;
+      this.inventory = gameData.inventory;
+      this.settings = gameData.settings;
+      this.isLoaded = true;
+      this.currentMode = null;
+      this.playerGems = 0;
+      this.playerStars = 0;
+      this.speedChallenge = this.getDefaultSpeedChallenge();
+      this.workshop = this.getDefaultWorkshop();
+      this.cardBattle = this.getDefaultCardBattle();
+      this.leaderboard = this.getDefaultLeaderboard();
+      this.notifications = [];
+      this.englishSpeedSpell = null;
     },
 
     /**
      * 重置游戏
      */
     async resetGame() {
-      storageManager.resetGame()
-      this.$reset()
+      storageManager.resetGame();
+      this.$reset();
+    },
+
+    /**
+     * 重置所有游戏进度（由 handleReset 调用）
+     * 集中管理所有 store 的重置，避免 GameApp.vue 直接依赖大量 store
+     * @returns {Promise<void>}
+     */
+    resetAllProgress() {
+      this.$reset();
+      useBattleStore().$reset();
+      useShopStore().$reset();
+      useAchievementStore().$reset();
+      useEquipmentStore().$reset();
+      useSpeedChallengeStore().$reset();
+      useCashierStore().$reset();
+      useSaveDataStore().$reset();
+      useQuestionStore().$reset();
+      useWorkshopStore().$reset();
+      useCardStore().$reset();
+      useInventoryStore().$reset();
+      useEnglishSpeedSpellStore().$reset();
+      useMathKnowledgeStore().$reset();
+      useEnglishKnowledgeStore().$reset();
     },
 
     /**
      * 设置当前游戏模式
      */
     setGameMode(mode) {
-      this.currentMode = mode
+      this.currentMode = mode;
     },
 
     /**
@@ -133,66 +166,46 @@ export const useGameStore = defineStore('game', {
      */
     updatePlayer(updates) {
       if (this.player) {
-        Object.assign(this.player, updates)
-        this.saveGame()
+        Object.assign(this.player, updates);
+        this.saveGame();
       }
     },
 
     /**
      * 增加经验值
+     * @param {number} amount - 经验值数量
+     * @returns {boolean} 是否触发升级
      */
     addExp(amount) {
-      if (!this.player) return false
-      
-      // 使用 $patch 确保响应式更新
-      const oldExp = this.player.exp
-      const oldLevel = this.player.level
-      let newExp = oldExp + amount
-      let newLevel = oldLevel
-      let leveledUp = false
-      
-      const expNeeded = newLevel * 100
-      if (newExp >= expNeeded) {
-        newExp -= expNeeded
-        newLevel++
-        leveledUp = true
-      }
-      
-      this.$patch({
-        player: {
-          exp: newExp,
-          level: newLevel
-        }
-      })
-      
-      this.saveGame()
-      return leveledUp
+      if (!this.player) return false;
+      const leveledUp = this.player.addExp(amount);
+      this.saveGame();
+      return leveledUp;
     },
 
     /**
      * 增加金币
+     * @param {number} amount - 金币数量
+     * @returns {void}
      */
     addCoins(amount) {
-      if (!this.player) return
-      
-      // 使用 $patch 确保响应式更新
-      this.$patch({
-        player: {
-          coins: this.player.coins + amount
-        }
-      })
-      
-      this.saveGame()
+      if (!this.player) return;
+      this.player.coins += amount;
+      this.saveGame();
     },
 
     /**
      * 消费金币
+     * @param {number} amount - 消费金额
+     * @returns {boolean} 是否消费成功（余额不足时返回 false）
      */
     spendCoins(amount) {
-      if (this.player) {
-        return this.player.spendCoins(amount)
+      if (!this.player) return false;
+      const result = this.player.spendCoins(amount);
+      if (result) {
+        this.saveGame();
       }
-      return false
+      return result;
     },
 
     /**
@@ -200,8 +213,8 @@ export const useGameStore = defineStore('game', {
      */
     updateProgress(updates) {
       if (this.progress) {
-        Object.assign(this.progress, updates)
-        this.saveGame()
+        Object.assign(this.progress, updates);
+        this.saveGame();
       }
     },
 
@@ -210,8 +223,8 @@ export const useGameStore = defineStore('game', {
      */
     completeLevel(levelId, stars = 1) {
       if (this.progress) {
-        this.progress.completeLevel(levelId, stars)
-        this.saveGame()
+        this.progress.completeLevel(levelId, stars);
+        this.saveGame();
       }
     },
 
@@ -220,9 +233,9 @@ export const useGameStore = defineStore('game', {
      */
     unlockArea(areaId) {
       if (this.progress) {
-        return this.progress.unlockArea(areaId)
+        return this.progress.unlockArea(areaId);
       }
-      return false
+      return false;
     },
 
     /**
@@ -230,8 +243,8 @@ export const useGameStore = defineStore('game', {
      */
     updateSettings(updates) {
       if (this.settings) {
-        Object.assign(this.settings, updates)
-        this.saveGame()
+        Object.assign(this.settings, updates);
+        this.saveGame();
       }
     },
 
@@ -240,8 +253,8 @@ export const useGameStore = defineStore('game', {
      */
     addItem(item) {
       if (this.inventory) {
-        this.inventory.addItem(item)
-        this.saveGame()
+        this.inventory.addItem(item);
+        this.saveGame();
       }
     },
 
@@ -250,9 +263,9 @@ export const useGameStore = defineStore('game', {
      */
     removeItem(itemId, quantity = 1) {
       if (this.inventory) {
-        return this.inventory.removeItem(itemId, quantity)
+        return this.inventory.removeItem(itemId, quantity);
       }
-      return false
+      return false;
     },
 
     /**
@@ -260,9 +273,9 @@ export const useGameStore = defineStore('game', {
      */
     equipItem(item) {
       if (this.inventory) {
-        return this.inventory.equipItem(item)
+        return this.inventory.equipItem(item);
       }
-      return null
+      return null;
     },
 
     /**
@@ -270,20 +283,20 @@ export const useGameStore = defineStore('game', {
      */
     addCollectible(collectible) {
       if (this.inventory) {
-        return this.inventory.addCollectible(collectible)
+        return this.inventory.addCollectible(collectible);
       }
-      return false
+      return false;
     },
 
     /**
      * 增加钻石
      */
     addGems(amount) {
-      if (!this.player) return
+      if (!this.player) return;
       this.$patch({
         playerGems: this.playerGems + amount
-      })
-      this.saveGame()
+      });
+      this.saveGame();
     },
 
     /**
@@ -293,22 +306,22 @@ export const useGameStore = defineStore('game', {
       if (this.playerGems >= amount) {
         this.$patch({
           playerGems: this.playerGems - amount
-        })
-        this.saveGame()
-        return true
+        });
+        this.saveGame();
+        return true;
       }
-      return false
+      return false;
     },
 
     /**
      * 增加星星
      */
     addStars(amount) {
-      if (!this.player) return
+      if (!this.player) return;
       this.$patch({
         playerStars: this.playerStars + amount
-      })
-      this.saveGame()
+      });
+      this.saveGame();
     },
 
     /**
@@ -319,7 +332,7 @@ export const useGameStore = defineStore('game', {
         bestScores: {}, // { mode: { score, rating, date } }
         totalGames: 0,
         totalCorrect: 0
-      }
+      };
     },
 
     /**
@@ -330,7 +343,7 @@ export const useGameStore = defineStore('game', {
         materials: {}, // { materialId: quantity }
         craftedItems: [], // { itemId, quantity, listedAt, price }
         listedItems: [] // { itemId, price, listedAt, sold }
-      }
+      };
     },
 
     /**
@@ -341,7 +354,7 @@ export const useGameStore = defineStore('game', {
         collection: [], // { cardId, quantity }
         deck: [], // cardId[]
         battleStats: { wins: 0, losses: 0, totalBattles: 0 }
-      }
+      };
     },
 
     /**
@@ -352,20 +365,33 @@ export const useGameStore = defineStore('game', {
         virtualPlayers: [],
         playerBest: {}, // { mode: { score, date } }
         lastGenerated: null
-      }
+      };
     },
 
     /**
-     * 保存游戏（扩展）
+     * 获取默认英语速拼数据
      */
-    async saveGame() {
+    getDefaultEnglishSpeedSpell() {
+      return {
+        bestScores: {}, // { mode: { score, rating, date } }
+        totalGames: 0,
+        totalCorrect: 0
+      };
+    },
+
+    /**
+     * 保存完整游戏存档到 localStorage
+     * 包含 player、progress、inventory、settings 及扩展玩法数据
+     * @returns {void}
+     */
+    saveGame() {
       if (this.player && this.progress && this.inventory && this.settings) {
         // 保存玩家货币到 player 对象
         const playerData = {
           ...this.player,
           gems: this.playerGems,
           stars: this.playerStars
-        }
+        };
         
         storageManager.saveGame(
           playerData,
@@ -377,12 +403,13 @@ export const useGameStore = defineStore('game', {
             workshop: this.workshop,
             cardBattle: this.cardBattle,
             leaderboard: this.leaderboard,
-            notifications: this.notifications
+            notifications: this.notifications,
+            englishSpeedSpell: this.englishSpeedSpell
           }
-        )
+        );
       }
     }
   }
-})
+});
 
-export default useGameStore
+export default useGameStore;

@@ -161,20 +161,20 @@ export const audioConfig = {
       volume: 0.7
     }
   }
-}
+};
 
 /**
  * 获取音效配置
  */
 export function getSfxConfig(key) {
-  return audioConfig.sfx[key] || null
+  return audioConfig.sfx[key] || null;
 }
 
 /**
  * 获取背景音乐配置
  */
 export function getBgmConfig(key) {
-  return audioConfig.bgm[key] || null
+  return audioConfig.bgm[key] || null;
 }
 
-export default audioConfig
+export default audioConfig;

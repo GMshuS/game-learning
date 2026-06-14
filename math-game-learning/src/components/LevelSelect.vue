@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   area: {
@@ -55,32 +55,32 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   }
-})
+});
 
-const emit = defineEmits(['levelSelect', 'back'])
+const emit = defineEmits(['levelSelect', 'back']);
 
 const areaIcon = computed(() => {
-  const icons = { 'area_1': '🌲', 'area_2': '🏔️', 'area_3': '🏰', 'area_4': '🏝️', 'area_5': '👑' }
-  return icons[props.area.id] || '⭐'
-})
+  const icons = { 'area_1': '🌲', 'area_2': '🏔️', 'area_3': '🏰', 'area_4': '🏝️', 'area_5': '👑' };
+  return icons[props.area.id] || '⭐';
+});
 
 const selectLevel = (level) => {
-  if (level.locked) return
-  emit('levelSelect', { area: props.area, level })
-}
+  if (level.locked) return;
+  emit('levelSelect', { area: props.area, level });
+};
 
 const levels = computed(() => {
-  const result = []
-  const totalLevels = props.area.levels || 10
+  const result = [];
+  const totalLevels = props.area.levels || 10;
   
   for (let i = 1; i <= totalLevels; i++) {
-    const levelId = `${props.area.id}_level_${i}`
-    const isCompleted = props.completedLevels.includes(levelId)
-    const levelStars = props.stars[levelId] || 0
+    const levelId = `${props.area.id}_level_${i}`;
+    const isCompleted = props.completedLevels.includes(levelId);
+    const levelStars = props.stars[levelId] || 0;
     
     // Level 1 is always unlocked if area is unlocked
     // Subsequent levels unlock when previous level is completed
-    const isLocked = i > 1 && !props.completedLevels.includes(`${props.area.id}_level_${i - 1}`)
+    const isLocked = i > 1 && !props.completedLevels.includes(`${props.area.id}_level_${i - 1}`);
     
     result.push({
       number: i,
@@ -88,11 +88,11 @@ const levels = computed(() => {
       locked: isLocked,
       completed: isCompleted,
       stars: levelStars
-    })
+    });
   }
   
-  return result
-})
+  return result;
+});
 </script>
 
 <style scoped>

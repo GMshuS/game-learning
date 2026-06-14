@@ -1,123 +1,78 @@
 /**
  * 题库管理系统
  * 支持题目的存储、检索、分类管理
+ *
+ * @deprecated 题目生成逻辑已由 questionGenerator.js + src/questions/ 注册表模式统一管理。
+ *   本模块保留的缓存、选项生成、答案校验等功能将在后续版本迁移至独立的 utility 模块。
+ *   新增题型请直接在 src/questions/ 下添加生成器并注册到 registry.js。
  */
-
-// 预定义题库数据
-const questionBank = {
-  // 一年级题库
-  grade1: {
-    add: [],
-    subtract: [],
-    word: []
-  },
-  // 二年级题库
-  grade2: {
-    add: [],
-    subtract: [],
-    multiply: [],
-    word: []
-  },
-  // 三年级题库
-  grade3: {
-    add: [],
-    subtract: [],
-    multiply: [],
-    divide: [],
-    mixed: [],
-    word: []
-  },
-  // 四年级题库
-  grade4: {
-    add: [],
-    subtract: [],
-    multiply: [],
-    divide: [],
-    mixed: []
-  },
-  // 五年级题库
-  grade5: {
-    fraction: [],
-    decimal: [],
-    mixed: []
-  },
-  // 六年级题库
-  grade6: {
-    fraction: [],
-    decimal: [],
-    percentage: [],
-    mixed: []
-  }
-}
+import { generateQuestion } from './questionGenerator.js';
 
 /**
  * 题目缓存
  */
-let questionCache = new Map()
+let questionCache = new Map();
 
 /**
  * 从题库获取题目
+ * @param {number} grade 年级
+ * @param {string} type 题型
+ * @param {number} count 数量
+ * @param {Function} [generateFn] 题目生成函数，默认使用 questionGenerator.js
  */
-export function getQuestionsFromBank(grade, type, count = 10) {
-  const key = `g${grade}_${type}`
+export function getQuestionsFromBank(grade, type, count = 10, generateFn) {
+  const key = `g${grade}_${type}`;
   
   if (questionCache.has(key)) {
-    const cached = questionCache.get(key)
+    const cached = questionCache.get(key);
     if (cached.length >= count) {
-      return shuffleArray(cached).slice(0, count)
+      return shuffleArray(cached).slice(0, count);
     }
   }
   
   // 如果缓存不足，生成新题目
-  const questions = generateQuestionsForBank(grade, type, count)
-  questionCache.set(key, questions)
+  const gen = generateFn || generateQuestion;
+  const questions = generateQuestionsForBank(grade, type, count, gen);
+  questionCache.set(key, questions);
   
-  return shuffleArray(questions).slice(0, count)
+  return shuffleArray(questions).slice(0, count);
 }
 
 /**
  * 为题库生成题目
+ * @param {number} grade 年级
+ * @param {string} type 题型
+ * @param {number} count 数量
+ * @param {Function} generateFn 题目生成函数
  */
-function generateQuestionsForBank(grade, type, count) {
-  const questions = []
+function generateQuestionsForBank(grade, type, count, generateFn) {
+  const questions = [];
   
   for (let i = 0; i < count; i++) {
-    const question = generateQuestion(grade, type)
-    questions.push(question)
+    const question = generateFn(grade, type);
+    questions.push(question);
   }
   
-  return questions
-}
-
-/**
- * 添加题目到题库
- */
-export function addQuestionToBank(grade, type, question) {
-  const gradeKey = `grade${grade}`
-  if (questionBank[gradeKey] && questionBank[gradeKey][type]) {
-    questionBank[gradeKey][type].push(question)
-    return true
-  }
-  return false
+  return questions;
 }
 
 /**
  * 清空题目缓存
  */
 export function clearQuestionCache() {
-  questionCache.clear()
+  questionCache.clear();
 }
 
 /**
  * 数组乱序
  */
 function shuffleArray(array) {
-  const shuffled = [...array]
+  const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled
+  return shuffled;
 }
 
 /**
@@ -127,65 +82,79 @@ export function generateWrongOptions(correctAnswer, count = 3, options = {}) {
   const {
     range = 20,
     avoidZero = false
-  } = options
+  } = options;
   
-  const wrongOptions = new Set()
+  const wrongOptions = new Set();
+  const MAX_ATTEMPTS = 1000;
+  let attempts = 0;
   
-  while (wrongOptions.size < count) {
+  while (wrongOptions.size < count && attempts < MAX_ATTEMPTS) {
+    attempts++;
     // 生成接近正确答案的干扰项
-    const offset = Math.floor(Math.random() * range) + 1
-    const sign = Math.random() > 0.5 ? 1 : -1
-    let wrongAnswer = correctAnswer + (offset * sign)
+    const offset = Math.floor(Math.random() * range) + 1;
+    const sign = Math.random() > 0.5 ? 1 : -1;
+    let wrongAnswer = correctAnswer + (offset * sign);
     
     // 确保是整数（如果正确答案是整数）
     if (Number.isInteger(correctAnswer)) {
-      wrongAnswer = Math.round(wrongAnswer)
+      wrongAnswer = Math.round(wrongAnswer);
     }
     
     // 避免 0
     if (avoidZero && wrongAnswer === 0) {
-      continue
+      continue;
     }
     
     // 避免与正确答案相同
     if (wrongAnswer !== correctAnswer) {
-      wrongOptions.add(wrongAnswer)
+      wrongOptions.add(wrongAnswer);
     }
   }
   
-  return Array.from(wrongOptions)
+  // 保底填充：若未生成足够干扰项，用递增值填充
+  let fallback = 1;
+  while (wrongOptions.size < count) {
+    const fallbackOption = correctAnswer + fallback;
+    if ((!avoidZero || fallbackOption !== 0) && fallbackOption !== correctAnswer) {
+      wrongOptions.add(fallbackOption);
+    }
+    fallback++;
+  }
+  
+  return Array.from(wrongOptions);
 }
 
 /**
  * 将题目转换为选择题格式
  */
 export function questionToMultipleChoice(question, optionCount = 4) {
-  const correctAnswer = question.answer
+  const correctAnswer = question.answer;
   const wrongOptions = generateWrongOptions(correctAnswer, optionCount - 1, {
     avoidZero: correctAnswer !== 0
-  })
+  });
   
   // 随机排列选项
-  const allOptions = shuffleArray([correctAnswer, ...wrongOptions])
+  const allOptions = shuffleArray([correctAnswer, ...wrongOptions]);
   
   return {
     ...question,
     format: 'multipleChoice',
     options: allOptions,
     correctOption: allOptions.indexOf(correctAnswer)
-  }
+  };
 }
 
 /**
  * 验证答案
  */
 export function checkAnswer(question, userAnswer, tolerance = 0.01) {
-  const correct = Math.abs(userAnswer - question.answer) <= tolerance
+  const correct = Math.abs(userAnswer - question.answer) <= tolerance;
   return {
     correct,
     correctAnswer: question.answer,
-    userAnswer
-  }
+    userAnswer,
+    knowledgeId: question.type  // 题型标识，与知识节点 id 一致
+  };
 }
 
 /**
@@ -199,15 +168,19 @@ export function getGradeTopics(grade) {
     4: ['大数运算', '四则混合运算', '几何图形', '小数入门'],
     5: ['分数运算', '小数运算', '百分比', '简易方程'],
     6: ['比例', '百分比应用', '圆的面积', '数据统计']
-  }
+  };
   
-  return topics[grade] || topics[1]
+  return topics[grade] || topics[1];
 }
 
 /**
  * 根据知识点筛选题目
+ * @param {number} grade 年级
+ * @param {string} topic 知识点名称
+ * @param {number} count 数量
+ * @param {Function} [generateFn] 题目生成函数，默认使用 questionGenerator.js
  */
-export function getQuestionsByTopic(grade, topic, count = 10) {
+export function getQuestionsByTopic(grade, topic, count = 10, generateFn) {
   const topicTypeMap = {
     '20 以内加减法': ['add', 'subtract'],
     '100 以内加减法': ['add', 'subtract'],
@@ -218,28 +191,26 @@ export function getQuestionsByTopic(grade, topic, count = 10) {
     '小数运算': ['decimal'],
     '百分比': ['percentage'],
     '简单应用题': ['word']
-  }
+  };
   
-  const types = topicTypeMap[topic] || ['add', 'subtract']
-  const questions = []
+  const gen = generateFn || generateQuestion;
+  const types = topicTypeMap[topic] || ['add', 'subtract'];
+  const questions = [];
   
   for (let i = 0; i < count; i++) {
-    const type = types[Math.floor(Math.random() * types.length)]
-    questions.push(generateQuestion(grade, type))
+    const type = types[Math.floor(Math.random() * types.length)];
+    questions.push(gen(grade, type));
   }
   
-  return questions
+  return questions;
 }
-
-import { generateQuestion } from './questionGenerator.js'
 
 export default {
   getQuestionsFromBank,
-  addQuestionToBank,
   clearQuestionCache,
   generateWrongOptions,
   questionToMultipleChoice,
   checkAnswer,
   getGradeTopics,
   getQuestionsByTopic
-}
+};

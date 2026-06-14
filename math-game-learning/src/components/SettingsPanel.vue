@@ -47,10 +47,10 @@
           <div class="setting-item">
             <label>
               <input
-                type="checkbox"
                 v-model="localSettings.showTutorial"
+                type="checkbox"
                 @change="updateSetting('showTutorial', localSettings.showTutorial)"
-              />
+              >
               显示教程提示
             </label>
           </div>
@@ -63,10 +63,10 @@
           <div class="setting-item">
             <label>
               <input
-                type="checkbox"
                 v-model="localSettings.music"
+                type="checkbox"
                 @change="updateSetting('music', localSettings.music)"
-              />
+              >
               背景音乐
             </label>
             <span class="toggle-icon">{{ localSettings.music ? '🔊' : '🔇' }}</span>
@@ -75,22 +75,22 @@
           <div v-if="localSettings.music" class="setting-item slider">
             <label>背景音乐音量</label>
             <input
-              type="range"
               v-model="localSettings.musicVolume"
-              @change="updateSetting('musicVolume', localSettings.musicVolume)"
+              type="range"
               min="0"
               max="100"
-            />
+              @change="updateSetting('musicVolume', localSettings.musicVolume)"
+            >
             <span class="slider-value">{{ localSettings.musicVolume }}%</span>
           </div>
           
           <div class="setting-item">
             <label>
               <input
-                type="checkbox"
                 v-model="localSettings.sound"
+                type="checkbox"
                 @change="updateSetting('sound', localSettings.sound)"
-              />
+              >
               音效
             </label>
             <span class="toggle-icon">{{ localSettings.sound ? '🔊' : '🔇' }}</span>
@@ -99,12 +99,12 @@
           <div v-if="localSettings.sound" class="setting-item slider">
             <label>音效音量</label>
             <input
-              type="range"
               v-model="localSettings.soundVolume"
-              @change="updateSetting('soundVolume', localSettings.soundVolume)"
+              type="range"
               min="0"
               max="100"
-            />
+              @change="updateSetting('soundVolume', localSettings.soundVolume)"
+            >
             <span class="slider-value">{{ localSettings.soundVolume }}%</span>
           </div>
         </div>
@@ -151,6 +151,39 @@
             </button>
           </div>
         </div>
+
+        <!-- 管理模式 -->
+        <div v-show="activeTab === 'admin'" class="settings-section">
+          <!-- PIN 验证弹窗 -->
+          <div v-if="!isAdminAuthed" class="pin-overlay">
+            <div class="pin-modal">
+              <h3>🔐 管理模式</h3>
+              <p v-if="!hasPin">{{ isSettingPin ? '请再次输入新 PIN 确认' : '首次使用，请设置管理模式 PIN (4位数字)' }}</p>
+              <p v-else>请输入管理模式 PIN</p>
+
+              <div v-if="!hasPin && !isSettingPin" class="pin-input-group">
+                <input ref="newPinRef" v-model="newPin" type="password" maxlength="6" placeholder="输入新 PIN" class="pin-input" @keyup.enter="setFirstPin">
+                <button class="pin-btn" @click="setFirstPin">设置 PIN</button>
+              </div>
+
+              <div v-if="!hasPin && isSettingPin" class="pin-input-group">
+                <input v-model="newPinConfirm" type="password" maxlength="6" placeholder="再次输入 PIN" class="pin-input" @keyup.enter="confirmFirstPin">
+                <button class="pin-btn" @click="confirmFirstPin">确认</button>
+              </div>
+
+              <div v-if="hasPin" class="pin-input-group">
+                <input v-model="pinInput" type="password" maxlength="6" placeholder="输入 PIN" class="pin-input" @keyup.enter="verifyPin">
+                <button class="pin-btn" @click="verifyPin">验证</button>
+              </div>
+
+              <p v-if="pinError" class="pin-error">{{ pinError }}</p>
+              <button class="pin-cancel" @click="activeTab = 'general'">取消</button>
+            </div>
+          </div>
+
+          <!-- 管理面板 -->
+          <AdminPanel v-else />
+        </div>
       </div>
 
       <!-- 底部按钮 -->
@@ -167,9 +200,62 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useSettingsStore } from '../store/settingsStore'
-const settingsStore = useSettingsStore()
+import { ref, computed, watch, nextTick } from 'vue';
+import { useSettingsStore } from '../store/settingsStore';
+import AdminPanel from './AdminPanel.vue';
+const settingsStore = useSettingsStore();
+
+const PIN_KEY = 'math_game_admin_pin';
+const DEFAULT_PIN = '0000';
+
+const isAdminAuthed = ref(false);
+const showPinModal = ref(false);
+const pinInput = ref('');
+const newPin = ref('');
+const newPinConfirm = ref('');
+const isSettingPin = ref(false);
+const pinError = ref('');
+const newPinRef = ref(null);
+
+const hasPin = computed(() => {
+  return localStorage.getItem(PIN_KEY) !== null;
+});
+
+function verifyPin() {
+  const storedPin = localStorage.getItem(PIN_KEY) || DEFAULT_PIN;
+  if (pinInput.value === storedPin) {
+    isAdminAuthed.value = true;
+    pinError.value = '';
+    pinInput.value = '';
+  } else {
+    pinError.value = 'PIN 错误，请重试';
+  }
+}
+
+function setFirstPin() {
+  if (!/^\d{4,6}$/.test(newPin.value)) {
+    pinError.value = 'PIN 必须为 4-6 位数字';
+    return;
+  }
+  isSettingPin.value = true;
+  pinError.value = '';
+  nextTick(() => {
+    // 聚焦确认输入框
+  });
+}
+
+function confirmFirstPin() {
+  if (newPin.value !== newPinConfirm.value) {
+    pinError.value = '两次输入的 PIN 不一致';
+    return;
+  }
+  localStorage.setItem(PIN_KEY, newPin.value);
+  isAdminAuthed.value = true;
+  pinError.value = '';
+  newPin.value = '';
+  newPinConfirm.value = '';
+  isSettingPin.value = false;
+}
 
 const props = defineProps({
   settings: {
@@ -185,35 +271,48 @@ const props = defineProps({
       showTutorial: true
     })
   }
-})
+});
 
-const emit = defineEmits(['update', 'close', 'export', 'import', 'reset'])
+const emit = defineEmits(['update', 'close', 'export', 'import', 'reset']);
 
-const activeTab = ref('general')
-const localSettings = ref({ ...props.settings })
+const activeTab = ref('general');
+const localSettings = ref({ ...props.settings });
+
+// 切换 tab 时重置管理认证状态
+watch(activeTab, (newTab) => {
+  if (newTab !== 'admin') {
+    isAdminAuthed.value = false;
+    pinError.value = '';
+    pinInput.value = '';
+    newPin.value = '';
+    newPinConfirm.value = '';
+    isSettingPin.value = false;
+  }
+});
 
 watch(() => props.settings, (newSettings) => {
   Object.keys(newSettings).forEach(key => {
     if (key === 'musicVolume' || key === 'soundVolume') {
-      localSettings.value[key] = Math.round(newSettings[key])
+      localSettings.value[key] = Math.round(newSettings[key]);
     } else {
-      localSettings.value[key] = newSettings[key]
+      localSettings.value[key] = newSettings[key];
     }
-  })
-}, { deep: true })
+  });
+}, { deep: true });
 
 const tabs = [
   { id: 'general', name: '通用设置', icon: '⚙️' },
   { id: 'audio', name: '音频设置', icon: '🔊' },
   { id: 'game', name: '游戏设置', icon: '🎮' },
-  { id: 'data', name: '数据管理', icon: '💾' }
-]
+  { id: 'data', name: '数据管理', icon: '💾' },
+  { id: 'admin', name: '管理模式', icon: '🔐' }
+];
 
 const difficulties = [
   { value: 'easy', label: '简单', description: '适合初学者' },
   { value: 'normal', label: '普通', description: '标准难度' },
   { value: 'hard', label: '困难', description: '挑战性更高' }
-]
+];
 
 const grades = [
   { value: 1, label: '一年级' },
@@ -222,19 +321,19 @@ const grades = [
   { value: 4, label: '四年级' },
   { value: 5, label: '五年级' },
   { value: 6, label: '六年级' }
-]
+];
 
 const languages = [
   { value: 'zh-CN', label: '简体中文' },
   { value: 'zh-TW', label: '繁體中文' },
   { value: 'en', label: 'English' }
-]
+];
 
 const updateSetting = (key, value) => {
-  localSettings.value[key] = value
+  localSettings.value[key] = value;
   // 仅 emit 给父组件，由父组件统一处理值转换和持久化
-  emit('update', { ...localSettings.value })
-}
+  emit('update', { ...localSettings.value });
+};
 
 const resetSettings = () => {
   const defaults = {
@@ -246,16 +345,16 @@ const resetSettings = () => {
     grade: 1,
     language: 'zh-CN',
     showTutorial: true
-  }
-  localSettings.value = { ...defaults }
-  emit('update', { ...localSettings.value })
+  };
+  localSettings.value = { ...defaults };
+  emit('update', { ...localSettings.value });
   // 显式持久化到 localStorage，不依赖父组件转发
   Object.entries(defaults).forEach(([key, value]) => {
     // musicVolume/soundVolume 组件中存 0-100，store 存 0-1
-    const storeValue = (key === 'musicVolume' || key === 'soundVolume') ? value / 100 : value
-    settingsStore.updateSetting(key, storeValue)
-  })
-}
+    const storeValue = (key === 'musicVolume' || key === 'soundVolume') ? value / 100 : value;
+    settingsStore.updateSetting(key, storeValue);
+  });
+};
 </script>
 
 <style scoped>
@@ -555,6 +654,87 @@ const resetSettings = () => {
 
 .btn-danger:hover {
   background: rgba(239, 68, 68, 0.3);
+}
+
+/* PIN 弹窗 */
+.pin-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.pin-modal {
+  text-align: center;
+  padding: 2rem;
+}
+
+.pin-modal h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.pin-modal p {
+  margin: 0 0 1rem 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.pin-input-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.pin-input {
+  padding: 0.6rem 1rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  width: 160px;
+  letter-spacing: 0.3rem;
+}
+
+.pin-input::placeholder {
+  letter-spacing: normal;
+  font-size: 0.9rem;
+}
+
+.pin-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.pin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+}
+
+.pin-error {
+  color: #ef4444 !important;
+  font-size: 0.85rem !important;
+}
+
+.pin-cancel {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.pin-cancel:hover {
+  color: #fff;
 }
 
 .settings-footer {

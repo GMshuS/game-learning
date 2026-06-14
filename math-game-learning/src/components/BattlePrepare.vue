@@ -74,8 +74,8 @@
     <div class="prepare-footer">
       <button
         class="btn-start"
-        @click="startBattle"
         :disabled="equippedItems.length === 0"
+        @click="startBattle"
       >
         ⚔️ 进入战斗！
       </button>
@@ -84,73 +84,73 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useInventoryStore } from '../store/inventoryStore'
+import { ref, computed } from 'vue';
+import { useInventoryStore } from '../store/inventoryStore';
 
-const inventoryStore = useInventoryStore()
-const emit = defineEmits(['back', 'startBattle'])
+const inventoryStore = useInventoryStore();
+const emit = defineEmits(['back', 'startBattle']);
 
-const selectedSlot = ref(null)
+const selectedSlot = ref(null);
 
 const battleSlots = computed(() => {
-  return inventoryStore.battleSlots
-})
+  return inventoryStore.battleSlots;
+});
 
 const equippedItems = computed(() => {
-  return inventoryStore.getEquippedBattleItems
-})
+  return inventoryStore.getEquippedBattleItems;
+});
 
 /**
  * 获取可装备到战斗栏的物品（不在槽位中的战斗道具）
  */
 const availableItems = computed(() => {
-  const equippedIds = inventoryStore.battleSlots.filter(id => id !== null)
+  const equippedIds = inventoryStore.battleSlots.filter(id => id !== null);
   return inventoryStore.items.filter(item => {
     // 只显示战斗道具（有 effect 且 type 非 collectible）
-    if (!item.effect || item.effect.target === 'collectible') return false
-    if (item.quantity <= 0) return false
-    if (equippedIds.includes(item.id)) return false
-    return true
-  })
-})
+    if (!item.effect || item.effect.target === 'collectible') return false;
+    if (item.quantity <= 0) return false;
+    if (equippedIds.includes(item.id)) return false;
+    return true;
+  });
+});
 
 function getItemById(itemId) {
-  return inventoryStore.items.find(i => i.id === itemId) || null
+  return inventoryStore.items.find(i => i.id === itemId) || null;
 }
 
 function onSlotClick(index) {
-  const slot = battleSlots.value[index]
+  const slot = battleSlots.value[index];
   if (slot !== null) {
     // 点击已装备的槽位 → 卸下
-    inventoryStore.unequipFromBattleSlot(index)
-    selectedSlot.value = null
+    inventoryStore.unequipFromBattleSlot(index);
+    selectedSlot.value = null;
   } else {
     // 点击空槽位 → 弹出选择面板（切换选中状态）
     if (selectedSlot.value === index) {
-      selectedSlot.value = null
+      selectedSlot.value = null;
     } else {
-      selectedSlot.value = index
+      selectedSlot.value = index;
     }
   }
 }
 
 function unequipSlot(index) {
-  inventoryStore.unequipFromBattleSlot(index)
+  inventoryStore.unequipFromBattleSlot(index);
   if (selectedSlot.value === index) {
-    selectedSlot.value = null
+    selectedSlot.value = null;
   }
 }
 
 function equipItem(itemId) {
   if (selectedSlot.value !== null) {
-    inventoryStore.equipToBattleSlot(itemId, selectedSlot.value)
-    selectedSlot.value = null
+    inventoryStore.equipToBattleSlot(itemId, selectedSlot.value);
+    selectedSlot.value = null;
   }
 }
 
 function startBattle() {
-  if (equippedItems.value.length === 0) return
-  emit('startBattle', equippedItems.value)
+  if (equippedItems.value.length === 0) return;
+  emit('startBattle', equippedItems.value);
 }
 </script>
 

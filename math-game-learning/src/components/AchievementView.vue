@@ -31,6 +31,31 @@
         </div>
       </div>
 
+      <!-- 知识掌握度 -->
+      <div v-if="knowledgeMastery.length > 0" class="knowledge-mastery">
+        <h3>📚 知识掌握度</h3>
+        <div class="mastery-show">
+          <div
+            v-for="item in knowledgeMastery.slice(0, showAllMastery ? knowledgeMastery.length : 5)"
+            :key="item.subject + '-' + item.id"
+            class="mastery-item"
+          >
+            <span class="mastery-icon">{{ item.icon }}</span>
+            <div class="mastery-info">
+              <span class="mastery-label">{{ item.label }}</span>
+              <span class="mastery-detail">{{ item.accuracy }}% ({{ item.correctCount }}/{{ item.totalAttempts }})</span>
+            </div>
+            <div class="mastery-bar">
+              <div class="mastery-fill" :style="{ width: item.accuracy + '%', background: item.accuracy >= 80 ? '#4ade80' : item.accuracy >= 50 ? '#f59e0b' : '#ef4444' }" />
+            </div>
+          </div>
+          <button v-if="knowledgeMastery.length > 5" class="mastery-toggle" @click="showAllMastery = !showAllMastery">
+            {{ showAllMastery ? '收起 ▲' : '展开全部 ▼ (' + knowledgeMastery.length + ' 个知识点)' }}
+          </button>
+        </div>
+        <p v-if="knowledgeMastery.length === 0" class="mastery-empty">暂无学习记录，开始挑战吧！</p>
+      </div>
+
       <!-- 分类标签 -->
       <div class="category-tabs">
         <button
@@ -81,8 +106,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { getAllAchievements, getAchievementsByCategory, getRarityConfig } from '../config/achievements'
+import { ref, computed } from 'vue';
+import { getAllAchievements, getAchievementsByCategory, getRarityConfig } from '../config/achievements';
+import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
+import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
+import { mathKnowledgeNodes, englishKnowledgeNodes } from '../config/knowledge';
 
 const props = defineProps({
   unlockedAchievements: {
@@ -97,17 +125,42 @@ const props = defineProps({
     type: Number,
     default: 0
   }
-})
+});
 
 // 安全的计算属性，防止 undefined 错误
 const safeTotalRewards = computed(() => ({
   coins: props.totalRewards?.coins ?? 0,
   exp: props.totalRewards?.exp ?? 0
-}))
+}));
 
-const emit = defineEmits(['select', 'close'])
+const emit = defineEmits(['select', 'close']);
 
-const selectedCategory = ref('all')
+const selectedCategory = ref('all');
+const showAllMastery = ref(false);
+
+const mathKnowledgeStore = useMathKnowledgeStore();
+const englishKnowledgeStore = useEnglishKnowledgeStore();
+
+const knowledgeMastery = computed(() => {
+  const result = [];
+  const addNodes = (nodes, records) => {
+    for (const node of nodes) {
+      const rec = records[node.id];
+      if (rec && rec.totalAttempts > 0) {
+        result.push({
+          ...node,
+          totalAttempts: rec.totalAttempts,
+          wrongCount: rec.wrongCount,
+          correctCount: rec.totalAttempts - rec.wrongCount,
+          accuracy: Math.round((1 - rec.wrongCount / rec.totalAttempts) * 100)
+        });
+      }
+    }
+  };
+  addNodes(mathKnowledgeNodes, mathKnowledgeStore.records);
+  addNodes(englishKnowledgeNodes, englishKnowledgeStore.records);
+  return result;
+});
 
 const achievementConfig = {
   categories: [
@@ -116,39 +169,39 @@ const achievementConfig = {
     { id: 'shop', name: '商店', icon: '🏪' },
     { id: 'special', name: '特殊', icon: '⭐' }
   ]
-}
+};
 
 const categories = computed(() => {
   return [
     { id: 'all', name: '全部', icon: '🏆' },
     ...achievementConfig.categories
-  ]
-})
+  ];
+});
 
 const filteredAchievements = computed(() => {
-  const all = getAllAchievements()
+  const all = getAllAchievements();
   if (selectedCategory.value === 'all') {
-    return all
+    return all;
   }
-  return getAchievementsByCategory(selectedCategory.value)
-})
+  return getAchievementsByCategory(selectedCategory.value);
+});
 
 const isUnlocked = (achievementId) => {
-  return props.unlockedAchievements.includes(achievementId)
-}
+  return props.unlockedAchievements.includes(achievementId);
+};
 
 const getRarityStyle = (rarity) => {
-  const config = getRarityConfig(rarity)
+  const config = getRarityConfig(rarity);
   return {
     border: `2px solid ${config.color}`,
     bg: `${config.color}20`
-  }
-}
+  };
+};
 
 const getRarityColor = (rarity) => {
-  const config = getRarityConfig(rarity)
-  return config?.color || '#888'
-}
+  const config = getRarityConfig(rarity);
+  return config?.color || '#888';
+};
 
 const getRarityLabel = (rarity) => {
   const labels = {
@@ -156,29 +209,29 @@ const getRarityLabel = (rarity) => {
     rare: '稀有',
     epic: '史诗',
     legendary: '传说'
-  }
-  return labels[rarity] || rarity
-}
+  };
+  return labels[rarity] || rarity;
+};
 
 const getAchievementStyle = (achievement) => {
-  const rarity = achievement.rarity
-  const config = getRarityConfig(rarity)
-  const isUn = isUnlocked(achievement.id)
+  const rarity = achievement.rarity;
+  const config = getRarityConfig(rarity);
+  const isUn = isUnlocked(achievement.id);
   
   return {
     background: isUn ? `linear-gradient(135deg, ${config.color}20, ${config.color}10)` : 'rgba(0,0,0,0.2)',
     border: `1px solid ${isUn ? config.color : 'rgba(255,255,255,0.1)'}`,
     opacity: isUn ? 1 : 0.7
-  }
-}
+  };
+};
 
 const selectAchievement = (achievement) => {
-  emit('select', achievement)
-}
+  emit('select', achievement);
+};
 
 const close = () => {
-  emit('close')
-}
+  emit('close');
+};
 </script>
 
 <style scoped>
@@ -385,5 +438,84 @@ const close = () => {
 
 .status-locked {
   opacity: 0.5;
+}
+
+.knowledge-mastery {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.knowledge-mastery h3 {
+  margin: 0 0 0.8rem 0;
+  color: #fbbf24;
+  font-size: 1rem;
+}
+
+.mastery-show {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.mastery-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mastery-icon {
+  font-size: 1.3rem;
+  width: 1.8rem;
+  text-align: center;
+}
+
+.mastery-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+
+.mastery-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.mastery-detail {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.mastery-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mastery-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.mastery-toggle {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  text-align: left;
+}
+
+.mastery-toggle:hover {
+  color: #fff;
+}
+
+.mastery-empty {
+  text-align: center;
+  opacity: 0.5;
+  padding: 1rem 0;
 }
 </style>

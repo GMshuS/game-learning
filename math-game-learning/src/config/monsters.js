@@ -148,7 +148,7 @@ export const monsterConfig = {
       isBoss: true
     }
   ]
-}
+};
 
 /**
  * 根据难度获取怪物
@@ -159,9 +159,9 @@ export function getMonstersByDifficulty(difficulty) {
     ...monsterConfig.goblins,
     ...monsterConfig.orcs,
     ...monsterConfig.dragons
-  ]
+  ];
   
-  return allMonsters.filter(m => m.difficulty === difficulty)
+  return allMonsters.filter(m => m.difficulty === difficulty);
 }
 
 /**
@@ -173,20 +173,20 @@ export function getMonstersForGrade(grade) {
     ...monsterConfig.goblins,
     ...monsterConfig.orcs,
     ...monsterConfig.dragons
-  ]
+  ];
   
-  return allMonsters.filter(m => m.grades.includes(grade))
+  return allMonsters.filter(m => m.grades.includes(grade));
 }
 
 /**
  * 随机获取一个怪物
  */
 export function getRandomMonster(grade) {
-  const available = getMonstersForGrade(grade)
+  const available = getMonstersForGrade(grade);
   if (available.length === 0) {
-    return monsterConfig.slimes[0]
+    return monsterConfig.slimes[0];
   }
-  return available[Math.floor(Math.random() * available.length)]
+  return available[Math.floor(Math.random() * available.length)];
 }
 
-export default monsterConfig
+export default monsterConfig;

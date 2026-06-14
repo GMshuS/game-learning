@@ -27,7 +27,7 @@
           <div class="mode-icon">{{ mode.icon }}</div>
           <h3>{{ mode.name }}</h3>
           <p>{{ mode.description }}</p>
-          <div class="mode-best" v-if="bestScores[mode.id]">
+          <div v-if="bestScores[mode.id]" class="mode-best">
             最佳: {{ bestScores[mode.id].score }}分 ({{ bestScores[mode.id].rating }})
           </div>
         </div>
@@ -41,16 +41,17 @@
           ⏱️ {{ store.timeLeft }}s
         </div>
         <div class="score">得分: {{ store.score }}</div>
-        <div class="combo" v-if="store.combo > 1">🔥 {{ store.combo }}连击</div>
-        <div class="lives" v-if="store.currentMode === 'survival'">
+        <div v-if="store.combo > 1" class="combo">🔥 {{ store.combo }}连击</div>
+        <div v-if="store.currentMode === 'survival'" class="lives">
           ❤️ {{ '❤️'.repeat(store.lives) }}{{ '🖤'.repeat(store.maxLives - store.lives) }}
         </div>
-        <div class="ai-bar" v-if="store.currentMode === 'blitz'">
+        <div v-if="store.currentMode === 'blitz'" class="ai-bar">
           <div class="ai-label">AI 对手</div>
           <div class="ai-progress-bar">
-            <div class="ai-fill" :style="{ width: store.aiProgress + '%' }"></div>
+            <div class="ai-fill" :style="{ width: store.aiProgress + '%' }" />
           </div>
         </div>
+        <button class="btn-back-game" @click="goBackToModeSelect">← 返回</button>
       </div>
 
       <div class="question-area">
@@ -86,7 +87,7 @@
           <div class="stat-value">💰 {{ store.gameResult.coins }}</div>
           <div class="stat-label">金币</div>
         </div>
-        <div class="stat" v-if="store.gameResult.gems > 0">
+        <div v-if="store.gameResult.gems > 0" class="stat">
           <div class="stat-value">💎 {{ store.gameResult.gems }}</div>
           <div class="stat-label">钻石</div>
         </div>
@@ -105,19 +106,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useSpeedChallengeStore } from '../store/speedChallengeStore'
-import { speedChallengeConfig } from '../config/speedChallenge'
-import { useGameStore } from '../store/gameStore'
-import GameTutorial from './GameTutorial.vue'
+import { ref, computed, onUnmounted } from 'vue';
+import { useSpeedChallengeStore } from '../store/speedChallengeStore';
+import { useGameStore } from '../store/gameStore';
+import GameTutorial from './GameTutorial.vue';
 
-const emit = defineEmits(['back', 'challengeEnd'])
+const emit = defineEmits(['back', 'challengeEnd']);
 
-const store = useSpeedChallengeStore()
-const gameStore = useGameStore()
-let timer = null
+const store = useSpeedChallengeStore();
+const gameStore = useGameStore();
+let timer = null;
 
-const showTutorial = ref(false)
+const showTutorial = ref(false);
 
 const speedTutorialSteps = [
   {
@@ -140,57 +140,57 @@ const speedTutorialSteps = [
     title: '计分与奖励',
     description: '根据得分获得D/S评级，得分可兑换金币（0.5金币/分），达到300/500/800分还可获得钻石奖励！'
   }
-]
+];
 
 const closeTutorial = () => {
-  showTutorial.value = false
-}
+  showTutorial.value = false;
+};
 
 const modes = [
   { id: 'base', icon: '⏱️', name: '基础速算', description: '60秒内尽可能多答题' },
   { id: 'blitz', icon: '⚡', name: '闪电抢答', description: '与 AI 对手竞速' },
   { id: 'survival', icon: '💀', name: '生存模式', description: '3条命，答错扣命' }
-]
+];
 
-const bestScores = computed(() => gameStore.speedChallenge?.bestScores || {})
+const bestScores = computed(() => gameStore.speedChallenge?.bestScores || {});
 
 function startMode(modeId) {
-  store.startGame(modeId)
-  startTimer()
+  store.startGame(modeId);
+  startTimer();
 }
 
 function handleAnswer(selected) {
-  const correct = store.answer(selected)
+  const correct = store.answer(selected);
   if (!store.isPlaying) {
-    emit('challengeEnd', store.gameResult)
+    emit('challengeEnd', store.gameResult);
   }
 }
 
 function startTimer() {
-  stopTimer()
-  if (store.currentMode === 'survival') return
+  stopTimer();
+  if (store.currentMode === 'survival') return;
   timer = setInterval(() => {
-    store.tick()
+    store.tick();
     if (!store.isPlaying) {
-      stopTimer()
-      emit('challengeEnd', store.gameResult)
+      stopTimer();
+      emit('challengeEnd', store.gameResult);
     }
-  }, 1000)
+  }, 1000);
 }
 
 function stopTimer() {
   if (timer) {
-    clearInterval(timer)
-    timer = null
+    clearInterval(timer);
+    timer = null;
   }
 }
 
 function goBackToModeSelect() {
-  store.$reset()
-  stopTimer()
+  store.$reset();
+  stopTimer();
 }
 
-onUnmounted(() => stopTimer())
+onUnmounted(() => stopTimer());
 </script>
 
 <style scoped>
@@ -241,6 +241,21 @@ onUnmounted(() => stopTimer())
 
 .btn-help:hover {
   background: rgba(102, 126, 234, 0.5);
+}
+
+.btn-back-game {
+  padding: 0.5rem 1.2rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.btn-back-game:hover {
+  background: rgba(255,255,255,0.3);
 }
 
 .mode-cards {

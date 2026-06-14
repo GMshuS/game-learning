@@ -224,7 +224,7 @@ export const equipmentConfig = {
       cost: 2000
     }
   ]
-}
+};
 
 /**
  * 稀有度配置
@@ -260,7 +260,7 @@ export const rarityConfig = {
     multiplier: 5.0,
     dropRate: 0.01
   }
-}
+};
 
 /**
  * 根据 ID 获取装备
@@ -270,18 +270,18 @@ export function getEquipmentById(id) {
     ...equipmentConfig.weapons,
     ...equipmentConfig.armors,
     ...equipmentConfig.accessories
-  ]
-  return allEquipment.find(e => e.id === id)
+  ];
+  return allEquipment.find(e => e.id === id);
 }
 
 /**
  * 根据类型获取装备列表
  */
 export function getEquipmentByType(type) {
-  if (type === 'weapon') return equipmentConfig.weapons
-  if (type === 'armor') return equipmentConfig.armors
-  if (type === 'accessory') return equipmentConfig.accessories
-  return []
+  if (type === 'weapon') return equipmentConfig.weapons;
+  if (type === 'armor') return equipmentConfig.armors;
+  if (type === 'accessory') return equipmentConfig.accessories;
+  return [];
 }
 
 /**
@@ -292,8 +292,8 @@ export function getEquipmentForGrade(grade) {
     ...equipmentConfig.weapons,
     ...equipmentConfig.armors,
     ...equipmentConfig.accessories
-  ]
-  return allEquipment.filter(e => e.grade <= grade)
+  ];
+  return allEquipment.filter(e => e.grade <= grade);
 }
 
 /**
@@ -304,8 +304,8 @@ export function getEquipmentByRarity(rarity) {
     ...equipmentConfig.weapons,
     ...equipmentConfig.armors,
     ...equipmentConfig.accessories
-  ]
-  return allEquipment.filter(e => e.rarity === rarity)
+  ];
+  return allEquipment.filter(e => e.rarity === rarity);
 }
 
-export default equipmentConfig
+export default equipmentConfig;

@@ -1,9 +1,9 @@
 /**
  * 收银游戏 Store
  */
-import { defineStore } from 'pinia'
-import { useSettingsStore } from './settingsStore'
-import { getGameConfig } from '../utils/gameContext'
+import { defineStore } from 'pinia';
+import { useSettingsStore } from './settingsStore';
+import { getGameConfig } from '../utils/gameContext';
 
 export const useCashierStore = defineStore('cashier', {
   state: () => ({
@@ -23,16 +23,16 @@ export const useCashierStore = defineStore('cashier', {
   getters: {
     // 胜率
     winRate: (state) => {
-      if (state.gamesPlayed === 0) return 0
-      return Math.round((state.gamesWon / state.gamesPlayed) * 100)
+      if (state.gamesPlayed === 0) return 0;
+      return Math.round((state.gamesWon / state.gamesPlayed) * 100);
     },
     
     // 平均评分
     averageStars: (state) => {
-      const validResults = state.lastResults.filter(r => r.stars)
-      if (validResults.length === 0) return 0
-      const total = validResults.reduce((sum, r) => sum + r.stars, 0)
-      return (total / validResults.length).toFixed(1)
+      const validResults = state.lastResults.filter(r => r.stars);
+      if (validResults.length === 0) return 0;
+      const total = validResults.reduce((sum, r) => sum + r.stars, 0);
+      return (total / validResults.length).toFixed(1);
     }
   },
 
@@ -41,45 +41,45 @@ export const useCashierStore = defineStore('cashier', {
      * 记录游戏结果
      */
     recordResult(result) {
-      const settingsStore = useSettingsStore()
-      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
-      const coinRatio = gameConfig.scale.coinRatio || 1.0
-      const cashierDifficulty = settingsStore.difficulty === 'normal' ? 'medium' : settingsStore.difficulty
+      const settingsStore = useSettingsStore();
+      const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty);
+      const coinRatio = gameConfig.scale.coinRatio || 1.0;
+      const cashierDifficulty = settingsStore.difficulty === 'normal' ? 'medium' : settingsStore.difficulty;
 
-      this.gamesPlayed++
+      this.gamesPlayed++;
       
       if (result.status === 'success') {
-        this.gamesWon++
-        this.currentStreak++
+        this.gamesWon++;
+        this.currentStreak++;
         
         if (this.currentStreak > this.bestStreak) {
-          this.bestStreak = this.currentStreak
+          this.bestStreak = this.currentStreak;
         }
         
         // 计算得分（应用难度倍率）
-        const score = this.calculateScore(result)
-        const adjustedScore = Math.floor(score * coinRatio)
+        const score = this.calculateScore(result);
+        const adjustedScore = Math.floor(score * coinRatio);
         
         // 更新最高分
         if (adjustedScore > this.highScores[cashierDifficulty]) {
-          this.highScores[cashierDifficulty] = adjustedScore
+          this.highScores[cashierDifficulty] = adjustedScore;
         }
         
         // 增加收益（带难度倍率）
-        this.totalEarnings += Math.floor(result.stars * 10 * coinRatio)
+        this.totalEarnings += Math.floor(result.stars * 10 * coinRatio);
       } else {
-        this.currentStreak = 0
+        this.currentStreak = 0;
       }
       
       // 记录最近结果
       this.lastResults.unshift({
         ...result,
         timestamp: new Date().toISOString()
-      })
+      });
       
       // 只保留最近 10 场
       if (this.lastResults.length > 10) {
-        this.lastResults = this.lastResults.slice(0, 10)
+        this.lastResults = this.lastResults.slice(0, 10);
       }
     },
     
@@ -87,28 +87,28 @@ export const useCashierStore = defineStore('cashier', {
      * 计算得分
      */
     calculateScore(result) {
-      const baseScore = 100
+      const baseScore = 100;
       
       // 星级奖励
-      const starBonus = result.stars * 50
+      const starBonus = result.stars * 50;
       
       // 时间奖励
-      const timeBonus = Math.floor(result.timeUsed * 2)
+      const timeBonus = Math.floor(result.timeUsed * 2);
       
       // 连击奖励
-      const streakBonus = this.currentStreak * 10
+      const streakBonus = this.currentStreak * 10;
       
-      return baseScore + starBonus + timeBonus + streakBonus
+      return baseScore + starBonus + timeBonus + streakBonus;
     },
     
     /**
      * 设置难度
      */
     setDifficulty(difficulty) {
-      const settingsStore = useSettingsStore()
-      const mappedDifficulty = difficulty === 'medium' ? 'normal' : difficulty
+      const settingsStore = useSettingsStore();
+      const mappedDifficulty = difficulty === 'medium' ? 'normal' : difficulty;
       if (['easy', 'normal', 'hard'].includes(mappedDifficulty)) {
-        settingsStore.setDifficulty(mappedDifficulty)
+        settingsStore.setDifficulty(mappedDifficulty);
       }
     },
     
@@ -116,19 +116,19 @@ export const useCashierStore = defineStore('cashier', {
      * 重置统计
      */
     reset() {
-      this.gamesPlayed = 0
-      this.gamesWon = 0
-      this.bestStreak = 0
-      this.currentStreak = 0
-      this.totalEarnings = 0
-      this.lastResults = []
+      this.gamesPlayed = 0;
+      this.gamesWon = 0;
+      this.bestStreak = 0;
+      this.currentStreak = 0;
+      this.totalEarnings = 0;
+      this.lastResults = [];
       this.highScores = {
         easy: 0,
         medium: 0,
         hard: 0
-      }
+      };
     }
   }
-})
+});
 
-export default useCashierStore
+export default useCashierStore;

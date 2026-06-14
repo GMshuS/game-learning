@@ -65,6 +65,17 @@
           <span>收藏: {{ cardCollectionCount }} 张</span>
         </div>
       </div>
+
+      <!-- 针对性训练 -->
+      <div class="hall-card training-card" @click="$emit('startTargetedTraining')">
+        <div class="card-icon">🎯</div>
+        <h3>针对性训练</h3>
+        <p>根据错题记录，自动推荐薄弱题型</p>
+        <div class="card-status">
+          <span v-if="weakNodeCount > 0">待强化: {{ weakNodeCount }} 个知识点</span>
+          <span v-else>暂无薄弱点</span>
+        </div>
+      </div>
     </div>
 
     <div class="hall-footer">
@@ -76,44 +87,65 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useGameStore } from '../store/gameStore'
-import { useCashierStore } from '../store/cashierStore'
+import { computed } from 'vue';
+import { useGameStore } from '../store/gameStore';
+import { useCashierStore } from '../store/cashierStore';
+import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 
 // ⚠️ 架构建议：以下 computed 直接访问 gameStore 深层嵌套属性（如 gameStore.speedChallenge?.bestScores?.base）。
 //    建议在对应 Store 中暴露 getter（如 speedChallengeStore.bestScore），降低组件与 Store 内部结构的耦合度。
 
-const gameStore = useGameStore()
-const cashierStore = useCashierStore()
+const emit = defineEmits([
+  'back',
+  'startShop',
+  'startCashier',
+  'startAdventure',
+  'startSpeedChallenge',
+  'startWorkshop',
+  'startCardBattle',
+  'startTargetedTraining',
+  'openLeaderboard'
+]);
+
+const gameStore = useGameStore();
+const cashierStore = useCashierStore();
 
 const adventureProgress = computed(() => {
-  const area = gameStore.currentArea || 'area_1'
-  const areaNum = area.replace('area_', '')
-  return `第${areaNum}关`
-})
+  const area = gameStore.currentArea || 'area_1';
+  const areaNum = area.replace('area_', '');
+  return `第${areaNum}关`;
+});
 
 const shopCoins = computed(() => {
-  return gameStore.playerCoins || 0
-})
+  return gameStore.playerCoins || 0;
+});
 
 const cashierBestScore = computed(() => {
-  const scores = cashierStore.highScores
-  const best = Math.max(scores.easy, scores.medium, scores.hard)
-  return best > 0 ? `最佳: ${best}分` : '未挑战'
-})
+  const scores = cashierStore.highScores;
+  const best = Math.max(scores.easy, scores.medium, scores.hard);
+  return best > 0 ? `最佳: ${best}分` : '未挑战';
+});
 
 const bestSpeedScore = computed(() => {
-  const best = gameStore.speedChallenge?.bestScores?.base || null
-  return best ? `${best.score}分` : '未挑战'
-})
+  const best = gameStore.speedChallenge?.bestScores?.base || null;
+  return best ? `${best.score}分` : '未挑战';
+});
 
 const listedCount = computed(() => {
-  return gameStore.workshop?.listedItems?.filter(item => !item.sold).length || 0
-})
+  return gameStore.workshop?.listedItems?.filter(item => !item.sold).length || 0;
+});
 
 const cardCollectionCount = computed(() => {
-  return gameStore.cardBattle?.collection?.reduce((sum, c) => sum + (c.quantity || 0), 0) || 0
-})
+  return gameStore.cardBattle?.collection?.reduce((sum, c) => sum + (c.quantity || 0), 0) || 0;
+});
+
+const mathKnowledgeStore = useMathKnowledgeStore();
+const weakNodeCount = computed(() => {
+  const records = mathKnowledgeStore.records;
+  return Object.values(records).filter(r =>
+    r.totalAttempts > 0 && (r.wrongCount / r.totalAttempts) > 0.3
+  ).length;
+});
 </script>
 
 <style scoped>
@@ -199,6 +231,10 @@ const cardCollectionCount = computed(() => {
 
 .card-card:hover {
   border-color: #8b5cf6;
+}
+
+.training-card:hover {
+  border-color: #f59e0b;
 }
 
 .card-icon {

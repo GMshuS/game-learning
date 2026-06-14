@@ -60,7 +60,7 @@
       </div>
 
       <!-- 成品背包 -->
-      <div class="ws-section" v-if="store.craftedItems.length > 0">
+      <div v-if="store.craftedItems.length > 0" class="ws-section">
         <h3>🎒 成品背包</h3>
         <div class="crafted-list">
           <div v-for="item in store.craftedItems" :key="item.recipeId" class="crafted-item">
@@ -73,7 +73,7 @@
       </div>
 
       <!-- 待售队列 -->
-      <div class="ws-section" v-if="store.pendingSales.length > 0">
+      <div v-if="store.pendingSales.length > 0" class="ws-section">
         <h3>🏷️ 待售中</h3>
         <div class="listed-list">
           <div v-for="(item, idx) in store.pendingSales" :key="idx" class="listed-item">
@@ -109,7 +109,7 @@
         <p>{{ getRecipeName(listingRecipeId) }}</p>
         <div class="price-input">
           <label>价格: </label>
-          <input v-model.number="listingPrice" type="number" :min="10" :step="5" />
+          <input v-model.number="listingPrice" type="number" :min="10" :step="5">
           <span>💰</span>
         </div>
         <div class="modal-actions">
@@ -122,20 +122,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useWorkshopStore } from '../store/workshopStore'
-import { useGameStore } from '../store/gameStore'
-import { useSettingsStore } from '../store/settingsStore'
-import workshopConfig from '../config/workshop'
-import GameTutorial from './GameTutorial.vue'
+import { ref, computed, onMounted } from 'vue';
+import { useWorkshopStore } from '../store/workshopStore';
+import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
+import { generateQuestion as generateQuizQuestion } from '../utils/questionGenerator';
+import { questionToMultipleChoice } from '../utils/questionBank';
+import workshopConfig from '../config/workshop';
+import GameTutorial from './GameTutorial.vue';
 
-const emit = defineEmits(['back'])
+const emit = defineEmits(['back']);
 
-const store = useWorkshopStore()
-const gameStore = useGameStore()
-const settingsStore = useSettingsStore()
+const store = useWorkshopStore();
+const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
 
-const showTutorial = ref(false)
+const showTutorial = ref(false);
 
 const workshopTutorialSteps = [
   {
@@ -158,131 +161,114 @@ const workshopTutorialSteps = [
     title: '销售结算',
     description: '顾客会定期购买待售物品，售价越接近基础价格越容易售出。点击"撤回"可退回成品重新定价。'
   }
-]
+];
 
 const closeTutorial = () => {
-  showTutorial.value = false
-}
+  showTutorial.value = false;
+};
 
-const showQuestionDialog = ref(false)
-const questionText = ref('')
-const questionOptions = ref([])
-const questionAnswer = ref(0)
-const questionResult = ref('')
-const resultType = ref('success')
+const showQuestionDialog = ref(false);
+const questionText = ref('');
+const questionOptions = ref([]);
+const questionAnswer = ref(0);
+const currentQuestionType = ref('');
+const questionResult = ref('');
+const resultType = ref('success');
 
-const showListDialog = ref(false)
-const listingRecipeId = ref('')
-const listingPrice = ref(0)
+const showListDialog = ref(false);
+const listingRecipeId = ref('');
+const listingPrice = ref(0);
 
 function getMaterialIcon(id) {
-  const mat = workshopConfig.materialTypes.find(m => m.id === id)
-  return mat ? mat.icon : '?'
+  const mat = workshopConfig.materialTypes.find(m => m.id === id);
+  return mat ? mat.icon : '?';
 }
 
 function getRecipeIcon(id) {
-  const recipe = workshopConfig.recipes.find(r => r.id === id)
-  return recipe ? recipe.icon : '?'
+  const recipe = workshopConfig.recipes.find(r => r.id === id);
+  return recipe ? recipe.icon : '?';
 }
 
 function getRecipeName(id) {
-  const recipe = workshopConfig.recipes.find(r => r.id === id)
-  return recipe ? recipe.name : id
+  const recipe = workshopConfig.recipes.find(r => r.id === id);
+  return recipe ? recipe.name : id;
 }
 
 function handleCraft(recipeId) {
   if (store.craftRecipe(recipeId)) {
-    gameStore.workshop = store.getSaveData()
-    gameStore.saveGame()
+    gameStore.workshop = store.getSaveData();
+    gameStore.saveGame();
   }
 }
 
 function openListDialog(recipeId) {
-  const recipe = workshopConfig.recipes.find(r => r.id === recipeId)
-  listingRecipeId.value = recipeId
-  listingPrice.value = recipe.basePrice
-  showListDialog.value = true
+  const recipe = workshopConfig.recipes.find(r => r.id === recipeId);
+  listingRecipeId.value = recipeId;
+  listingPrice.value = recipe.basePrice;
+  showListDialog.value = true;
 }
 
 function confirmList() {
   if (listingPrice.value >= 10) {
-    store.listItem(listingRecipeId.value, listingPrice.value)
-    gameStore.workshop = store.getSaveData()
-    gameStore.saveGame()
-    showListDialog.value = false
+    store.listItem(listingRecipeId.value, listingPrice.value);
+    gameStore.workshop = store.getSaveData();
+    gameStore.saveGame();
+    showListDialog.value = false;
   }
 }
 
 function handleWithdraw(idx) {
-  store.withdrawItem(idx)
-  gameStore.workshop = store.getSaveData()
-  gameStore.saveGame()
+  store.withdrawItem(idx);
+  gameStore.workshop = store.getSaveData();
+  gameStore.saveGame();
 }
 
 function generateQuestion() {
-  const grade = settingsStore.grade
-  const maxNum = grade <= 2 ? 20 : grade <= 4 ? 100 : 1000
-  let a = Math.floor(Math.random() * maxNum) + 1
-  let b = Math.floor(Math.random() * maxNum) + 1
-  const ops = ['+', '-']
-  if (grade >= 3) ops.push('×')
-  if (grade >= 4) ops.push('÷')
-  const op = ops[Math.floor(Math.random() * ops.length)]
-
-  let answer
-  switch (op) {
-    case '+': answer = a + b; break
-    case '-': answer = a - b; break
-    case '×': answer = a * b; break
-    case '÷': {
-      const maxDiv = grade <= 2 ? 5 : grade <= 4 ? 9 : 12
-      b = Math.floor(Math.random() * maxDiv) + 2
-      const quotient = Math.floor(Math.random() * 10) + 1
-      a = b * quotient
-      answer = quotient
-      break
-    }
-  }
-
-  questionText.value = `${a} ${op} ${b} = ?`
-  questionAnswer.value = answer
-
-  const opts = new Set([answer])
-  while (opts.size < 4) {
-    const offset = Math.floor(Math.random() * 20) - 10
-    const val = answer + offset
-    if (val !== answer) opts.add(val)
-  }
-  questionOptions.value = [...opts].sort(() => Math.random() - 0.5)
-  showQuestionDialog.value = true
+  const settingsStore = useSettingsStore();
+  const grade = settingsStore.grade;
+  const q = generateQuizQuestion(grade, 'random');
+  const mcq = questionToMultipleChoice(q);
+  questionText.value = mcq.question;
+  questionOptions.value = mcq.options;
+  questionAnswer.value = mcq.answer;
+  currentQuestionType.value = q.type;
+  showQuestionDialog.value = true;
 }
 
 function answerQuestion(selected) {
-  if (selected === questionAnswer.value) {
-    const reward = store.rewardMaterial()
-    gameStore.workshop = store.getSaveData()
-    gameStore.saveGame()
-    questionResult.value = `答对了！获得 ${reward.material.icon} ${reward.material.name} ×${reward.amount}`
-    resultType.value = 'success'
-  } else {
-    questionResult.value = '答错了，再试一次！'
-    resultType.value = 'error'
+  const isCorrect = selected === questionAnswer.value;
+
+  // 记录答题结果到知识库
+  const mathKnowledgeStore = useMathKnowledgeStore();
+  if (currentQuestionType.value) {
+    mathKnowledgeStore.recordResult(currentQuestionType.value, isCorrect);
   }
-  setTimeout(closeQuestion, 1500)
+
+  if (isCorrect) {
+    const reward = store.rewardMaterial();
+    gameStore.workshop = store.getSaveData();
+    gameStore.saveGame();
+    questionResult.value = `答对了！获得 ${reward.material.icon} ${reward.material.name} ×${reward.amount}`;
+    resultType.value = 'success';
+  } else {
+    questionResult.value = '答错了，再试一次！';
+    resultType.value = 'error';
+  }
+  setTimeout(closeQuestion, 1500);
 }
 
 function closeQuestion() {
-  showQuestionDialog.value = false
-  questionResult.value = ''
+  showQuestionDialog.value = false;
+  questionResult.value = '';
 }
 
 onMounted(() => {
-  store.loadData(gameStore.workshop)
+  store.loadData(gameStore.workshop);
   // 结算销售
-  store.settleSales()
-  gameStore.workshop = store.getSaveData()
-  gameStore.saveGame()
-})
+  store.settleSales();
+  gameStore.workshop = store.getSaveData();
+  gameStore.saveGame();
+});
 </script>
 
 <style scoped>

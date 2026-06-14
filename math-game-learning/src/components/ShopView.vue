@@ -60,11 +60,11 @@
             class="answer-input"
             placeholder="输入答案..."
             @keyup.enter="submitAnswer"
-          />
+          >
           <button
             class="btn-submit"
-            @click="submitAnswer"
             :disabled="userAnswer === ''"
+            @click="submitAnswer"
           >
             ✍️ 确认
           </button>
@@ -88,7 +88,7 @@
       <div v-if="!shopStore.customerQueue" class="empty-state">
         <div class="empty-icon">🛍️</div>
         <p>欢迎来到文具商店！</p>
-        <p>点击下方按钮邀请顾客前来购物，<br/>计算总价赢取道具吧！</p>
+        <p>点击下方按钮邀请顾客前来购物，<br>计算总价赢取道具吧！</p>
       </div>
     </div>
 
@@ -96,8 +96,8 @@
     <div class="shop-footer">
       <button
         class="btn-customer"
-        @click="inviteCustomer"
         :disabled="shopStore.isProblemActive"
+        @click="inviteCustomer"
       >
         🧑‍🤝‍🧑 来一位顾客
       </button>
@@ -113,23 +113,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useShopStore } from '../store/shopStore'
-import { useGameStore } from '../store/gameStore'
-import { useSettingsStore } from '../store/settingsStore'
-import GameTutorial from './GameTutorial.vue'
+import { ref, computed } from 'vue';
+import { useShopStore } from '../store/shopStore';
+import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
+import GameTutorial from './GameTutorial.vue';
 
-const shopStore = useShopStore()
-const gameStore = useGameStore()
-const settingsStore = useSettingsStore()
+const shopStore = useShopStore();
+const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
 
-const emit = defineEmits(['back', 'openInventory'])
+const emit = defineEmits(['back', 'openInventory']);
 
-const showTutorial = ref(false)
-const userAnswer = ref('')
-const feedbackMessage = ref('')
-const feedbackClass = ref('')
-const rewardInfo = ref(null)
+const showTutorial = ref(false);
+const userAnswer = ref('');
+const feedbackMessage = ref('');
+const feedbackClass = ref('');
+const rewardInfo = ref(null);
 
 const shopTutorialSteps = [
   {
@@ -152,45 +152,45 @@ const shopTutorialSteps = [
     title: '🎒 管理道具',
     description: '获得的物品存入背包，可在背包界面装备到战斗栏，在冒险中使用。'
   }
-]
+];
 
 const playerCoins = computed(() => {
-  return gameStore.playerCoins
-})
+  return gameStore.playerCoins;
+});
 
 function inviteCustomer() {
-  const grade = settingsStore.grade || 2
-  userAnswer.value = ''
-  feedbackMessage.value = ''
-  feedbackClass.value = ''
-  rewardInfo.value = null
-  shopStore.generateCustomer(grade)
+  const grade = settingsStore.grade || 2;
+  userAnswer.value = '';
+  feedbackMessage.value = '';
+  feedbackClass.value = '';
+  rewardInfo.value = null;
+  shopStore.generateCustomer(grade);
 }
 
 function submitAnswer() {
-  if (userAnswer.value === '') return
+  if (userAnswer.value === '') return;
 
   // 检查是否是找零步骤
-  const isChangeStep = feedbackMessage.value && feedbackMessage.value.includes('找零')
-  const result = shopStore.checkAnswer(userAnswer.value, { isChangeStep })
+  const isChangeStep = feedbackMessage.value && feedbackMessage.value.includes('找零');
+  const result = shopStore.checkAnswer(userAnswer.value, { isChangeStep });
 
-  feedbackMessage.value = result.message
-  feedbackClass.value = result.correct ? 'feedback-correct' : 'feedback-wrong'
-  userAnswer.value = ''
+  feedbackMessage.value = result.message;
+  feedbackClass.value = result.correct ? 'feedback-correct' : 'feedback-wrong';
+  userAnswer.value = '';
 
   if (result.correct) {
     if (result.isChangeStep) {
       // 高年级找零步骤：更新题目为找零计算
-      return // checkAnswer 已更新 questionText
+      return; // checkAnswer 已更新 questionText
     }
     if (result.reward) {
-      rewardInfo.value = result.reward
+      rewardInfo.value = result.reward;
     }
   }
 }
 
 function openInventory() {
-  emit('openInventory')
+  emit('openInventory');
 }
 </script>
 

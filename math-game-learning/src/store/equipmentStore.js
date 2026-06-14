@@ -1,8 +1,8 @@
 /**
  * 装备管理 Store
  */
-import { defineStore } from 'pinia'
-import { getEquipmentById } from '../config/equipment'
+import { defineStore } from 'pinia';
+import { getEquipmentById } from '../config/equipment';
 
 export const useEquipmentStore = defineStore('equipment', {
   state: () => ({
@@ -22,40 +22,40 @@ export const useEquipmentStore = defineStore('equipment', {
   getters: {
     // 获取总属性加成
     getTotalBonus: (state) => {
-      let bonus = { attack: 0, defense: 0, luck: 0 }
+      let bonus = { attack: 0, defense: 0, luck: 0 };
       
       Object.values(state.equipped).forEach(itemId => {
         if (itemId) {
-          const item = getEquipmentById(itemId)
+          const item = getEquipmentById(itemId);
           if (item) {
-            bonus.attack += item.attack || 0
-            bonus.defense += item.defense || 0
-            bonus.luck += item.luck || 0
+            bonus.attack += item.attack || 0;
+            bonus.defense += item.defense || 0;
+            bonus.luck += item.luck || 0;
           }
         }
-      })
+      });
       
-      return bonus
+      return bonus;
     },
     
     // 获取当前装备的物品详情
     getEquippedItems: (state) => {
-      const items = {}
+      const items = {};
       
       Object.entries(state.equipped).forEach(([slot, itemId]) => {
         if (itemId) {
-          items[slot] = getEquipmentById(itemId)
+          items[slot] = getEquipmentById(itemId);
         } else {
-          items[slot] = null
+          items[slot] = null;
         }
-      })
+      });
       
-      return items
+      return items;
     },
     
     // 检查是否有某物品
     hasItem: (state) => (itemId) => {
-      return state.inventory.some(item => item.id === itemId)
+      return state.inventory.some(item => item.id === itemId);
     }
   },
 
@@ -65,32 +65,32 @@ export const useEquipmentStore = defineStore('equipment', {
      */
     equipItem(slot, itemId) {
       if (!['weapon', 'armor', 'accessory'].includes(slot)) {
-        return false
+        return false;
       }
       
       if (!this.hasItem(itemId)) {
-        return false
+        return false;
       }
       
-      const item = getEquipmentById(itemId)
+      const item = getEquipmentById(itemId);
       if (!item || item.type !== slot) {
-        return false
+        return false;
       }
       
       // 卸下当前装备
-      const oldItemId = this.equipped[slot]
+      const oldItemId = this.equipped[slot];
       
       // 装备新物品
-      this.equipped[slot] = itemId
+      this.equipped[slot] = itemId;
       
       // 更新总加成
-      this.updateTotalBonus()
+      this.updateTotalBonus();
       
       return {
         slot,
         newItem: item,
         oldItemId
-      }
+      };
     },
     
     /**
@@ -98,31 +98,31 @@ export const useEquipmentStore = defineStore('equipment', {
      */
     unequipItem(slot) {
       if (!['weapon', 'armor', 'accessory'].includes(slot)) {
-        return null
+        return null;
       }
       
-      const itemId = this.equipped[slot]
+      const itemId = this.equipped[slot];
       if (!itemId) {
-        return null
+        return null;
       }
       
-      const item = getEquipmentById(itemId)
-      this.equipped[slot] = null
+      const item = getEquipmentById(itemId);
+      this.equipped[slot] = null;
       
-      this.updateTotalBonus()
+      this.updateTotalBonus();
       
-      return item
+      return item;
     },
     
     /**
      * 添加物品到库存
      */
     addItemToInventory(item) {
-      const existing = this.inventory.find(i => i.id === item.id)
+      const existing = this.inventory.find(i => i.id === item.id);
       if (existing) {
-        existing.quantity = (existing.quantity || 1) + 1
+        existing.quantity = (existing.quantity || 1) + 1;
       } else {
-        this.inventory.push({ ...item, quantity: 1 })
+        this.inventory.push({ ...item, quantity: 1 });
       }
     },
     
@@ -130,39 +130,39 @@ export const useEquipmentStore = defineStore('equipment', {
      * 从库存移除物品
      */
     removeItemFromInventory(itemId, quantity = 1) {
-      const index = this.inventory.findIndex(i => i.id === itemId)
+      const index = this.inventory.findIndex(i => i.id === itemId);
       if (index === -1) {
-        return false
+        return false;
       }
       
-      const item = this.inventory[index]
+      const item = this.inventory[index];
       if ((item.quantity || 1) <= quantity) {
-        this.inventory.splice(index, 1)
+        this.inventory.splice(index, 1);
       } else {
-        item.quantity -= quantity
+        item.quantity -= quantity;
       }
       
-      return true
+      return true;
     },
     
     /**
      * 更新总加成
      */
     updateTotalBonus() {
-      let bonus = { attack: 0, defense: 0, luck: 0 }
+      let bonus = { attack: 0, defense: 0, luck: 0 };
       
       Object.values(this.equipped).forEach(itemId => {
         if (itemId) {
-          const item = getEquipmentById(itemId)
+          const item = getEquipmentById(itemId);
           if (item) {
-            bonus.attack += item.attack || 0
-            bonus.defense += item.defense || 0
-            bonus.luck += item.luck || 0
+            bonus.attack += item.attack || 0;
+            bonus.defense += item.defense || 0;
+            bonus.luck += item.luck || 0;
           }
         }
-      })
+      });
       
-      this.totalBonus = bonus
+      this.totalBonus = bonus;
     },
     
     /**
@@ -173,11 +173,11 @@ export const useEquipmentStore = defineStore('equipment', {
         weapon: null,
         armor: null,
         accessory: null
-      }
-      this.inventory = []
-      this.totalBonus = { attack: 0, defense: 0, luck: 0 }
+      };
+      this.inventory = [];
+      this.totalBonus = { attack: 0, defense: 0, luck: 0 };
     }
   }
-})
+});
 
-export default useEquipmentStore
+export default useEquipmentStore;

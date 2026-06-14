@@ -36,6 +36,6 @@ export const gameConfig = {
     musicVolume: 0.5,
     soundVolume: 0.7
   }
-}
+};
 
-export default gameConfig
+export default gameConfig;

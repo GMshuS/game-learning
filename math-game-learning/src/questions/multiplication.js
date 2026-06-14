@@ -1,8 +1,8 @@
 /**
  * 乘法题目生成器
  */
-import { register } from './registry'
-import { randomInt } from './_helpers'
+import { register } from './registry';
+import { randomInt } from './_helpers';
 
 /**
  * 生成乘法题目
@@ -12,18 +12,18 @@ import { randomInt } from './_helpers'
  */
 function generateMultiplication(grade, range) {
   // 乘除法使用较小的数字范围
-  const maxFactor = Math.min(12, Math.floor(range.max / 10))
-  const a = randomInt(2, maxFactor)
-  const b = randomInt(2, maxFactor)
+  const maxFactor = Math.min(12, Math.floor(range.max / 10));
+  const a = randomInt(2, maxFactor);
+  const b = randomInt(2, maxFactor);
   return {
     question: `${a} × ${b} = ?`,
     answer: a * b,
     type: 'multiply',
     operands: [a, b],
     operator: '×'
-  }
+  };
 }
 
-register('multiply', generateMultiplication)
+register('multiply', generateMultiplication);
 
-export default generateMultiplication
+export default generateMultiplication;

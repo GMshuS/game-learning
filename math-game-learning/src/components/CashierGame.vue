@@ -51,7 +51,7 @@
             <div class="currency-icon">{{ denom.icon }}</div>
             <div class="currency-info">
               <span class="currency-value">¥{{ formatPrice(denom.value) }}</span>
-              <span class="currency-count" v-if="getCoinCount(denom.value) > 0">
+              <span v-if="getCoinCount(denom.value) > 0" class="currency-count">
                 x{{ getCoinCount(denom.value) }}
               </span>
             </div>
@@ -120,122 +120,122 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue';
 import {
   cashierConfig,
   generateCashierProblem,
   calculateOptimalChange,
   validateChange
-} from '../config/cashier'
-import { useSettingsStore } from '../store/settingsStore'
-import { getGameConfig } from '../utils/gameContext'
+} from '../config/cashier';
+import { useSettingsStore } from '../store/settingsStore';
+import { getGameConfig } from '../utils/gameContext';
 
 const props = defineProps({
   difficulty: {
     type: String,
     default: 'easy'
   }
-})
+});
 
-const emit = defineEmits(['complete', 'back'])
+const emit = defineEmits(['complete', 'back']);
 
-const settingsStore = useSettingsStore()
-const problem = ref(null)
-const selectedChange = ref({})
-const timeLeft = ref(60)
-const isComplete = ref(false)
-const result = ref(null)
-let timer = null
+const settingsStore = useSettingsStore();
+const problem = ref(null);
+const selectedChange = ref({});
+const timeLeft = ref(60);
+const isComplete = ref(false);
+const result = ref(null);
+let timer = null;
 
 // 初始化游戏
 const initGame = () => {
-  const grade = settingsStore.grade
-  problem.value = generateCashierProblem(props.difficulty, grade)
-  selectedChange.value = {}
-  isComplete.value = false
-  result.value = null
+  const grade = settingsStore.grade;
+  problem.value = generateCashierProblem(props.difficulty, grade);
+  selectedChange.value = {};
+  isComplete.value = false;
+  result.value = null;
   
   // 根据难度设置时间
-  const config = cashierConfig.difficulties[props.difficulty]
-  timeLeft.value = config.timeLimit
+  const config = cashierConfig.difficulties[props.difficulty];
+  timeLeft.value = config.timeLimit;
   
-  startTimer()
-}
+  startTimer();
+};
 
 // 启动计时器
 const startTimer = () => {
-  if (timer) clearInterval(timer)
+  if (timer) clearInterval(timer);
   timer = setInterval(() => {
-    timeLeft.value--
+    timeLeft.value--;
     if (timeLeft.value <= 0) {
-      endGame('timeout')
+      endGame('timeout');
     }
-  }, 1000)
-}
+  }, 1000);
+};
 
 // 添加货币到找零
 const addCoin = (value) => {
-  if (isComplete.value) return
+  if (isComplete.value) return;
   
-  const key = value.toString()
-  selectedChange.value[key] = (selectedChange.value[key] || 0) + 1
-}
+  const key = value.toString();
+  selectedChange.value[key] = (selectedChange.value[key] || 0) + 1;
+};
 
 // 移除货币
 const removeCoin = (value) => {
-  if (isComplete.value) return
+  if (isComplete.value) return;
   
-  const key = value.toString()
+  const key = value.toString();
   if (selectedChange.value[key] && selectedChange.value[key] > 0) {
-    selectedChange.value[key]--
+    selectedChange.value[key]--;
     if (selectedChange.value[key] === 0) {
-      delete selectedChange.value[key]
+      delete selectedChange.value[key];
     }
   }
-}
+};
 
 // 获取当前选择的货币数量
 const getCoinCount = (value) => {
-  return selectedChange.value[value.toString()] || 0
-}
+  return selectedChange.value[value.toString()] || 0;
+};
 
 // 计算当前找零总额
 const currentTotal = computed(() => {
   return Object.entries(selectedChange.value).reduce((sum, [value, count]) => {
-    return sum + parseInt(value) * count
-  }, 0)
-})
+    return sum + parseInt(value) * count;
+  }, 0);
+});
 
 // 计算还需要找零多少
 const remainingChange = computed(() => {
-  if (!problem.value) return 0
-  return problem.value.change - currentTotal.value
-})
+  if (!problem.value) return 0;
+  return problem.value.change - currentTotal.value;
+});
 
 // 提交答案
 const submit = () => {
-  if (!problem.value || isComplete.value) return
+  if (!problem.value || isComplete.value) return;
   
-  const validation = validateChange(selectedChange.value, problem.value.change)
+  const validation = validateChange(selectedChange.value, problem.value.change);
   
   if (validation.correct) {
     // 计算评分
-    const coinCount = Object.values(selectedChange.value).reduce((sum, c) => sum + c, 0)
-    const optimalChange = calculateOptimalChange(problem.value.change)
-    const optimalCount = Object.values(optimalChange).reduce((sum, c) => sum + c, 0)
+    const coinCount = Object.values(selectedChange.value).reduce((sum, c) => sum + c, 0);
+    const optimalChange = calculateOptimalChange(problem.value.change);
+    const optimalCount = Object.values(optimalChange).reduce((sum, c) => sum + c, 0);
     
-    let stars = 1
-    if (coinCount <= optimalCount) stars = 3
-    else if (coinCount <= optimalCount + 2) stars = 2
+    let stars = 1;
+    if (coinCount <= optimalCount) stars = 3;
+    else if (coinCount <= optimalCount + 2) stars = 2;
     
     // 计算奖励（应用难度 coinRatio）
-    const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty)
-    const coinRatio = gameConfig.scale.coinRatio || 1.0
-    const timeUsed = cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value
+    const gameConfig = getGameConfig(settingsStore.grade, settingsStore.difficulty);
+    const coinRatio = gameConfig.scale.coinRatio || 1.0;
+    const timeUsed = cashierConfig.difficulties[props.difficulty].timeLimit - timeLeft.value;
     const rewards = {
       coins: Math.floor(stars * 10 * coinRatio),
       exp: stars * 5 + Math.max(0, 30 - timeUsed)
-    }
+    };
     
     endGame('success', {
       stars,
@@ -243,75 +243,75 @@ const submit = () => {
       optimalCount,
       timeUsed,
       rewards
-    })
+    });
   } else {
-    endGame('wrong', validation)
+    endGame('wrong', validation);
   }
-}
+};
 
 // 结束游戏
 const endGame = (status, data = {}) => {
-  isComplete.value = true
-  if (timer) clearInterval(timer)
+  isComplete.value = true;
+  if (timer) clearInterval(timer);
   
   result.value = {
     status,
     ...data,
     problem: problem.value,
     selectedChange: { ...selectedChange.value }
-  }
+  };
   
-  emit('complete', result.value)
-}
+  emit('complete', result.value);
+};
 
 // 继续下一题
 const next = () => {
-  initGame()
-}
+  initGame();
+};
 
 // 返回
 const back = () => {
-  if (timer) clearInterval(timer)
-  emit('back')
-}
+  if (timer) clearInterval(timer);
+  emit('back');
+};
 
 // 获取货币配置
 const getDenomination = (value) => {
-  return cashierConfig.denominations.find(d => d.value === parseInt(value))
-}
+  return cashierConfig.denominations.find(d => d.value === parseInt(value));
+};
 
 // 格式化钞票组合：{20: 2, 5: 1} => "2张¥20.00，1张¥5.00"
 const formatBills = (bills) => {
-  if (!bills) return ''
+  if (!bills) return '';
   return Object.entries(bills)
     .sort(([a], [b]) => parseInt(b) - parseInt(a))
     .map(([value, count]) => `${count}张¥${formatPrice(parseInt(value))}`)
-    .join('，')
-}
+    .join('，');
+};
 
 // 格式化价格（直接显示，单位是元）
 const formatPrice = (value) => {
   if (value === null || value === undefined || isNaN(value)) {
-    return '0.00'
+    return '0.00';
   }
-  return Number(value).toFixed(2)
-}
+  return Number(value).toFixed(2);
+};
 
 // 计算绝对值（用于模板）
 const absValue = (value) => {
-  return Math.abs(value).toFixed(2)
-}
+  return Math.abs(value).toFixed(2);
+};
 
 // 组件卸载时清理定时器
 onUnmounted(() => {
   if (timer) {
-    clearInterval(timer)
-    timer = null
+    clearInterval(timer);
+    timer = null;
   }
-})
+});
 
 // 初始化
-initGame()
+initGame();
 </script>
 
 <style scoped>

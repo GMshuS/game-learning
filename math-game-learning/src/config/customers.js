@@ -71,42 +71,42 @@ export const customerConfig = {
       '很满意！'
     ]
   }
-}
+};
 
 /**
  * 生成顾客
  */
 export function generateCustomer() {
-  const types = customerConfig.types
+  const types = customerConfig.types;
   
   // 根据频率随机选择顾客类型
-  const rand = Math.random()
-  let cumulative = 0
-  let selectedType = types[0]
+  const rand = Math.random();
+  let cumulative = 0;
+  let selectedType = types[0];
   
   for (const type of types) {
-    cumulative += type.frequency
+    cumulative += type.frequency;
     if (rand <= cumulative) {
-      selectedType = type
-      break
+      selectedType = type;
+      break;
     }
   }
   
   // 生成顾客要购买的商品
-  const productCount = Math.floor(Math.random() * 3) + 1
-  const products = []
+  const productCount = Math.floor(Math.random() * 3) + 1;
+  const products = [];
   
   for (let i = 0; i < productCount; i++) {
-    const randProduct = Math.floor(Math.random() * shopConfig.products.length)
-    const product = shopConfig.products[randProduct]
-    const quantity = Math.floor(Math.random() * 2) + 1
-    products.push({ product, quantity })
+    const randProduct = Math.floor(Math.random() * shopConfig.products.length);
+    const product = shopConfig.products[randProduct];
+    const quantity = Math.floor(Math.random() * 2) + 1;
+    products.push({ product, quantity });
   }
   
   // 计算总价
   const total = products.reduce((sum, item) => {
-    return sum + item.product.sellPrice * item.quantity
-  }, 0)
+    return sum + item.product.sellPrice * item.quantity;
+  }, 0);
   
   return {
     id: 'customer_' + Date.now(),
@@ -119,19 +119,19 @@ export function generateCustomer() {
     total,
     status: 'waiting', // waiting, being_served, leaving
     dialogue: getRandomDialogue('greeting')
-  }
+  };
 }
 
 /**
  * 获取随机对话
  */
 export function getRandomDialogue(type) {
-  const dialogues = customerConfig.dialogues[type]
-  if (!dialogues || dialogues.length === 0) return '...'
-  return dialogues[Math.floor(Math.random() * dialogues.length)]
+  const dialogues = customerConfig.dialogues[type];
+  if (!dialogues || dialogues.length === 0) return '...';
+  return dialogues[Math.floor(Math.random() * dialogues.length)];
 }
 
 // 导入 shopConfig
-import shopConfig from './shop'
+import shopConfig from './shop';
 
-export default customerConfig
+export default customerConfig;

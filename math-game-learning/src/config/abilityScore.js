@@ -22,8 +22,8 @@ export const ABILITY_TYPES = {
   SYSTEM_THINKING: 'systemThinking',    // 系统思维：整体把握
   CRITICAL_THINKING: 'criticalThinking',// 批判性思维：验证、反思
   COMPREHENSIVE: 'comprehensive',       // 综合应用：多知识融合
-  CREATIVITY: 'creativity',             // 创造性解题：非常规解法
-}
+  CREATIVITY: 'creativity'             // 创造性解题：非常规解法
+};
 
 /** 能力显示配置 */
 export const abilityLabels = {
@@ -43,8 +43,8 @@ export const abilityLabels = {
   systemThinking:    { label: '系统思维',   icon: '🔄', color: '#22d3ee' },
   criticalThinking:  { label: '批判性思维', icon: '⚖️', color: '#818cf8' },
   comprehensive:     { label: '综合应用',   icon: '🏆', color: '#f59e0b' },
-  creativity:        { label: '创造性解题', icon: '💡', color: '#10b981' },
-}
+  creativity:        { label: '创造性解题', icon: '💡', color: '#10b981' }
+};
 
 /** 能力升级经验表 */
 export const abilityLevelExp = [
@@ -57,8 +57,8 @@ export const abilityLevelExp = [
   { level: 7,  expNeeded: 500 },
   { level: 8,  expNeeded: 800 },
   { level: 9,  expNeeded: 1200 },
-  { level: 10, expNeeded: 1800 },
-]
+  { level: 10, expNeeded: 1800 }
+];
 
 /** 题目类型到能力类型的映射 */
 export const questionTypeToAbility = {
@@ -70,15 +70,15 @@ export const questionTypeToAbility = {
   fraction: 'abstraction',
   decimal: 'dataAnalysis',
   percentage: 'dataAnalysis',
-  word: 'reading',
-}
+  word: 'reading'
+};
 
 /** 题目内部难度对应的经验值 */
 export const difficultyExpMap = {
   easy: 2,
   medium: 3,
-  hard: 5,
-}
+  hard: 5
+};
 
 /**
  * 根据能力经验值获取等级
@@ -86,24 +86,24 @@ export const difficultyExpMap = {
  * @returns {{ level: number, exp: number, expNeeded: number, progress: number }}
  */
 export function getAbilityLevel(exp) {
-  let level = 1
+  let level = 1;
   for (let i = abilityLevelExp.length - 1; i >= 0; i--) {
     if (exp >= abilityLevelExp[i].expNeeded) {
-      level = abilityLevelExp[i].level
-      break
+      level = abilityLevelExp[i].level;
+      break;
     }
   }
-  const current = abilityLevelExp[level - 1] || abilityLevelExp[0]
-  const next = abilityLevelExp[level] || abilityLevelExp[abilityLevelExp.length - 1]
-  const expInLevel = exp - current.expNeeded
-  const expNeededForNext = next.expNeeded - current.expNeeded
+  const current = abilityLevelExp[level - 1] || abilityLevelExp[0];
+  const next = abilityLevelExp[level] || abilityLevelExp[abilityLevelExp.length - 1];
+  const expInLevel = exp - current.expNeeded;
+  const expNeededForNext = next.expNeeded - current.expNeeded;
 
   return {
     level,
     exp,
     expNeeded: next.expNeeded,
-    progress: expNeededForNext > 0 ? Math.min(1, expInLevel / expNeededForNext) : 1,
-  }
+    progress: expNeededForNext > 0 ? Math.min(1, expInLevel / expNeededForNext) : 1
+  };
 }
 
 export default {
@@ -112,5 +112,5 @@ export default {
   abilityLevelExp,
   questionTypeToAbility,
   difficultyExpMap,
-  getAbilityLevel,
-}
+  getAbilityLevel
+};

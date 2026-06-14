@@ -8,7 +8,7 @@ export const RARITY = {
   RARE: 'rare',
   EPIC: 'epic',
   LEGENDARY: 'legendary'
-}
+};
 
 // 卡牌类型
 export const CARD_TYPE = {
@@ -17,7 +17,7 @@ export const CARD_TYPE = {
   HEAL: 'heal',
   SPECIAL: 'special',
   EQUATION: 'equation' // 高年级专属
-}
+};
 
 // 稀有度配置
 export const rarityConfig = {
@@ -25,7 +25,7 @@ export const rarityConfig = {
   rare: { color: '#3b82f6', label: '稀有', packWeight: 25, duplicateCoins: 15 },
   epic: { color: '#a855f7', label: '史诗', packWeight: 12, duplicateCoins: 30 },
   legendary: { color: '#fbbf24', label: '传说', packWeight: 3, duplicateCoins: 50 }
-}
+};
 
 // 卡包配置
 export const packConfig = {
@@ -33,7 +33,7 @@ export const packConfig = {
   rare: { name: '稀有卡包', icon: '🎁', price: 150, currency: 'coins', weights: { common: 40, rare: 40, epic: 17, legendary: 3 } },
   epic: { name: '史诗卡包', icon: '💜', price: 500, currency: 'coins', weights: { common: 20, rare: 40, epic: 35, legendary: 5 } },
   legendary: { name: '传说卡包', icon: '👑', price: 10, currency: 'gems', weights: { common: 10, rare: 30, epic: 45, legendary: 15 } }
-}
+};
 
 // 卡牌数据库
 export const cards = [
@@ -107,18 +107,18 @@ export const cards = [
   { id: 'c01', name: '火焰+风', type: CARD_TYPE.SPECIAL, rarity: RARITY.EPIC, value: 0, grade: [1, 6], desc: '与风系卡组合: 龙卷风(20伤)', combo: 'wind', effect: 'combo_tornado' },
   { id: 'c02', name: '水+冰', type: CARD_TYPE.SPECIAL, rarity: RARITY.EPIC, value: 0, grade: [3, 6], desc: '与冰系卡组合: 冰河世纪(25伤)', combo: 'ice', effect: 'combo_glacier' },
   { id: 'c03', name: '光+暗', type: CARD_TYPE.SPECIAL, rarity: RARITY.LEGENDARY, value: 0, grade: [5, 6], desc: '与暗系卡组合: 混沌爆发(35伤)', combo: 'dark', effect: 'combo_chaos' }
-]
+];
 
 export function getCardById(id) {
-  return cards.find(c => c.id === id)
+  return cards.find(c => c.id === id);
 }
 
 export function getCardsByGrade(grade) {
-  return cards.filter(c => c.grade[0] <= grade && c.grade[1] >= grade)
+  return cards.filter(c => c.grade[0] <= grade && c.grade[1] >= grade);
 }
 
 export function getCardsByRarity(rarity) {
-  return cards.filter(c => c.rarity === rarity)
+  return cards.filter(c => c.rarity === rarity);
 }
 
-export default { cards, rarityConfig, packConfig, getCardById, getCardsByGrade, getCardsByRarity }
+export default { cards, rarityConfig, packConfig, getCardById, getCardsByGrade, getCardsByRarity };

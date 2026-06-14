@@ -15,19 +15,19 @@
     <button class="btn-help" @click="showTutorial = true">❓ 玩法说明</button>
     
     <!-- Phaser 游戏容器 -->
-    <div ref="gameContainer" class="phaser-container"></div>
+    <div ref="gameContainer" class="phaser-container" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import Phaser from 'phaser'
-import BattleScene from '../scenes/BattleScene'
-import { getRandomMonster } from '../config/monsters'
-import GameTutorial from './GameTutorial.vue'
-import { useInventoryStore } from '../store/inventoryStore'
+import { ref, onMounted, onUnmounted } from 'vue';
+import Phaser from 'phaser';
+import BattleScene from '../scenes/BattleScene';
+import { getRandomMonster } from '../config/monsters';
+import GameTutorial from './GameTutorial.vue';
+import { useInventoryStore } from '../store/inventoryStore';
 
-const showTutorial = ref(false)
+const showTutorial = ref(false);
 
 const adventureTutorialSteps = [
   {
@@ -50,11 +50,11 @@ const adventureTutorialSteps = [
     title: '取得胜利',
     description: '将怪物的血量归零即可获胜，获得经验和金币奖励。如果自己的血量归零或时间用完则挑战失败。'
   }
-]
+];
 
 const closeTutorial = () => {
-  showTutorial.value = false
-}
+  showTutorial.value = false;
+};
 
 const props = defineProps({
   player: {
@@ -85,21 +85,21 @@ const props = defineProps({
     type: Object,
     default: null
   }
-})
+});
 
-const emit = defineEmits(['battleEnd', 'back'])
+const emit = defineEmits(['battleEnd', 'back']);
 
-const inventoryStore = useInventoryStore()
+const inventoryStore = useInventoryStore();
 
-const gameContainer = ref(null)
-let game = null
+const gameContainer = ref(null);
+let game = null;
 
 onMounted(() => {
   if (gameContainer.value) {
-    const monster = props.monster || getRandomMonster(props.grade)
+    const monster = props.monster || getRandomMonster(props.grade);
     
     // 从 inventoryStore 读取已装备的战斗道具
-    const battleItems = inventoryStore.getEquippedBattleItems
+    const battleItems = inventoryStore.getEquippedBattleItems;
     
     const config = {
       type: Phaser.AUTO,
@@ -112,9 +112,9 @@ onMounted(() => {
         autoCenter: Phaser.Scale.CENTER_BOTH
       },
       scene: [BattleScene]
-    }
+    };
     
-    game = new Phaser.Game(config)
+    game = new Phaser.Game(config);
     
     game.scene.start('BattleScene', {
       player: props.player,
@@ -124,25 +124,25 @@ onMounted(() => {
       difficultyScale: props.difficultyScale,
       battleItems,
       onBattleEnd: (battleResult) => {
-        emit('battleEnd', battleResult)
+        emit('battleEnd', battleResult);
       },
       onItemUsed: (itemId) => {
-        inventoryStore.consumeBattleItem(itemId)
+        inventoryStore.consumeBattleItem(itemId);
       }
-    })
+    });
   }
-})
+});
 
 onUnmounted(() => {
   if (game) {
-    game.destroy(true)
-    game = null
+    game.destroy(true);
+    game = null;
   }
-})
+});
 
 const back = () => {
-  emit('back')
-}
+  emit('back');
+};
 </script>
 
 <style scoped>

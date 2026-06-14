@@ -18,7 +18,7 @@
             <span class="coins">💰 {{ playerInfo.coins }}</span>
           </div>
           <div class="exp-bar">
-            <div class="exp-fill" :style="{ width: expPercent + '%' }"></div>
+            <div class="exp-fill" :style="{ width: expPercent + '%' }" />
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
 
       <!-- 操作按钮 -->
       <div class="menu-actions">
-        <button class="btn btn-confirm" @click="confirmOption" :disabled="!selectedOption">
+        <button class="btn btn-confirm" :disabled="!selectedOption" @click="confirmOption">
           确认选择
         </button>
         <button class="btn btn-quit" @click="quit">
@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
   playerName: {
@@ -74,12 +74,12 @@ const props = defineProps({
     type: Number,
     default: 0
   }
-})
+});
 
-const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit'])
+const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall']);
 
-const isLoading = ref(true)
-const selectedOption = ref(null)
+const isLoading = ref(true);
+const selectedOption = ref(null);
 
 const menuOptions = computed(() => [
   {
@@ -105,50 +105,60 @@ const menuOptions = computed(() => [
     description: '调整游戏设置和管理存档',
     color: '#64748b',
     gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)'
+  },
+  {
+    id: 'english',
+    label: '英语乐园',
+    icon: '🎓',
+    description: '单词速拼、英语冒险',
+    gradient: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)'
   }
-])
+]);
 
 const playerInfo = computed(() => ({
   name: props.playerName,
   level: props.playerLevel,
   coins: props.playerCoins,
   expNeeded: props.playerLevel * 100
-}))
+}));
 
 const expPercent = computed(() => {
-  return 0 // 简化版本，暂时显示 0
-})
+  return 0; // 简化版本，暂时显示 0
+});
 
 const selectOption = (option) => {
-  selectedOption.value = option
-}
+  selectedOption.value = option;
+};
 
 const confirmOption = () => {
   if (selectedOption.value) {
     switch (selectedOption.value.id) {
-      case 'challenge':
-        emit('startChallengeCenter')
-        break
-      case 'achievements':
-        emit('openAchievements')
-        break
-      case 'settings':
-        emit('openSettings')
-        break
+    case 'challenge':
+      emit('startChallengeCenter');
+      break;
+    case 'achievements':
+      emit('openAchievements');
+      break;
+    case 'settings':
+      emit('openSettings');
+      break;
+    case 'english':
+      emit('startEnglishHall');
+      break;
     }
   }
-}
+};
 
 const quit = () => {
-  emit('quit')
-}
+  emit('quit');
+};
 
 onMounted(() => {
   // 模拟加载
   setTimeout(() => {
-    isLoading.value = false
-  }, 500)
-})
+    isLoading.value = false;
+  }, 500);
+});
 </script>
 
 <style scoped>

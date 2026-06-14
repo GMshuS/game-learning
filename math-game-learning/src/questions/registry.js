@@ -3,7 +3,7 @@
  * 管理各题型生成器的注册与调用
  */
 
-const registry = {}
+const registry = {};
 
 /**
  * 注册一个题型生成器
@@ -11,7 +11,7 @@ const registry = {}
  * @param {function} generator - (grade, range) => { question, answer, type, ... }
  */
 export function register(type, generator) {
-  registry[type] = generator
+  registry[type] = generator;
 }
 
 /**
@@ -19,7 +19,7 @@ export function register(type, generator) {
  * @returns {string[]}
  */
 export function getRegisteredTypes() {
-  return Object.keys(registry)
+  return Object.keys(registry);
 }
 
 /**
@@ -30,7 +30,7 @@ export function getRegisteredTypes() {
  * @returns {object|null} 题目对象，若类型未注册则返回 null
  */
 export function generate(type, grade, range) {
-  const generator = registry[type]
-  if (!generator) return null
-  return generator(grade, range)
+  const generator = registry[type];
+  if (!generator) return null;
+  return generator(grade, range);
 }

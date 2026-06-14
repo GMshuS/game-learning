@@ -23,7 +23,7 @@ export const difficultyConfig = {
     coinMultiplier: 2.0,
     timeLimit: 30
   }
-}
+};
 
 /**
  * 题型配置
@@ -89,20 +89,20 @@ export const questionTypeConfig = {
     icon: '✕',
     color: '#fbbf24'
   }
-}
+};
 
 /**
  * 获取难度配置
  */
 export function getDifficultyConfig(difficulty) {
-  return difficultyConfig[difficulty] || difficultyConfig.easy
+  return difficultyConfig[difficulty] || difficultyConfig.easy;
 }
 
 /**
  * 获取题型配置
  */
 export function getQuestionTypeConfig(type) {
-  return questionTypeConfig[type] || questionTypeConfig.add
+  return questionTypeConfig[type] || questionTypeConfig.add;
 }
 
 /**
@@ -116,9 +116,9 @@ export function getAvailableTypesForGrade(grade) {
     4: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word'],
     5: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'mixed', 'word', 'equation'],
     6: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'percentage', 'mixed', 'word', 'equation']
-  }
+  };
   
-  return typeMap[grade] || typeMap[1]
+  return typeMap[grade] || typeMap[1];
 }
 
 export default {
@@ -127,4 +127,4 @@ export default {
   getDifficultyConfig,
   getQuestionTypeConfig,
   getAvailableTypesForGrade
-}
+};

@@ -1,7 +1,7 @@
 <template>
   <nav class="game-navbar">
     <div class="navbar-left">
-      <button class="btn-back" @click="openMenu" title="返回主菜单">
+      <button class="btn-back" title="返回主菜单" @click="openMenu">
         ← 菜单
       </button>
       <span class="mode-label">{{ currentModeLabel }}</span>
@@ -19,10 +19,10 @@
         <span class="coin-icon">💰</span>
         <span class="coin-amount">{{ playerCoins }}</span>
       </div>
-      <button class="btn-backpack" @click="openInventory" title="背包">
+      <button class="btn-backpack" title="背包" @click="openInventory">
         🎒
       </button>
-      <button class="btn-settings" @click="openSettings" title="设置">
+      <button class="btn-settings" title="设置" @click="openSettings">
         ⚙️
       </button>
     </div>
@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   currentMode: {
@@ -49,9 +49,9 @@ const props = defineProps({
     type: Number,
     default: 1
   }
-})
+});
 
-const emit = defineEmits(['navigate', 'openMenu', 'openSettings', 'openInventory'])
+const emit = defineEmits(['navigate', 'openMenu', 'openSettings', 'openInventory']);
 
 const modeLabels = {
   menu: '主菜单',
@@ -60,28 +60,29 @@ const modeLabels = {
   battle: '战斗中',
   cashier: '收银游戏',
   challenge_center: '挑战中心',
-  inventory: '背包'
-}
+  inventory: '背包',
+  english: '英语乐园'
+};
 
 const currentModeLabel = computed(() => {
-  return modeLabels[props.currentMode] || '未知模式'
-})
+  return modeLabels[props.currentMode] || '未知模式';
+});
 
 const navigate = (mode) => {
-  emit('navigate', mode)
-}
+  emit('navigate', mode);
+};
 
 const openMenu = () => {
-  emit('openMenu')
-}
+  emit('openMenu');
+};
 
 const openSettings = () => {
-  emit('openSettings')
-}
+  emit('openSettings');
+};
 
 const openInventory = () => {
-  emit('openInventory')
-}
+  emit('openInventory');
+};
 </script>
 
 <style scoped>

@@ -13,6 +13,6 @@ export const gradeQuestionWeights = {
   4: { add: 8, subtract: 8, multiply: 12, divide: 10, mixed: 15, word: 15, estimate: 12 },
   5: { fraction: 15, decimal: 15, mixed: 10, word: 15, equation: 15, percentage: 10 },
   6: { fraction: 10, decimal: 10, percentage: 15, equation: 20, word: 15, mixed: 10 }
-}
+};
 
-export default gradeQuestionWeights
+export default gradeQuestionWeights;

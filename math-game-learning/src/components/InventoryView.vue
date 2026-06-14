@@ -97,7 +97,7 @@
             <div
               class="set-bar-fill"
               :style="{ width: getSetPercent(set) + '%' }"
-            ></div>
+            />
           </div>
           <div class="set-items">
             <span
@@ -151,111 +151,111 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useInventoryStore } from '../store/inventoryStore'
-import { getCollectibleSetInfo, isCollectible } from '../config/shopEffects'
-import { getProductById } from '../config/shop'
+import { ref, computed } from 'vue';
+import { useInventoryStore } from '../store/inventoryStore';
+import { getCollectibleSetInfo, isCollectible } from '../config/shopEffects';
+import { getProductById } from '../config/shop';
 
-const inventoryStore = useInventoryStore()
-const emit = defineEmits(['back', 'openBattlePrepare'])
+const inventoryStore = useInventoryStore();
+const emit = defineEmits(['back', 'openBattlePrepare']);
 
-const activeFilter = ref('all')
-const selectedItem = ref(null)
+const activeFilter = ref('all');
+const selectedItem = ref(null);
 
 const filterTabs = [
   { id: 'all', name: '全部', icon: '📦' },
   { id: 'battle', name: '战斗道具', icon: '⚔️' },
   { id: 'collectible', name: '收藏品', icon: '🏆' },
   { id: 'equipment', name: '装备', icon: '🛡️' }
-]
+];
 
 const currentFilterLabel = computed(() => {
-  const tab = filterTabs.find(t => t.id === activeFilter.value)
-  return tab ? `${tab.icon} ${tab.name}` : '全部'
-})
+  const tab = filterTabs.find(t => t.id === activeFilter.value);
+  return tab ? `${tab.icon} ${tab.name}` : '全部';
+});
 
 const filteredItems = computed(() => {
-  let items = [...inventoryStore.items]
+  let items = [...inventoryStore.items];
 
   switch (activeFilter.value) {
-    case 'battle':
-      items = items.filter(item => item.effect && item.effect.target !== 'collectible')
-      break
-    case 'collectible':
-      items = items.filter(item => isCollectible(item.productId))
-      break
-    case 'equipment':
-      items = items.filter(item => !item.effect || item.effect.target === 'collectible')
-      break
-    default:
-      break
+  case 'battle':
+    items = items.filter(item => item.effect && item.effect.target !== 'collectible');
+    break;
+  case 'collectible':
+    items = items.filter(item => isCollectible(item.productId));
+    break;
+  case 'equipment':
+    items = items.filter(item => !item.effect || item.effect.target === 'collectible');
+    break;
+  default:
+    break;
   }
 
-  return items
-})
+  return items;
+});
 
 const collectibleSets = computed(() => {
-  const sets = getCollectibleSetInfo()
-  return Object.values(sets)
-})
+  const sets = getCollectibleSetInfo();
+  return Object.values(sets);
+});
 
 function getItemById(itemId) {
-  return inventoryStore.items.find(i => i.id === itemId) || null
+  return inventoryStore.items.find(i => i.id === itemId) || null;
 }
 
 function isInBattleSlot(itemId) {
-  return inventoryStore.battleSlots.includes(itemId)
+  return inventoryStore.battleSlots.includes(itemId);
 }
 
 function canEquip(item) {
   // 只有战斗道具（非收藏品）可以装备
-  return item.effect && item.effect.target !== 'collectible'
+  return item.effect && item.effect.target !== 'collectible';
 }
 
 function selectItem(item) {
-  selectedItem.value = item
+  selectedItem.value = item;
 }
 
 function onBattleSlotClick(index) {
-  const slotId = inventoryStore.battleSlots[index]
+  const slotId = inventoryStore.battleSlots[index];
   if (slotId !== null) {
     // 点击已装备物品 → 选中并打开详情
-    const item = getItemById(slotId)
+    const item = getItemById(slotId);
     if (item) {
-      selectedItem.value = item
+      selectedItem.value = item;
     }
   }
   // 空槽位点击通过点击物品卡片装备
 }
 
 function unequipFromSlot(index) {
-  inventoryStore.unequipFromBattleSlot(index)
+  inventoryStore.unequipFromBattleSlot(index);
 }
 
 function equipSelectedToSlot() {
-  if (!selectedItem.value) return
+  if (!selectedItem.value) return;
 
   // 找到第一个空槽位
-  const emptySlot = inventoryStore.battleSlots.findIndex(s => s === null)
+  const emptySlot = inventoryStore.battleSlots.findIndex(s => s === null);
   if (emptySlot === -1) {
-    alert('战斗栏已满，请先卸下其他物品')
-    return
+    alert('战斗栏已满，请先卸下其他物品');
+    return;
   }
 
-  inventoryStore.equipToBattleSlot(selectedItem.value.id, emptySlot)
-  selectedItem.value = null
+  inventoryStore.equipToBattleSlot(selectedItem.value.id, emptySlot);
+  selectedItem.value = null;
 }
 
 function unequipSelectedItem() {
-  if (!selectedItem.value) return
+  if (!selectedItem.value) return;
 
   for (let i = 0; i < inventoryStore.battleSlots.length; i++) {
     if (inventoryStore.battleSlots[i] === selectedItem.value.id) {
-      inventoryStore.unequipFromBattleSlot(i)
-      break
+      inventoryStore.unequipFromBattleSlot(i);
+      break;
     }
   }
-  selectedItem.value = null
+  selectedItem.value = null;
 }
 
 function getEffectTypeLabel(type) {
@@ -263,37 +263,37 @@ function getEffectTypeLabel(type) {
     buff: '✨ 增益',
     heal: '💚 治疗',
     special: '⭐ 特殊'
-  }
-  return labels[type] || type
+  };
+  return labels[type] || type;
 }
 
 function isCollectibleCollected(productId) {
-  return inventoryStore.hasCollectible(productId)
+  return inventoryStore.hasCollectible(productId);
 }
 
 function getCollectibleIcon(productId) {
-  const product = getProductById(productId)
-  return product?.icon || '❓'
+  const product = getProductById(productId);
+  return product?.icon || '❓';
 }
 
 function getCollectibleName(productId) {
-  const product = getProductById(productId)
-  return product?.name || '未知'
+  const product = getProductById(productId);
+  return product?.name || '未知';
 }
 
 function getSetProgress(set) {
-  const collectedIds = inventoryStore.collectibles.map(c => c.productId)
-  return set.requiredProductIds.filter(id => collectedIds.includes(id)).length
+  const collectedIds = inventoryStore.collectibles.map(c => c.productId);
+  return set.requiredProductIds.filter(id => collectedIds.includes(id)).length;
 }
 
 function getSetPercent(set) {
-  const total = set.requiredProductIds.length
-  const collected = getSetProgress(set)
-  return total > 0 ? Math.round((collected / total) * 100) : 0
+  const total = set.requiredProductIds.length;
+  const collected = getSetProgress(set);
+  return total > 0 ? Math.round((collected / total) * 100) : 0;
 }
 
 function openBattlePrepare() {
-  emit('openBattlePrepare')
+  emit('openBattlePrepare');
 }
 </script>
 

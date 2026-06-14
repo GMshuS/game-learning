@@ -91,7 +91,7 @@ export const wordProblemConfig = {
       '平均分配，每人得几个'
     ]
   }
-}
+};
 
 /**
  * 生成可视化应用题
@@ -99,37 +99,37 @@ export const wordProblemConfig = {
 export function generateVisualWordProblem(grade = 1) {
   const operation = grade <= 2 
     ? (Math.random() > 0.5 ? 'add' : 'subtract')
-    : ['add', 'subtract', 'multiply'][Math.floor(Math.random() * 3)]
+    : ['add', 'subtract', 'multiply'][Math.floor(Math.random() * 3)];
   
-  const templates = wordProblemConfig.templates[operation]
-  const template = templates[Math.floor(Math.random() * templates.length)]
+  const templates = wordProblemConfig.templates[operation];
+  const template = templates[Math.floor(Math.random() * templates.length)];
   
   // 选择物品
-  const itemKeys = Object.keys(wordProblemConfig.items)
-  const itemKey = itemKeys[Math.floor(Math.random() * itemKeys.length)]
-  const item = wordProblemConfig.items[itemKey]
+  const itemKeys = Object.keys(wordProblemConfig.items);
+  const itemKey = itemKeys[Math.floor(Math.random() * itemKeys.length)];
+  const item = wordProblemConfig.items[itemKey];
   
   // 生成数字（根据年级调整范围）
-  let a, b
+  let a, b;
   if (grade === 1) {
-    a = Math.floor(Math.random() * 10) + 1
+    a = Math.floor(Math.random() * 10) + 1;
     b = operation === 'subtract' 
       ? Math.floor(Math.random() * a) + 1
-      : Math.floor(Math.random() * 10) + 1
+      : Math.floor(Math.random() * 10) + 1;
   } else if (grade === 2) {
-    a = Math.floor(Math.random() * 20) + 1
+    a = Math.floor(Math.random() * 20) + 1;
     b = operation === 'subtract'
       ? Math.floor(Math.random() * a) + 1
-      : Math.floor(Math.random() * 20) + 1
+      : Math.floor(Math.random() * 20) + 1;
   } else {
     if (operation === 'multiply') {
-      a = Math.floor(Math.random() * 5) + 2
-      b = Math.floor(Math.random() * 5) + 2
+      a = Math.floor(Math.random() * 5) + 2;
+      b = Math.floor(Math.random() * 5) + 2;
     } else {
-      a = Math.floor(Math.random() * 20) + 5
+      a = Math.floor(Math.random() * 20) + 5;
       b = operation === 'subtract'
         ? Math.floor(Math.random() * a) + 1
-        : Math.floor(Math.random() * 20) + 1
+        : Math.floor(Math.random() * 20) + 1;
     }
   }
   
@@ -137,14 +137,14 @@ export function generateVisualWordProblem(grade = 1) {
   let question = template.pattern
     .replace(/{a}/g, a)
     .replace(/{b}/g, b)
-    .replace(/{item}/g, item.name)
+    .replace(/{item}/g, item.name);
   
   // 计算答案
-  let answer
-  if (operation === 'add') answer = a + b
-  else if (operation === 'subtract') answer = a - b
-  else if (operation === 'multiply') answer = a * b
-  else answer = a / b
+  let answer;
+  if (operation === 'add') answer = a + b;
+  else if (operation === 'subtract') answer = a - b;
+  else if (operation === 'multiply') answer = a * b;
+  else answer = a / b;
   
   return {
     question,
@@ -155,20 +155,20 @@ export function generateVisualWordProblem(grade = 1) {
     numbers: { a, b },
     grade,
     steps: generateSteps(operation, a, b, item)
-  }
+  };
 }
 
 /**
  * 生成解题步骤
  */
 function generateSteps(operation, a, b, item) {
-  const hints = wordProblemConfig.stepHints[operation]
+  const hints = wordProblemConfig.stepHints[operation];
   
   return hints.map((hint, index) => ({
     step: index + 1,
     hint,
     visual: generateStepVisual(operation, a, b, item, index)
-  }))
+  }));
 }
 
 /**
@@ -177,21 +177,21 @@ function generateSteps(operation, a, b, item) {
 function generateStepVisual(operation, a, b, item, stepIndex) {
   if (operation === 'add') {
     if (stepIndex === 0) {
-      return { count: a, highlighted: 'first', total: a }
+      return { count: a, highlighted: 'first', total: a };
     } else if (stepIndex === 1) {
-      return { count: b, highlighted: 'second', total: b }
+      return { count: b, highlighted: 'second', total: b };
     } else {
-      return { count: a + b, highlighted: 'all', total: a + b }
+      return { count: a + b, highlighted: 'all', total: a + b };
     }
   }
   
   if (operation === 'subtract') {
     if (stepIndex === 0) {
-      return { count: a, highlighted: 'all', total: a }
+      return { count: a, highlighted: 'all', total: a };
     } else if (stepIndex === 1) {
-      return { count: b, highlighted: 'removed', total: b }
+      return { count: b, highlighted: 'removed', total: b };
     } else {
-      return { count: a - b, highlighted: 'remaining', total: a - b }
+      return { count: a - b, highlighted: 'remaining', total: a - b };
     }
   }
   
@@ -201,13 +201,13 @@ function generateStepVisual(operation, a, b, item, stepIndex) {
       perGroup: a,
       total: a * b,
       highlighted: stepIndex === 2 ? 'total' : 'groups'
-    }
+    };
   }
   
-  return { count: a, highlighted: 'all', total: a }
+  return { count: a, highlighted: 'all', total: a };
 }
 
 export default {
   wordProblemConfig,
   generateVisualWordProblem
-}
+};

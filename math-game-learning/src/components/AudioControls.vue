@@ -2,10 +2,10 @@
   <div class="audio-controls" :class="{ compact: compact }">
     <!-- 快捷按钮 -->
     <div class="audio-buttons">
-      <button class="audio-btn" @click="toggleBgm" :title="bgmEnabled ? '关闭背景音乐' : '开启背景音乐'">
+      <button class="audio-btn" :title="bgmEnabled ? '关闭背景音乐' : '开启背景音乐'" @click="toggleBgm">
         {{ bgmIcon }}
       </button>
-      <button class="audio-btn" @click="toggleSfx" :title="sfxEnabled ? '关闭音效' : '开启音效'">
+      <button class="audio-btn" :title="sfxEnabled ? '关闭音效' : '开启音效'" @click="toggleSfx">
         {{ sfxIcon }}
       </button>
     </div>
@@ -15,23 +15,23 @@
       <div class="audio-slider">
         <label>背景音乐</label>
         <input
-          type="range"
           v-model="bgmVolume"
-          @input="updateBgmVolume(bgmVolume)"
+          type="range"
           min="0"
           max="100"
-        />
+          @input="updateBgmVolume(bgmVolume)"
+        >
         <span class="volume-value">{{ bgmVolume }}%</span>
       </div>
       <div class="audio-slider">
         <label>音效</label>
         <input
-          type="range"
           v-model="sfxVolume"
-          @input="updateSfxVolume(sfxVolume)"
+          type="range"
           min="0"
           max="100"
-        />
+          @input="updateSfxVolume(sfxVolume)"
+        >
         <span class="volume-value">{{ sfxVolume }}%</span>
       </div>
     </div>
@@ -44,62 +44,79 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import audioManager from '../utils/audioManager'
+import { ref, computed, onMounted } from 'vue';
+import audioManager from '../utils/audioManager';
+import { useSettingsStore } from '../store/settingsStore';
 
 const props = defineProps({
   compact: {
     type: Boolean,
     default: false
   }
-})
+});
 
-const bgmEnabled = ref(audioManager.bgmEnabled)
-const sfxEnabled = ref(audioManager.sfxEnabled)
-const bgmVolume = ref(audioManager.bgmVolume * 100)
-const sfxVolume = ref(audioManager.sfxVolume * 100)
-const showPanel = ref(false)
+const bgmEnabled = ref(audioManager.bgmEnabled);
+const sfxEnabled = ref(audioManager.sfxEnabled);
+const bgmVolume = ref(audioManager.bgmVolume * 100);
+const sfxVolume = ref(audioManager.sfxVolume * 100);
+const showPanel = ref(false);
 
 const toggleBgm = () => {
-  bgmEnabled.value = audioManager.toggleBgm()
-}
+  bgmEnabled.value = audioManager.toggleBgm();
+  // 通过 settingsStore 持久化
+  const settingsStore = useSettingsStore();
+  settingsStore.music = audioManager.bgmEnabled;
+  settingsStore.saveSettings();
+};
 
 const toggleSfx = () => {
-  sfxEnabled.value = audioManager.toggleSfx()
-}
+  sfxEnabled.value = audioManager.toggleSfx();
+  // 通过 settingsStore 持久化
+  const settingsStore = useSettingsStore();
+  settingsStore.sound = audioManager.sfxEnabled;
+  settingsStore.saveSettings();
+};
 
 const updateBgmVolume = (value) => {
-  bgmVolume.value = value
-  audioManager.setBgmVolume(value / 100)
-}
+  bgmVolume.value = value;
+  audioManager.setBgmVolume(value / 100);
+  // 通过 settingsStore 持久化
+  const settingsStore = useSettingsStore();
+  settingsStore.musicVolume = audioManager.bgmVolume;
+  settingsStore.saveSettings();
+};
 
 const updateSfxVolume = (value) => {
-  sfxVolume.value = value
-  audioManager.setSfxVolume(value / 100)
-}
+  sfxVolume.value = value;
+  audioManager.setSfxVolume(value / 100);
+  // 通过 settingsStore 持久化
+  const settingsStore = useSettingsStore();
+  settingsStore.soundVolume = audioManager.sfxVolume;
+  settingsStore.saveSettings();
+};
 
 const togglePanel = () => {
-  showPanel.value = !showPanel.value
-}
+  showPanel.value = !showPanel.value;
+};
 
 const bgmIcon = computed(() => {
-  if (!bgmEnabled.value) return '🔇'
-  if (bgmVolume.value < 30) return '🔈'
-  if (bgmVolume.value < 70) return '🔉'
-  return '🔊'
-})
+  if (!bgmEnabled.value) return '🔇';
+  if (bgmVolume.value < 30) return '🔈';
+  if (bgmVolume.value < 70) return '🔉';
+  return '🔊';
+});
 
 const sfxIcon = computed(() => {
-  if (!sfxEnabled.value) return '🔇'
-  if (sfxVolume.value < 30) return '🔈'
-  if (sfxVolume.value < 70) return '🔉'
-  return '🔊'
-})
+  if (!sfxEnabled.value) return '🔇';
+  if (sfxVolume.value < 30) return '🔈';
+  if (sfxVolume.value < 70) return '🔉';
+  return '🔊';
+});
 
 onMounted(() => {
   // 初始化音频系统
-  audioManager.init()
-})
+  audioManager.init();
+});
 </script>
 
 <style scoped>

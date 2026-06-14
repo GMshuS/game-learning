@@ -1,8 +1,8 @@
 /**
  * 成就系统 Store
  */
-import { defineStore } from 'pinia'
-import { getAllAchievements, getAchievementById, getRarityConfig } from '../config/achievements'
+import { defineStore } from 'pinia';
+import { getAllAchievements, getAchievementById } from '../config/achievements';
 
 export const useAchievementStore = defineStore('achievement', {
   state: () => ({
@@ -37,32 +37,32 @@ export const useAchievementStore = defineStore('achievement', {
     
     // 完成度百分比
     completionRate: (state) => {
-      const total = getAllAchievements().length
-      return Math.round((state.unlocked.length / total) * 100)
+      const total = getAllAchievements().length;
+      return Math.round((state.unlocked.length / total) * 100);
     },
     
     // 获取按分类统计
     achievementsByCategory: () => (category) => {
-      return getAllAchievements().filter(a => a.category === category)
+      return getAllAchievements().filter(a => a.category === category);
     },
     
     // 获取已解锁成就详情
     unlockedAchievements: (state) => {
-      return state.unlocked.map(id => getAchievementById(id)).filter(Boolean)
+      return state.unlocked.map(id => getAchievementById(id)).filter(Boolean);
     },
     
     // 获取未解锁成就
     lockedAchievements: (state) => {
-      return getAllAchievements().filter(a => !state.unlocked.includes(a.id))
+      return getAllAchievements().filter(a => !state.unlocked.includes(a.id));
     },
     
     // 获取可解锁成就（进度已达标的）
     availableAchievements: (state) => {
       return state.lockedAchievements.filter(achievement => {
-        const req = achievement.requirement
-        const current = state.stats[req.type] || state.progress[req.type] || 0
-        return current >= req.count
-      })
+        const req = achievement.requirement;
+        const current = state.stats[req.type] || state.progress[req.type] || 0;
+        return current >= req.count;
+      });
     }
   },
 
@@ -73,15 +73,15 @@ export const useAchievementStore = defineStore('achievement', {
     updateStat(type, value) {
       if (type === 'streak') {
         if (value > this.stats.currentStreak) {
-          this.stats.currentStreak = value
+          this.stats.currentStreak = value;
         }
         if (value > this.stats.bestStreak) {
-          this.stats.bestStreak = value
+          this.stats.bestStreak = value;
         }
-        this.checkAchievements('streak')
-      } else if (this.stats.hasOwnProperty(type)) {
-        this.stats[type] = (this.stats[type] || 0) + value
-        this.checkAchievements(type)
+        this.checkAchievements('streak');
+      } else if (Object.prototype.hasOwnProperty.call(this.stats, type)) {
+        this.stats[type] = (this.stats[type] || 0) + value;
+        this.checkAchievements(type);
       }
     },
 
@@ -89,9 +89,9 @@ export const useAchievementStore = defineStore('achievement', {
      * 设置统计数据
      */
     setStat(type, value) {
-      if (this.stats.hasOwnProperty(type)) {
-        this.stats[type] = value
-        this.checkAchievements(type)
+      if (Object.prototype.hasOwnProperty.call(this.stats, type)) {
+        this.stats[type] = value;
+        this.checkAchievements(type);
       }
     },
 
@@ -99,38 +99,38 @@ export const useAchievementStore = defineStore('achievement', {
      * 检查成就
      */
     checkAchievements(statType) {
-      const achievementsToUnlock = []
+      const achievementsToUnlock = [];
 
       for (const achievement of getAllAchievements()) {
-        if (this.unlocked.includes(achievement.id)) continue
+        if (this.unlocked.includes(achievement.id)) continue;
 
-        const req = achievement.requirement
-        let currentValue
+        const req = achievement.requirement;
+        let currentValue;
 
         if (req.type === statType || req.type === 'questions_answered' || req.type === 'battles' || req.type === 'sales') {
-          currentValue = this.stats[req.type] || 0
+          currentValue = this.stats[req.type] || 0;
         } else if (req.type === 'streak') {
-          currentValue = this.stats.bestStreak
+          currentValue = this.stats.bestStreak;
         } else if (req.type === 'coins') {
-          currentValue = this.stats.coins
+          currentValue = this.stats.coins;
         } else if (req.type === 'equipment') {
-          currentValue = this.stats.equipment
+          currentValue = this.stats.equipment;
         } else if (req.type === 'areas_unlocked') {
-          currentValue = this.stats.areasUnlocked
+          currentValue = this.stats.areasUnlocked;
         } else if (req.type === 'collectibles') {
-          currentValue = this.stats.collectibles || 0
+          currentValue = this.stats.collectibles || 0;
         } else {
-          currentValue = this.progress[req.type] || 0
+          currentValue = this.progress[req.type] || 0;
         }
 
         if (currentValue >= req.count) {
-          achievementsToUnlock.push(achievement)
+          achievementsToUnlock.push(achievement);
         }
       }
 
       // 解锁成就
       for (const achievement of achievementsToUnlock) {
-        this.unlockAchievement(achievement)
+        this.unlockAchievement(achievement);
       }
     },
 
@@ -138,14 +138,14 @@ export const useAchievementStore = defineStore('achievement', {
      * 解锁成就
      */
     unlockAchievement(achievement) {
-      if (this.unlocked.includes(achievement.id)) return
+      if (this.unlocked.includes(achievement.id)) return;
 
-      this.unlocked.push(achievement.id)
+      this.unlocked.push(achievement.id);
 
       // 添加奖励
       if (achievement.rewards) {
-        this.totalRewards.coins += achievement.rewards.coins || 0
-        this.totalRewards.exp += achievement.rewards.exp || 0
+        this.totalRewards.coins += achievement.rewards.coins || 0;
+        this.totalRewards.exp += achievement.rewards.exp || 0;
       }
 
       // 添加通知
@@ -156,11 +156,11 @@ export const useAchievementStore = defineStore('achievement', {
         icon: achievement.icon,
         rarity: achievement.rarity,
         timestamp: new Date().toISOString()
-      })
+      });
 
       // 限制通知数量
       if (this.notifications.length > 10) {
-        this.notifications = this.notifications.slice(0, 10)
+        this.notifications = this.notifications.slice(0, 10);
       }
     },
 
@@ -168,44 +168,44 @@ export const useAchievementStore = defineStore('achievement', {
      * 清除通知
      */
     clearNotification(index) {
-      this.notifications.splice(index, 1)
+      this.notifications.splice(index, 1);
     },
 
     /**
      * 清除所有通知
      */
     clearAllNotifications() {
-      this.notifications = []
+      this.notifications = [];
     },
 
     /**
      * 更新登录信息
      */
     updateLogin() {
-      const today = new Date().toDateString()
-      const lastLogin = this.lastLogin ? new Date(this.lastLogin).toDateString() : null
+      const today = new Date().toDateString();
+      const lastLogin = this.lastLogin ? new Date(this.lastLogin).toDateString() : null;
 
       if (lastLogin !== today) {
         // 检查连续登录
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
 
         if (lastLogin === yesterday.toDateString()) {
-          this.loginStreak++
+          this.loginStreak++;
         } else {
-          this.loginStreak = 1
+          this.loginStreak = 1;
         }
 
-        this.lastLogin = new Date().toISOString()
+        this.lastLogin = new Date().toISOString();
 
         // 检查登录成就
-        this.checkAchievements('login')
-        this.checkAchievements('login_streak')
+        this.checkAchievements('login');
+        this.checkAchievements('login_streak');
       }
 
       // 检查初次登录成就
       if (!this.unlocked.includes('first_login')) {
-        this.unlockAchievement(getAchievementById('first_login'))
+        this.unlockAchievement(getAchievementById('first_login'));
       }
     },
 
@@ -213,10 +213,10 @@ export const useAchievementStore = defineStore('achievement', {
      * 重置成就系统
      */
     reset() {
-      this.unlocked = []
-      this.progress = {}
-      this.lastLogin = null
-      this.loginStreak = 0
+      this.unlocked = [];
+      this.progress = {};
+      this.lastLogin = null;
+      this.loginStreak = 0;
       this.stats = {
         questionsAnswered: 0,
         battles: 0,
@@ -227,24 +227,24 @@ export const useAchievementStore = defineStore('achievement', {
         currentStreak: 0,
         bestStreak: 0,
         collectibles: 0
-      }
-      this.notifications = []
+      };
+      this.notifications = [];
       this.totalRewards = {
         coins: 0,
         exp: 0
-      }
+      };
     },
 
     /**
      * 获取成就详情
      */
     getAchievementProgress(achievementId) {
-      const achievement = getAchievementById(achievementId)
-      if (!achievement) return null
+      const achievement = getAchievementById(achievementId);
+      if (!achievement) return null;
 
-      const req = achievement.requirement
-      const current = this.stats[req.type] || this.progress[req.type] || 0
-      const isUnlocked = this.unlocked.includes(achievementId)
+      const req = achievement.requirement;
+      const current = this.stats[req.type] || this.progress[req.type] || 0;
+      const isUnlocked = this.unlocked.includes(achievementId);
 
       return {
         ...achievement,
@@ -252,9 +252,9 @@ export const useAchievementStore = defineStore('achievement', {
         required: req.count,
         progress: Math.min(100, Math.round((current / req.count) * 100)),
         isUnlocked
-      }
+      };
     }
   }
-})
+});
 
-export default useAchievementStore
+export default useAchievementStore;

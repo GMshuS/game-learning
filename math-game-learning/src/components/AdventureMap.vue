@@ -6,7 +6,7 @@
     </div>
     
     <!-- Phaser 游戏容器 -->
-    <div ref="gameContainer" class="phaser-container"></div>
+    <div ref="gameContainer" class="phaser-container" />
     
     <!-- 区域选择提示 -->
     <div class="area-hint">
@@ -16,9 +16,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import Phaser from 'phaser'
-import WorldMapScene from '../scenes/WorldMapScene'
+import { ref, onMounted, onUnmounted } from 'vue';
+import Phaser from 'phaser';
+import WorldMapScene from '../scenes/WorldMapScene';
 
 const props = defineProps({
   unlockedAreas: {
@@ -29,12 +29,12 @@ const props = defineProps({
     type: String,
     default: 'area_1'
   }
-})
+});
 
-const emit = defineEmits(['areaSelect', 'back'])
+const emit = defineEmits(['areaSelect', 'back']);
 
-const gameContainer = ref(null)
-let game = null
+const gameContainer = ref(null);
+let game = null;
 
 onMounted(() => {
   if (gameContainer.value) {
@@ -49,30 +49,30 @@ onMounted(() => {
         autoCenter: Phaser.Scale.CENTER_BOTH
       },
       scene: [WorldMapScene]
-    }
+    };
     
-    game = new Phaser.Game(config)
+    game = new Phaser.Game(config);
     
     game.scene.start('WorldMapScene', {
       unlockedAreas: props.unlockedAreas,
       currentAreaId: props.currentAreaId,
       onAreaSelect: (area) => {
-        emit('areaSelect', area)
+        emit('areaSelect', area);
       }
-    })
+    });
   }
-})
+});
 
 onUnmounted(() => {
   if (game) {
-    game.destroy(true)
-    game = null
+    game.destroy(true);
+    game = null;
   }
-})
+});
 
 const back = () => {
-  emit('back')
-}
+  emit('back');
+};
 </script>
 
 <style scoped>

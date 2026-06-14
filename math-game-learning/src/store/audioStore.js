@@ -1,8 +1,8 @@
 /**
  * 音频 Store
  */
-import { defineStore } from 'pinia'
-import audioManager from '../utils/audioManager'
+import { defineStore } from 'pinia';
+import audioManager from '../utils/audioManager';
 
 export const useAudioStore = defineStore('audio', {
   state: () => ({
@@ -17,17 +17,17 @@ export const useAudioStore = defineStore('audio', {
   getters: {
     // 获取图标
     bgmIcon: (state) => {
-      if (!state.bgmEnabled) return '🔇'
-      if (state.bgmVolume < 0.3) return '🔈'
-      if (state.bgmVolume < 0.7) return '🔉'
-      return '🔊'
+      if (!state.bgmEnabled) return '🔇';
+      if (state.bgmVolume < 0.3) return '🔈';
+      if (state.bgmVolume < 0.7) return '🔉';
+      return '🔊';
     },
     
     sfxIcon: (state) => {
-      if (!state.sfxEnabled) return '🔇'
-      if (state.sfxVolume < 0.3) return '🔈'
-      if (state.sfxVolume < 0.7) return '🔉'
-      return '🔊'
+      if (!state.sfxEnabled) return '🔇';
+      if (state.sfxVolume < 0.3) return '🔈';
+      if (state.sfxVolume < 0.7) return '🔉';
+      return '🔊';
     }
   },
 
@@ -36,12 +36,12 @@ export const useAudioStore = defineStore('audio', {
      * 初始化
      */
     init() {
-      const status = audioManager.getStatus()
-      this.bgmEnabled = status.bgmEnabled
-      this.sfxEnabled = status.sfxEnabled
-      this.bgmVolume = status.bgmVolume
-      this.sfxVolume = status.sfxVolume
-      this.currentBgm = status.currentBgm
+      const status = audioManager.getStatus();
+      this.bgmEnabled = status.bgmEnabled;
+      this.sfxEnabled = status.sfxEnabled;
+      this.bgmVolume = status.bgmVolume;
+      this.sfxVolume = status.sfxVolume;
+      this.currentBgm = status.currentBgm;
     },
 
     /**
@@ -49,7 +49,7 @@ export const useAudioStore = defineStore('audio', {
      */
     playSfx(key) {
       if (this.sfxEnabled && !this.isMuted) {
-        audioManager.playSfx(key)
+        audioManager.playSfx(key);
       }
     },
 
@@ -58,8 +58,8 @@ export const useAudioStore = defineStore('audio', {
      */
     playBgm(key) {
       if (this.bgmEnabled && !this.isMuted) {
-        audioManager.playBgm(key)
-        this.currentBgm = key
+        audioManager.playBgm(key);
+        this.currentBgm = key;
       }
     },
 
@@ -67,54 +67,54 @@ export const useAudioStore = defineStore('audio', {
      * 停止 BGM
      */
     stopBgm() {
-      audioManager.stopBgm()
-      this.currentBgm = null
+      audioManager.stopBgm();
+      this.currentBgm = null;
     },
 
     /**
      * 切换 BGM
      */
     toggleBgm() {
-      this.bgmEnabled = audioManager.toggleBgm()
+      this.bgmEnabled = audioManager.toggleBgm();
     },
 
     /**
      * 切换 SFX
      */
     toggleSfx() {
-      this.sfxEnabled = audioManager.toggleSfx()
+      this.sfxEnabled = audioManager.toggleSfx();
     },
 
     /**
      * 设置 BGM 音量
      */
     setBgmVolume(volume) {
-      this.bgmVolume = volume
-      audioManager.setBgmVolume(volume)
+      this.bgmVolume = volume;
+      audioManager.setBgmVolume(volume);
     },
 
     /**
      * 设置 SFX 音量
      */
     setSfxVolume(volume) {
-      this.sfxVolume = volume
-      audioManager.setSfxVolume(volume)
+      this.sfxVolume = volume;
+      audioManager.setSfxVolume(volume);
     },
 
     /**
      * 静音
      */
     mute() {
-      this.isMuted = true
-      audioManager.muteAll()
+      this.isMuted = true;
+      audioManager.muteAll();
     },
 
     /**
      * 取消静音
      */
     unmute() {
-      this.isMuted = false
-      audioManager.unmuteAll()
+      this.isMuted = false;
+      audioManager.unmuteAll();
     },
 
     /**
@@ -122,12 +122,12 @@ export const useAudioStore = defineStore('audio', {
      */
     toggleMute() {
       if (this.isMuted) {
-        this.unmute()
+        this.unmute();
       } else {
-        this.mute()
+        this.mute();
       }
     }
   }
-})
+});
 
-export default useAudioStore
+export default useAudioStore;

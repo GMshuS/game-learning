@@ -1,8 +1,7 @@
 /**
  * 存档管理 Store
  */
-import { defineStore } from 'pinia'
-import storageManager from '../utils/storage'
+import { defineStore } from 'pinia';
 
 export const useSaveDataStore = defineStore('saveData', {
   state: () => ({
@@ -18,17 +17,17 @@ export const useSaveDataStore = defineStore('saveData', {
   getters: {
     // 获取当前存档
     currentSave: (state) => {
-      return state.slots[state.currentSlot]?.data
+      return state.slots[state.currentSlot]?.data;
     },
 
     // 获取是否有存档
     hasSave: (state) => (slotIndex) => {
-      return state.slots[slotIndex]?.data !== null
+      return state.slots[slotIndex]?.data !== null;
     },
 
     // 获取存档数量
     saveCount: (state) => {
-      return state.slots.filter(s => s.data !== null).length
+      return state.slots.filter(s => s.data !== null).length;
     }
   },
 
@@ -38,16 +37,16 @@ export const useSaveDataStore = defineStore('saveData', {
      */
     loadAllSaves() {
       for (let i = 0; i < this.slots.length; i++) {
-        const key = `save_slot_${i}`
+        const key = `save_slot_${i}`;
         try {
-          const data = localStorage.getItem(key)
+          const data = localStorage.getItem(key);
           if (data) {
-            const parsed = JSON.parse(data)
-            this.slots[i].data = parsed
-            this.slots[i].updatedAt = parsed.progress?.lastSavedAt || null
+            const parsed = JSON.parse(data);
+            this.slots[i].data = parsed;
+            this.slots[i].updatedAt = parsed.progress?.lastSavedAt || null;
           }
         } catch (e) {
-          console.warn(`Failed to load save slot ${i}:`, e)
+          console.warn(`Failed to load save slot ${i}:`, e);
         }
       }
     },
@@ -56,24 +55,24 @@ export const useSaveDataStore = defineStore('saveData', {
      * 保存到指定槽位
      */
     saveToSlot(slotIndex, gameData) {
-      const key = `save_slot_${slotIndex}`
+      const key = `save_slot_${slotIndex}`;
       
       try {
         const saveData = {
           ...gameData,
           savedAt: new Date().toISOString()
-        }
+        };
         
-        localStorage.setItem(key, JSON.stringify(saveData))
+        localStorage.setItem(key, JSON.stringify(saveData));
         
-        this.slots[slotIndex].data = saveData
-        this.slots[slotIndex].updatedAt = saveData.savedAt
-        this.currentSlot = slotIndex
+        this.slots[slotIndex].data = saveData;
+        this.slots[slotIndex].updatedAt = saveData.savedAt;
+        this.currentSlot = slotIndex;
         
-        return true
+        return true;
       } catch (e) {
-        console.warn('Failed to save:', e)
-        return false
+        console.warn('Failed to save:', e);
+        return false;
       }
     },
 
@@ -81,36 +80,36 @@ export const useSaveDataStore = defineStore('saveData', {
      * 从指定槽位加载
      */
     loadFromSlot(slotIndex) {
-      const slot = this.slots[slotIndex]
+      const slot = this.slots[slotIndex];
       if (!slot || !slot.data) {
-        return null
+        return null;
       }
       
-      this.currentSlot = slotIndex
-      return slot.data
+      this.currentSlot = slotIndex;
+      return slot.data;
     },
 
     /**
      * 删除指定槽位的存档
      */
     deleteSlot(slotIndex) {
-      const key = `save_slot_${slotIndex}`
+      const key = `save_slot_${slotIndex}`;
       
       try {
-        localStorage.removeItem(key)
-        this.slots[slotIndex].data = null
-        this.slots[slotIndex].updatedAt = null
+        localStorage.removeItem(key);
+        this.slots[slotIndex].data = null;
+        this.slots[slotIndex].updatedAt = null;
         
         if (this.currentSlot === slotIndex) {
           // 找到下一个有存档的槽位
-          const nextSlot = this.slots.findIndex(s => s.data !== null)
-          this.currentSlot = nextSlot >= 0 ? nextSlot : 0
+          const nextSlot = this.slots.findIndex(s => s.data !== null);
+          this.currentSlot = nextSlot >= 0 ? nextSlot : 0;
         }
         
-        return true
+        return true;
       } catch (e) {
-        console.warn('Failed to delete save:', e)
-        return false
+        console.warn('Failed to delete save:', e);
+        return false;
       }
     },
 
@@ -118,18 +117,18 @@ export const useSaveDataStore = defineStore('saveData', {
      * 导出数据
      */
     exportData() {
-      const gameData = this.currentSave
+      const gameData = this.currentSave;
       if (!gameData) {
-        return null
+        return null;
       }
       
       const exportObj = {
         version: '1.0',
         exportedAt: new Date().toISOString(),
         data: gameData
-      }
+      };
       
-      return JSON.stringify(exportObj, null, 2)
+      return JSON.stringify(exportObj, null, 2);
     },
 
     /**
@@ -137,17 +136,17 @@ export const useSaveDataStore = defineStore('saveData', {
      */
     importData(jsonString, slotIndex = null) {
       try {
-        const importObj = JSON.parse(jsonString)
+        const importObj = JSON.parse(jsonString);
         
         if (!importObj.version || !importObj.data) {
-          throw new Error('Invalid save data format')
+          throw new Error('Invalid save data format');
         }
         
-        const targetSlot = slotIndex ?? this.currentSlot
-        return this.saveToSlot(targetSlot, importObj.data)
+        const targetSlot = slotIndex ?? this.currentSlot;
+        return this.saveToSlot(targetSlot, importObj.data);
       } catch (e) {
-        console.warn('Failed to import save:', e)
-        return false
+        console.warn('Failed to import save:', e);
+        return false;
       }
     },
 
@@ -156,16 +155,16 @@ export const useSaveDataStore = defineStore('saveData', {
      */
     autoSave(gameData) {
       if (this.autoSaveEnabled) {
-        return this.saveToSlot(this.currentSlot, gameData)
+        return this.saveToSlot(this.currentSlot, gameData);
       }
-      return false
+      return false;
     },
 
     /**
      * 切换自动保存
      */
     toggleAutoSave() {
-      this.autoSaveEnabled = !this.autoSaveEnabled
+      this.autoSaveEnabled = !this.autoSaveEnabled;
     },
 
     /**
@@ -173,10 +172,10 @@ export const useSaveDataStore = defineStore('saveData', {
      */
     resetAll() {
       for (let i = 0; i < this.slots.length; i++) {
-        this.deleteSlot(i)
+        this.deleteSlot(i);
       }
     }
   }
-})
+});
 
-export default useSaveDataStore
+export default useSaveDataStore;

@@ -2,8 +2,8 @@
  * GameContext 适配层
  * 设置层与表现层之间的统一接口
  */
-import { getGradeRange, getGradeOperations } from '../config/grades'
-import { getDifficultyScale } from '../config/difficultyScale'
+import { getGradeRange, getGradeOperations } from '../config/grades';
+import { getDifficultyScale } from '../config/difficultyScale';
 
 /**
  * 获取年级上下文
@@ -11,9 +11,9 @@ import { getDifficultyScale } from '../config/difficultyScale'
  * @returns {{ range: {min: number, max: number}, operations: string[] }}
  */
 export function getGradeContext(grade) {
-  const range = getGradeRange(grade)
-  const operations = getGradeOperations(grade)
-  return { range, operations }
+  const range = getGradeRange(grade);
+  const operations = getGradeOperations(grade);
+  return { range, operations };
 }
 
 /**
@@ -22,7 +22,7 @@ export function getGradeContext(grade) {
  * @returns {object} 难度倍率配置对象
  */
 export function getDifficultyContext(difficulty) {
-  return getDifficultyScale(difficulty)
+  return getDifficultyScale(difficulty);
 }
 
 /**
@@ -32,8 +32,8 @@ export function getDifficultyContext(difficulty) {
  * @returns {{ grade: number, range: {min: number, max: number}, operations: string[], difficulty: string, scale: object }}
  */
 export function getGameConfig(grade, difficulty) {
-  const gradeContext = getGradeContext(grade)
-  const scale = getDifficultyContext(difficulty)
+  const gradeContext = getGradeContext(grade);
+  const scale = getDifficultyContext(difficulty);
 
   return {
     grade: grade,
@@ -41,5 +41,5 @@ export function getGameConfig(grade, difficulty) {
     operations: gradeContext.operations,
     difficulty: difficulty,
     scale: scale
-  }
+  };
 }

@@ -1,8 +1,8 @@
 /**
  * 构建优化配置 - Vite
  */
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   plugins: [vue()],
@@ -68,4 +68,4 @@ export default defineConfig({
     port: 4173,
     open: true
   }
-})
+});

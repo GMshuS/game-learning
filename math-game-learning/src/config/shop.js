@@ -1,7 +1,7 @@
 /**
  * 商店商品配置
  */
-import { getEffectByProductId } from './shopEffects'
+import { getEffectByProductId } from './shopEffects';
 
 export const shopConfig = {
   // 商品分类
@@ -214,27 +214,27 @@ export const shopConfig = {
       effect: getEffectByProductId('puzzle')
     }
   ]
-}
+};
 
 /**
  * 根据分类获取商品
  */
 export function getProductsByCategory(categoryId) {
-  return shopConfig.products.filter(p => p.category === categoryId)
+  return shopConfig.products.filter(p => p.category === categoryId);
 }
 
 /**
  * 根据 ID 获取商品
  */
 export function getProductById(productId) {
-  return shopConfig.products.find(p => p.id === productId)
+  return shopConfig.products.find(p => p.id === productId);
 }
 
 /**
  * 获取所有商品
  */
 export function getAllProducts() {
-  return shopConfig.products
+  return shopConfig.products;
 }
 
-export default shopConfig
+export default shopConfig;

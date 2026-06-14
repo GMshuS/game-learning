@@ -272,34 +272,34 @@ export const achievementConfig = {
     epic: { name: '史诗', color: '#a78bfa', multiplier: 3 },
     legendary: { name: '传说', color: '#fbbf24', multiplier: 5 }
   }
-}
+};
 
 /**
  * 根据 ID 获取成就
  */
 export function getAchievementById(id) {
-  return achievementConfig.achievements.find(a => a.id === id)
+  return achievementConfig.achievements.find(a => a.id === id);
 }
 
 /**
  * 根据分类获取成就
  */
 export function getAchievementsByCategory(category) {
-  return achievementConfig.achievements.filter(a => a.category === category)
+  return achievementConfig.achievements.filter(a => a.category === category);
 }
 
 /**
  * 获取所有成就
  */
 export function getAllAchievements() {
-  return achievementConfig.achievements
+  return achievementConfig.achievements;
 }
 
 /**
  * 获取稀有度配置
  */
 export function getRarityConfig(rarity) {
-  return achievementConfig.rarities[rarity] || achievementConfig.rarities.common
+  return achievementConfig.rarities[rarity] || achievementConfig.rarities.common;
 }
 
-export default achievementConfig
+export default achievementConfig;

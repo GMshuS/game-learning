@@ -34,14 +34,14 @@ const props = defineProps({
   steps: {
     type: Array,
     default: () => []
-  },
-})
+  }
+});
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close']);
 
 const close = () => {
-  emit('close')
-}
+  emit('close');
+};
 </script>
 
 <style scoped>

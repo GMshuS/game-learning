@@ -10,7 +10,7 @@ export const materialTypes = [
   { id: 'crystal', name: '水晶', icon: '💎', rarity: 'rare' },
   { id: 'gold_ore', name: '金矿', icon: '🥇', rarity: 'rare' },
   { id: 'magic_dust', name: '魔法粉', icon: '✨', rarity: 'epic' }
-]
+];
 
 // 配方列表
 export const recipes = [
@@ -71,25 +71,25 @@ export const recipes = [
     basePrice: 350,
     category: 'budget'
   }
-]
+];
 
 // 答题获得材料配置
 export const questionReward = {
   common: { chance: 0.6, amount: [1, 2] },
   rare: { chance: 0.3, amount: [1, 1] },
   epic: { chance: 0.1, amount: [1, 1] }
-}
+};
 
 // 销售配置
 export const salesConfig = {
   customerInterval: 45, // 每 45 秒模拟一位顾客
   maxSettlement: 10, // 每次最多结算 10 笔
   priceVariance: 0.2 // 价格波动 ±20%
-}
+};
 
 export default {
   materialTypes,
   recipes,
   questionReward,
   salesConfig
-}
+};

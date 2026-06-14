@@ -55,22 +55,22 @@ export const gradesConfig = {
     topics: ['比例', '百分比应用', '简易方程'],
     description: '综合应用'
   }
-}
+};
 
 /**
  * 根据年级获取数字范围
  */
 export function getGradeRange(grade) {
-  const config = gradesConfig[`grade${grade}`]
-  return config ? config.range : { min: 1, max: 20 }
+  const config = gradesConfig[`grade${grade}`];
+  return config ? config.range : { min: 1, max: 20 };
 }
 
 /**
  * 根据年级获取可用运算类型
  */
 export function getGradeOperations(grade) {
-  const config = gradesConfig[`grade${grade}`]
-  return config ? config.operations : ['add', 'subtract']
+  const config = gradesConfig[`grade${grade}`];
+  return config ? config.operations : ['add', 'subtract'];
 }
 
-export default gradesConfig
+export default gradesConfig;

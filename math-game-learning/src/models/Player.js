@@ -3,47 +3,48 @@
  */
 export class Player {
   constructor(data = {}) {
-    this.id = data.id || this.generateId()
-    this.name = data.name || '冒险者'
-    this.level = data.level || 1  // 角色等级
-    this.exp = data.exp || 0      // 经验值
-    this.coins = data.coins || 0  // 金币数量
-    this.items = data.items || [] // 道具列表
-    this.createdAt = data.createdAt || new Date().toISOString()
-    this.lastLoginAt = data.lastLoginAt || new Date().toISOString()
+    this.id = data.id || this.generateId();
+    this.name = data.name || '冒险者';
+    this.level = data.level || 1;  // 角色等级
+    this.exp = data.exp || 0;      // 经验值
+    this.coins = data.coins || 0;  // 金币数量
+    this.items = data.items || []; // 道具列表
+    this.createdAt = data.createdAt || new Date().toISOString();
+    this.lastLoginAt = data.lastLoginAt || new Date().toISOString();
   }
 
   generateId() {
-    return 'player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11)
+    return 'player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
+    // 如需更严格的唯一性，可替换为 crypto.randomUUID()（需考虑浏览器兼容性）
   }
 
   /**
    * 增加经验值
    */
   addExp(amount) {
-    this.exp += amount
-    const expNeeded = this.level * 100
+    this.exp += amount;
+    const expNeeded = this.level * 100;
     if (this.exp >= expNeeded) {
-      this.exp -= expNeeded
-      this.levelUp()
-      return true
+      this.exp -= expNeeded;
+      this.levelUp();
+      return true;
     }
-    return false
+    return false;
   }
 
   /**
    * 升级
    */
   levelUp() {
-    this.level++
-    console.log(`升级！当前等级：${this.level}`)
+    this.level++;
+    if (import.meta.env.DEV) console.log(`升级！当前等级：${this.level}`);
   }
 
   /**
    * 增加金币
    */
   addCoins(amount) {
-    this.coins += amount
+    this.coins += amount;
   }
 
   /**
@@ -51,29 +52,29 @@ export class Player {
    */
   spendCoins(amount) {
     if (this.coins >= amount) {
-      this.coins -= amount
-      return true
+      this.coins -= amount;
+      return true;
     }
-    return false
+    return false;
   }
 
   /**
    * 添加道具
    */
   addItem(item) {
-    this.items.push(item)
+    this.items.push(item);
   }
 
   /**
    * 移除道具
    */
   removeItem(itemId) {
-    const index = this.items.findIndex(i => i.id === itemId)
+    const index = this.items.findIndex(i => i.id === itemId);
     if (index !== -1) {
-      this.items.splice(index, 1)
-      return true
+      this.items.splice(index, 1);
+      return true;
     }
-    return false
+    return false;
   }
 
   /**
@@ -89,15 +90,15 @@ export class Player {
       items: this.items,
       createdAt: this.createdAt,
       lastLoginAt: new Date().toISOString()
-    }
+    };
   }
 
   /**
    * 从存储对象创建
    */
   static fromStorage(data) {
-    return new Player(data)
+    return new Player(data);
   }
 }
 
-export default Player
+export default Player;

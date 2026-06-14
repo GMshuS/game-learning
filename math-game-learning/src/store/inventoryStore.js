@@ -3,24 +3,24 @@
  * 管理物品持有、收藏品追踪、战斗道具槽位（最多5个）
  * 遵循 save-on-write 模式
  */
-import { defineStore } from 'pinia'
-import { getEffectByProductId, isCollectible, getCollectibleSetInfo } from '../config/shopEffects'
-import { useAchievementStore } from './achievementStore'
-import { getProductById } from '../config/shop'
+import { defineStore } from 'pinia';
+import { getEffectByProductId, isCollectible, getCollectibleSetInfo } from '../config/shopEffects';
+import { useAchievementStore } from './achievementStore';
+import { getProductById } from '../config/shop';
 
-const STORAGE_KEY = 'math_game_inventory_store'
+const STORAGE_KEY = 'math_game_inventory_store';
 
 // 从 localStorage 加载数据
 function loadFromStorage() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY)
+    const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
-      return JSON.parse(data)
+      return JSON.parse(data);
     }
   } catch (e) {
-    console.error('加载背包数据失败:', e)
+    console.error('加载背包数据失败:', e);
   }
-  return null
+  return null;
 }
 
 // 保存到 localStorage
@@ -31,19 +31,19 @@ function saveToStorage(state) {
       collectibles: state.collectibles,
       battleSlots: state.battleSlots,
       maxBattleSlots: state.maxBattleSlots
-    }))
+    }));
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
-      console.warn('localStorage 容量不足，背包数据保存失败')
+      console.warn('localStorage 容量不足，背包数据保存失败');
     } else {
-      throw e
+      throw e;
     }
   }
 }
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => {
-    const saved = loadFromStorage()
+    const saved = loadFromStorage();
     return {
       // 持有物品列表
       items: saved?.items || [],
@@ -53,7 +53,7 @@ export const useInventoryStore = defineStore('inventory', {
       battleSlots: saved?.battleSlots || [null, null, null, null, null],
       // 最大战斗槽位数
       maxBattleSlots: saved?.maxBattleSlots || 5
-    }
+    };
   },
 
   getters: {
@@ -64,21 +64,21 @@ export const useInventoryStore = defineStore('inventory', {
       return state.battleSlots
         .filter(slotId => slotId !== null)
         .map(slotId => state.items.find(item => item.id === slotId))
-        .filter(Boolean)
+        .filter(Boolean);
     },
 
     /**
      * 获取所有收藏品 ID 列表
      */
     collectibleIds: (state) => {
-      return state.collectibles.map(c => c.productId)
+      return state.collectibles.map(c => c.productId);
     },
 
     /**
      * 检查收藏品是否已收集
      */
     hasCollectible: (state) => (productId) => {
-      return state.collectibles.some(c => c.productId === productId)
+      return state.collectibles.some(c => c.productId === productId);
     }
   },
 
@@ -89,15 +89,15 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {number} quantity - 添加数量
      */
     addItem(product, quantity = 1) {
-      if (!product || !product.id) return
+      if (!product || !product.id) return;
 
-      const existingItem = this.items.find(item => item.productId === product.id)
+      const existingItem = this.items.find(item => item.productId === product.id);
 
       if (existingItem) {
-        existingItem.quantity += quantity
+        existingItem.quantity += quantity;
       } else {
         // 生成唯一实例 ID
-        const itemId = `${product.id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+        const itemId = `${product.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         this.items.push({
           id: itemId,
           productId: product.id,
@@ -105,7 +105,7 @@ export const useInventoryStore = defineStore('inventory', {
           icon: product.icon,
           quantity: quantity,
           effect: product.effect || getEffectByProductId(product.id)
-        })
+        });
       }
 
       // 如果是收藏品，添加至 collectibles
@@ -113,12 +113,12 @@ export const useInventoryStore = defineStore('inventory', {
         this.collectibles.push({
           productId: product.id,
           collectedAt: Date.now()
-        })
+        });
         // 收集后检查收藏品集是否集齐
-        this.checkCollectibleSet()
+        this.checkCollectibleSet();
       }
 
-      this._save()
+      this._save();
     },
 
     /**
@@ -127,20 +127,20 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {number} quantity - 消耗数量
      */
     removeItem(itemId, quantity = 1) {
-      const index = this.items.findIndex(item => item.id === itemId)
-      if (index === -1) return
+      const index = this.items.findIndex(item => item.id === itemId);
+      if (index === -1) return;
 
-      const item = this.items[index]
-      item.quantity -= quantity
+      const item = this.items[index];
+      item.quantity -= quantity;
 
       if (item.quantity <= 0) {
         // 从战斗槽位中移除该物品
-        this.battleSlots = this.battleSlots.map(slotId => slotId === itemId ? null : slotId)
+        this.battleSlots = this.battleSlots.map(slotId => slotId === itemId ? null : slotId);
         // 删除物品条目
-        this.items.splice(index, 1)
+        this.items.splice(index, 1);
       }
 
-      this._save()
+      this._save();
     },
 
     /**
@@ -148,25 +148,25 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {number} slotIndex - 槽位索引（0-4）
      */
     equipToBattleSlot(itemId, slotIndex) {
-      if (slotIndex < 0 || slotIndex >= this.maxBattleSlots) return
+      if (slotIndex < 0 || slotIndex >= this.maxBattleSlots) return;
 
-      const item = this.items.find(i => i.id === itemId)
-      if (!item || item.quantity <= 0) return
+      const item = this.items.find(i => i.id === itemId);
+      if (!item || item.quantity <= 0) return;
 
       // 如果该槽位已有物品，先卸下
       if (this.battleSlots[slotIndex] !== null) {
-        this.unequipFromBattleSlot(slotIndex)
+        this.unequipFromBattleSlot(slotIndex);
       }
 
       // 如果该物品已在其他槽位，先移除旧引用
       for (let i = 0; i < this.battleSlots.length; i++) {
         if (this.battleSlots[i] === itemId) {
-          this.battleSlots[i] = null
+          this.battleSlots[i] = null;
         }
       }
 
-      this.battleSlots[slotIndex] = itemId
-      this._save()
+      this.battleSlots[slotIndex] = itemId;
+      this._save();
     },
 
     /**
@@ -174,9 +174,9 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {number} slotIndex - 槽位索引（0-4）
      */
     unequipFromBattleSlot(slotIndex) {
-      if (slotIndex < 0 || slotIndex >= this.maxBattleSlots) return
-      this.battleSlots[slotIndex] = null
-      this._save()
+      if (slotIndex < 0 || slotIndex >= this.maxBattleSlots) return;
+      this.battleSlots[slotIndex] = null;
+      this._save();
     },
 
     /**
@@ -184,27 +184,27 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {string} itemId - 物品实例 ID
      */
     consumeBattleItem(itemId) {
-      const item = this.items.find(i => i.id === itemId)
-      if (!item || item.quantity <= 0) return null
+      const item = this.items.find(i => i.id === itemId);
+      if (!item || item.quantity <= 0) return null;
 
-      item.quantity -= 1
+      item.quantity -= 1;
 
       if (item.quantity <= 0) {
         // 归零后从槽位移除
         for (let i = 0; i < this.battleSlots.length; i++) {
           if (this.battleSlots[i] === itemId) {
-            this.battleSlots[i] = null
+            this.battleSlots[i] = null;
           }
         }
         // 删除条目
-        const index = this.items.findIndex(i => i.id === itemId)
+        const index = this.items.findIndex(i => i.id === itemId);
         if (index !== -1) {
-          this.items.splice(index, 1)
+          this.items.splice(index, 1);
         }
       }
 
-      this._save()
-      return item
+      this._save();
+      return item;
     },
 
     /**
@@ -213,16 +213,16 @@ export const useInventoryStore = defineStore('inventory', {
      * @param {Array} legacyItems - 旧存档中的物品数组
      */
     initFromLegacy(legacyItems) {
-      if (!legacyItems || legacyItems.length === 0) return
+      if (!legacyItems || legacyItems.length === 0) return;
 
       // 避免重复迁移：如果已有数据则跳过
-      if (this.items.length > 0) return
+      if (this.items.length > 0) return;
 
       for (const legacyItem of legacyItems) {
-        const product = getProductById(legacyItem.productId || legacyItem.id)
-        if (!product) continue
+        const product = getProductById(legacyItem.productId || legacyItem.id);
+        if (!product) continue;
 
-        const itemId = `${product.id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+        const itemId = `${product.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         this.items.push({
           id: itemId,
           productId: product.id,
@@ -230,20 +230,20 @@ export const useInventoryStore = defineStore('inventory', {
           icon: product.icon,
           quantity: legacyItem.quantity || 1,
           effect: product.effect || getEffectByProductId(product.id)
-        })
+        });
 
         // 处理收藏品
         if (isCollectible(product.id) && !this.hasCollectible(product.id)) {
           this.collectibles.push({
             productId: product.id,
             collectedAt: Date.now()
-          })
+          });
         }
       }
 
       // 迁移后检查收藏品集
-      this.checkCollectibleSet()
-      this._save()
+      this.checkCollectibleSet();
+      this._save();
     },
 
     /**
@@ -251,16 +251,16 @@ export const useInventoryStore = defineStore('inventory', {
      * 若集齐则调用 achievementStore 更新统计并触发成就检查
      */
     checkCollectibleSet() {
-      const sets = getCollectibleSetInfo()
-      const collectedIds = this.collectibles.map(c => c.productId)
+      const sets = getCollectibleSetInfo();
+      const collectedIds = this.collectibles.map(c => c.productId);
 
       for (const set of Object.values(sets)) {
-        const allCollected = set.requiredProductIds.every(id => collectedIds.includes(id))
+        const allCollected = set.requiredProductIds.every(id => collectedIds.includes(id));
         if (allCollected) {
           // 通过 achievementStore 更新收集计数并触发成就检查
-          const achievementStore = useAchievementStore()
-          achievementStore.updateStat('collectibles', set.requiredProductIds.length)
-          achievementStore.checkAchievements('collectibles')
+          const achievementStore = useAchievementStore();
+          achievementStore.updateStat('collectibles', set.requiredProductIds.length);
+          achievementStore.checkAchievements('collectibles');
         }
       }
     },
@@ -269,20 +269,20 @@ export const useInventoryStore = defineStore('inventory', {
      * 重置状态
      */
     reset() {
-      this.items = []
-      this.collectibles = []
-      this.battleSlots = [null, null, null, null, null]
-      this.maxBattleSlots = 5
-      this._save()
+      this.items = [];
+      this.collectibles = [];
+      this.battleSlots = [null, null, null, null, null];
+      this.maxBattleSlots = 5;
+      this._save();
     },
 
     /**
      * 保存数据到 localStorage（save-on-write）
      */
     _save() {
-      saveToStorage(this)
+      saveToStorage(this);
     }
   }
-})
+});
 
-export default useInventoryStore
+export default useInventoryStore;

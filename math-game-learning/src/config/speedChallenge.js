@@ -60,6 +60,6 @@ export const speedChallengeConfig = {
     5: { operations: ['+', '-', '×', '÷'], maxNum: 1000 },
     6: { operations: ['+', '-', '×', '÷'], maxNum: 1000 }
   }
-}
+};
 
-export default speedChallengeConfig
+export default speedChallengeConfig;

@@ -14,7 +14,7 @@ export const EFFECT_TYPES = {
   BUFF: 'buff',
   HEAL: 'heal',
   SPECIAL: 'special'
-}
+};
 
 /** 效果目标属性 */
 export const TARGET_TYPES = {
@@ -31,7 +31,7 @@ export const TARGET_TYPES = {
   TAUNT: 'taunt',
   DAMAGE_MULTIPLIER: 'damage_multiplier',
   COLLECTIBLE: 'collectible'
-}
+};
 
 // ============================================================
 // 效果数据表（按 productId 索引）
@@ -189,7 +189,7 @@ const effectMap = {
     triggerDescription: '',
     collectibleSetId: null
   }
-}
+};
 
 // ============================================================
 // 收藏品集定义
@@ -204,17 +204,17 @@ const collectibleSets = {
     achievementId: 'collector_starter',
     icon: '📚'
   }
-}
+};
 
 // ============================================================
 // 导出数据（只读）
 // ============================================================
 
 /** 全部效果数据（浅拷贝副本，防止外部修改） */
-export const ALL_EFFECTS = { ...effectMap }
+export const ALL_EFFECTS = { ...effectMap };
 
 /** 全部收藏品集定义 */
-export const COLLECTIBLE_SETS = { ...collectibleSets }
+export const COLLECTIBLE_SETS = { ...collectibleSets };
 
 // ============================================================
 // 查询函数
@@ -226,8 +226,8 @@ export const COLLECTIBLE_SETS = { ...collectibleSets }
  * @returns {object|null} effect 对象，未找到返回 null
  */
 export function getEffectByProductId(productId) {
-  const effect = effectMap[productId]
-  return effect ? { ...effect } : null
+  const effect = effectMap[productId];
+  return effect ? { ...effect } : null;
 }
 
 /**
@@ -236,8 +236,8 @@ export function getEffectByProductId(productId) {
  * @returns {boolean}
  */
 export function isCollectible(productId) {
-  const effect = effectMap[productId]
-  return effect ? effect.collectibleSetId !== null : false
+  const effect = effectMap[productId];
+  return effect ? effect.collectibleSetId !== null : false;
 }
 
 /**
@@ -246,11 +246,11 @@ export function isCollectible(productId) {
  */
 export function getCollectibleSetInfo() {
   // 返回深拷贝副本
-  const result = {}
+  const result = {};
   for (const [key, set] of Object.entries(collectibleSets)) {
-    result[key] = { ...set, requiredProductIds: [...set.requiredProductIds] }
+    result[key] = { ...set, requiredProductIds: [...set.requiredProductIds] };
   }
-  return result
+  return result;
 }
 
 export default {
@@ -261,4 +261,4 @@ export default {
   getEffectByProductId,
   isCollectible,
   getCollectibleSetInfo
-}
+};

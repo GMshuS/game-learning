@@ -15,15 +15,16 @@
       <div v-for="rarity in rarities" :key="rarity.id" class="rarity-section">
         <h3 :style="{ color: rarity.color }">{{ rarity.label }} ({{ countByRarity(rarity.id) }})</h3>
         <div class="card-grid">
-          <div v-for="card in cardsByRarity(rarity.id)" :key="card.id" class="collection-card"
-               :class="{ 'in-deck': store.deck.includes(card.id) }"
-               @click="toggleDeck(card.id)">
+          <div
+            v-for="card in cardsByRarity(rarity.id)" :key="card.id" class="collection-card"
+            :class="{ 'in-deck': store.deck.includes(card.id) }"
+            @click="toggleDeck(card.id)">
             <div class="cc-rarity" :style="{ background: rarity.color }">{{ rarity.label }}</div>
             <div class="cc-name">{{ card.name }}</div>
             <div class="cc-type">{{ getCardTypeIcon(card.type) }}</div>
-            <div class="cc-value" v-if="card.value > 0">{{ card.value }}</div>
-            <div class="cc-qty" v-if="getCardQty(card.id) > 1">×{{ getCardQty(card.id) }}</div>
-            <div class="cc-deck-badge" v-if="store.deck.includes(card.id)">卡组中</div>
+            <div v-if="card.value > 0" class="cc-value">{{ card.value }}</div>
+            <div v-if="getCardQty(card.id) > 1" class="cc-qty">×{{ getCardQty(card.id) }}</div>
+            <div v-if="store.deck.includes(card.id)" class="cc-deck-badge">卡组中</div>
           </div>
         </div>
       </div>
@@ -32,58 +33,58 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useCardStore } from '../store/cardStore'
-import { cards, getCardById, rarityConfig, getCardsByGrade } from '../config/cards'
-import { useGameStore } from '../store/gameStore'
-import { useSettingsStore } from '../store/settingsStore'
+import { computed } from 'vue';
+import { useCardStore } from '../store/cardStore';
+import { cards, getCardById, rarityConfig, getCardsByGrade } from '../config/cards';
+import { useGameStore } from '../store/gameStore';
+import { useSettingsStore } from '../store/settingsStore';
 
-const emit = defineEmits(['back'])
+const emit = defineEmits(['back']);
 
-const store = useCardStore()
-const gameStore = useGameStore()
-const settingsStore = useSettingsStore()
+const store = useCardStore();
+const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
 
 const rarities = [
   { id: 'common', label: '普通', color: '#94a3b8' },
   { id: 'rare', label: '稀有', color: '#3b82f6' },
   { id: 'epic', label: '史诗', color: '#a855f7' },
   { id: 'legendary', label: '传说', color: '#fbbf24' }
-]
+];
 
 function cardsByRarity(rarity) {
-  const grade = settingsStore.grade
-  return cards.filter(c => c.rarity === rarity && c.grade[0] <= grade && c.grade[1] >= grade)
+  const grade = settingsStore.grade;
+  return cards.filter(c => c.rarity === rarity && c.grade[0] <= grade && c.grade[1] >= grade);
 }
 
 function countByRarity(rarity) {
-  return cardsByRarity(rarity).filter(c => store.hasCard(c.id)).length
+  return cardsByRarity(rarity).filter(c => store.hasCard(c.id)).length;
 }
 
 function getCardQty(cardId) {
-  const entry = store.collection.find(c => c.cardId === cardId)
-  return entry ? entry.quantity : 0
+  const entry = store.collection.find(c => c.cardId === cardId);
+  return entry ? entry.quantity : 0;
 }
 
 function getCardTypeIcon(type) {
   switch (type) {
-    case 'attack': return '⚔️'
-    case 'defense': return '🛡️'
-    case 'heal': return '💚'
-    case 'special': return '✨'
-    case 'equation': return '📐'
-    default: return '?'
+  case 'attack': return '⚔️';
+  case 'defense': return '🛡️';
+  case 'heal': return '💚';
+  case 'special': return '✨';
+  case 'equation': return '📐';
+  default: return '?';
   }
 }
 
 function toggleDeck(cardId) {
   if (store.deck.includes(cardId)) {
-    store.removeFromDeck(cardId)
+    store.removeFromDeck(cardId);
   } else {
-    store.addToDeck(cardId)
+    store.addToDeck(cardId);
   }
-  gameStore.cardBattle = store.getSaveData()
-  gameStore.saveGame()
+  gameStore.cardBattle = store.getSaveData();
+  gameStore.saveGame();
 }
 </script>
 

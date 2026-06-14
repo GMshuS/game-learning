@@ -22,9 +22,10 @@
     <div v-else class="pack-result">
       <div class="result-title">🎉 获得以下卡牌</div>
       <div class="result-cards">
-        <div v-for="(result, i) in openedCards" :key="i" class="result-card"
-             :style="{ animationDelay: i * 0.2 + 's' }">
-          <div class="rc-new" v-if="result.isNew">NEW!</div>
+        <div
+          v-for="(result, i) in openedCards" :key="i" class="result-card"
+          :style="{ animationDelay: i * 0.2 + 's' }">
+          <div v-if="result.isNew" class="rc-new">NEW!</div>
           <div class="rc-name">{{ result.card.name }}</div>
           <div class="rc-rarity" :style="{ color: rarityConfig[result.card.rarity].color }">
             {{ rarityConfig[result.card.rarity].label }}
@@ -38,35 +39,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useCardStore } from '../store/cardStore'
-import { packConfig, rarityConfig } from '../config/cards'
+import { ref } from 'vue';
+import { useCardStore } from '../store/cardStore';
+import { packConfig, rarityConfig } from '../config/cards';
 
-const emit = defineEmits(['back', 'packOpened'])
+const emit = defineEmits(['back', 'packOpened']);
 
-const store = useCardStore()
-const openedCards = ref(null)
+const store = useCardStore();
+const openedCards = ref(null);
 
-const packs = packConfig
+const packs = packConfig;
 
 function getCardTypeIcon(type) {
   switch (type) {
-    case 'attack': return '⚔️'
-    case 'defense': return '🛡️'
-    case 'heal': return '💚'
-    case 'special': return '✨'
-    case 'equation': return '📐'
-    default: return '?'
+  case 'attack': return '⚔️';
+  case 'defense': return '🛡️';
+  case 'heal': return '💚';
+  case 'special': return '✨';
+  case 'equation': return '📐';
+  default: return '?';
   }
 }
 
 function buyPack(packType) {
-  const results = store.openPack(packType)
+  const results = store.openPack(packType);
   if (results.length > 0) {
-    openedCards.value = results
-    emit('packOpened', results)
+    openedCards.value = results;
+    emit('packOpened', results);
   } else {
-    alert('货币不足！')
+    alert('货币不足！');
   }
 }
 </script>

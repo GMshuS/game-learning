@@ -65,20 +65,20 @@ export const adventureConfig = {
     perfectScore: { coins: 25, exp: 50 },
     timeBonus: { coins: 10, exp: 20 }
   }
-}
+};
 
 /**
  * 获取区域信息
  */
 export function getArea(areaId) {
-  return adventureConfig.areas.find(a => a.id === areaId)
+  return adventureConfig.areas.find(a => a.id === areaId);
 }
 
 /**
  * 获取所有区域
  */
 export function getAllAreas() {
-  return adventureConfig.areas
+  return adventureConfig.areas;
 }
 
 /**
@@ -87,7 +87,7 @@ export function getAllAreas() {
 export function getAreasForGrade(grade) {
   return adventureConfig.areas.filter(area => 
     grade >= area.gradeRange[0] && grade <= area.gradeRange[1]
-  )
+  );
 }
 
-export default adventureConfig
+export default adventureConfig;
