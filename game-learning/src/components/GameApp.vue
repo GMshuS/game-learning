@@ -19,88 +19,11 @@
       @open-inventory="openInventoryFromNavbar"
     />
 
-    <!-- 主内容区 -->
+    <!-- 主内容区 - 使用动态组件注册表渲染 -->
     <main class="game-main">
-      <!-- 主菜单 -->
-      <MainMenu
-        v-if="currentView === 'menu'"
-        :player-name="playerInfo.name"
-        :player-level="playerInfo.level"
-        :player-coins="playerInfo.coins"
-        @start-challenge-center="startChallengeCenter"
-        @open-achievements="openAchievements"
-        @open-settings="openSettings"
-        @start-english-hall="startEnglishHall"
-      />
+      <component :is="viewComponent" v-bind="viewProps" v-on="viewEvents" />
 
-      <!-- 冒险地图 -->
-      <KeepAlive>
-        <AdventureMap
-          v-if="currentView === 'adventure'"
-          :unlocked-areas="unlockedAreas"
-          :current-area-id="currentAreaId"
-          @area-select="showLevelSelect"
-          @back="goBack"
-        />
-      </KeepAlive>
-
-      <!-- 关卡选择 -->
-      <LevelSelect
-        v-if="currentView === 'levelSelect'"
-        :area="selectedArea"
-        :completed-levels="gameStore.progress?.completedLevels || []"
-        :stars="gameStore.progress?.stars || {}"
-        @level-select="onLevelSelect"
-        @back="goBack"
-      />
-
-      <!-- 战斗游戏 -->
-      <KeepAlive>
-        <BattleGame
-          v-if="currentView === 'battle'"
-          :player="battlePlayer"
-          :monster="battleMonster"
-          :grade="battleGrade"
-          :streak="battleStreak"
-          :difficulty-scale="battleDifficultyScale"
-          @battle-end="onBattleEnd"
-          @back="goBack"
-        />
-      </KeepAlive>
-
-      <!-- 商店视图 -->
-      <ShopView
-        v-if="currentView === 'shop'"
-        :player-coins="playerInfo.coins"
-        :inventory="playerInventory"
-        @buy="handleBuy"
-        @start-cashier="startCashier"
-        @open-inventory="openInventoryFromShop"
-        @back="goBack"
-      />
-
-      <!-- 背包视图 -->
-      <InventoryView
-        v-if="currentView === 'inventory'"
-        @back="goBack"
-        @open-battle-prepare="openBattlePrepareFromInventory"
-      />
-
-      <!-- 战斗准备 -->
-      <BattlePrepare
-        v-if="currentView === 'battlePrepare'"
-        @back="goBack"
-        @start-battle="onBattlePrepareStart"
-      />
-
-      <!-- 收银游戏 -->
-      <CashierGame
-        v-if="currentView === 'cashier'"
-        @complete="onCashierComplete"
-        @back="goBack"
-      />
-
-      <!-- 成就视图 -->
+      <!-- 成就弹窗（由 showAchievements 布尔控制，不归入 currentView 体系） -->
       <AchievementView
         v-if="showAchievements"
         :unlocked-achievements="achievementStore.unlockedAchievements"
@@ -109,7 +32,7 @@
         @close="closeAchievements"
       />
 
-      <!-- 设置面板 -->
+      <!-- 设置弹窗（由 showSettings 布尔控制，不归入 currentView 体系） -->
       <SettingsPanel
         v-if="showSettings"
         :settings="settings"
@@ -118,88 +41,6 @@
         @export="handleExport"
         @import="handleImport"
         @reset="handleReset"
-      />
-
-      <!-- 挑战中心/游戏大厅 -->
-      <GameHall
-        v-if="currentView === 'challenge'"
-        @start-speed-challenge="startSpeedChallenge"
-        @start-workshop="startWorkshop"
-        @start-card-battle="startCardBattle"
-        @start-adventure="startAdventureFromHall"
-        @start-shop="startShopFromHall"
-        @start-cashier="startCashierFromHall"
-        @start-targeted-training="startTargetedTraining"
-        @start-review="startReview"
-        @open-leaderboard="openLeaderboard"
-        @back="goBack"
-      />
-
-      <!-- 速算竞技场 -->
-      <SpeedChallenge
-        v-if="currentView === 'speedChallenge'"
-        @challenge-end="onChallengeEnd"
-        @back="goBack"
-      />
-
-      <!-- 数学工坊 -->
-      <Workshop
-        v-if="currentView === 'workshop'"
-        @back="goBack"
-      />
-
-      <!-- 卡牌对战 -->
-      <CardBattle
-        v-if="currentView === 'cardBattle'"
-        @battle-end="onCardBattleEnd"
-        @open-collection="openCardCollection"
-        @back="goBack"
-      />
-
-      <!-- 卡牌收藏 -->
-      <CardCollection
-        v-if="currentView === 'cardCollection'"
-        @back="goBack"
-        @open-pack="openCardPack"
-      />
-
-      <!-- 开卡包 -->
-      <CardPack
-        v-if="currentView === 'cardPack'"
-        @pack-opened="onPackOpened"
-        @back="goBack"
-      />
-
-      <!-- 排行榜 -->
-      <Leaderboard
-        v-if="currentView === 'leaderboard'"
-        @back="goBack"
-      />
-
-      <!-- 英语乐园 -->
-      <EnglishHall
-        v-if="currentView === 'englishHall'"
-        @start-speed-spell="startEnglishSpeedSpell"
-        @back="goBack"
-      />
-
-      <!-- 英语速拼 -->
-      <EnglishSpeedSpell
-        v-if="currentView === 'englishSpeedSpell'"
-        @back="goBack"
-        @challenge-end="onSpellEnd"
-      />
-
-      <!-- 针对性训练 -->
-      <TargetedTraining
-        v-if="currentView === 'targetedTraining'"
-        @back="goBack"
-      />
-
-      <!-- 复习模式 -->
-      <ReviewSession
-        v-if="currentView === 'review'"
-        @back="goBack"
       />
     </main>
 
@@ -447,8 +288,8 @@ const startBattle = (area, level) => {
     defense: Math.max(1, Math.floor(level.number / MONSTER_DEFENSE_PER_LEVELS)),
     difficulty: monsterDifficulty,
     color: area.color,
-    maxHp: baseHp,
-    icon: baseMonster.id === 'slime' ? '🟢' : baseMonster.id === 'goblin' ? '👺' : baseMonster.id === 'orc' ? '👹' : '🐉'
+    maxHp: baseHp
+    // icon 已通过 ...baseMonster 从怪物配置中获取，不再硬编码覆盖
   };
   
   // 获取难度配置并应用到怪物
@@ -902,6 +743,153 @@ const onCardBattleEnd = (result) => {
 const onPackOpened = (_cards) => {
   // 卡牌已添加到收藏，刷新显示
 };
+
+// ====== 动态视图注册表 ======
+// 将 20+ v-if 链替换为组件注册表 + <component :is=""> 模式
+// 注意：必须放在所有函数定义之后（下文引用的函数需先定义）
+const viewRegistry = {
+  menu: {
+    component: MainMenu,
+    props: () => ({
+      playerName: playerInfo.value.name,
+      playerLevel: playerInfo.value.level,
+      playerCoins: playerInfo.value.coins
+    }),
+    events: {
+      'startChallengeCenter': startChallengeCenter,
+      'openAchievements': openAchievements,
+      'openSettings': openSettings,
+      'startEnglishHall': startEnglishHall
+    }
+  },
+  adventure: {
+    component: AdventureMap,
+    props: () => ({
+      unlockedAreas: unlockedAreas.value,
+      currentAreaId: currentAreaId.value
+    }),
+    events: { 'areaSelect': showLevelSelect, back: goBack }
+  },
+  levelSelect: {
+    component: LevelSelect,
+    props: () => ({
+      area: selectedArea.value,
+      completedLevels: gameStore.progress?.completedLevels || [],
+      stars: gameStore.progress?.stars || {}
+    }),
+    events: { 'levelSelect': onLevelSelect, back: goBack }
+  },
+  battle: {
+    component: BattleGame,
+    props: () => ({
+      player: battlePlayer.value,
+      monster: battleMonster.value,
+      grade: battleGrade.value,
+      streak: battleStreak.value,
+      difficultyScale: battleDifficultyScale.value
+    }),
+    events: { 'battleEnd': onBattleEnd, back: goBack }
+  },
+  shop: {
+    component: ShopView,
+    props: () => ({
+      playerCoins: playerInfo.value.coins,
+      inventory: playerInventory.value
+    }),
+    events: {
+      buy: handleBuy,
+      'startCashier': startCashier,
+      'openInventory': openInventoryFromShop,
+      back: goBack
+    }
+  },
+  inventory: {
+    component: InventoryView,
+    props: () => ({}),
+    events: { back: goBack, 'openBattlePrepare': openBattlePrepareFromInventory }
+  },
+  battlePrepare: {
+    component: BattlePrepare,
+    props: () => ({}),
+    events: { back: goBack, 'startBattle': onBattlePrepareStart }
+  },
+  cashier: {
+    component: CashierGame,
+    props: () => ({}),
+    events: { complete: onCashierComplete, back: goBack }
+  },
+  challenge: {
+    component: GameHall,
+    props: () => ({}),
+    events: {
+      'startSpeedChallenge': startSpeedChallenge,
+      'startWorkshop': startWorkshop,
+      'startCardBattle': startCardBattle,
+      'startAdventure': startAdventureFromHall,
+      'startShop': startShopFromHall,
+      'startCashier': startCashierFromHall,
+      'startTargetedTraining': startTargetedTraining,
+      'startReview': startReview,
+      'openLeaderboard': openLeaderboard,
+      back: goBack
+    }
+  },
+  speedChallenge: {
+    component: SpeedChallenge,
+    props: () => ({}),
+    events: { 'challengeEnd': onChallengeEnd, back: goBack }
+  },
+  workshop: {
+    component: Workshop,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  cardBattle: {
+    component: CardBattle,
+    props: () => ({}),
+    events: { 'battleEnd': onCardBattleEnd, 'openCollection': openCardCollection, back: goBack }
+  },
+  cardCollection: {
+    component: CardCollection,
+    props: () => ({}),
+    events: { back: goBack, 'openPack': openCardPack }
+  },
+  cardPack: {
+    component: CardPack,
+    props: () => ({}),
+    events: { 'packOpened': onPackOpened, back: goBack }
+  },
+  leaderboard: {
+    component: Leaderboard,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  englishHall: {
+    component: EnglishHall,
+    props: () => ({}),
+    events: { 'startSpeedSpell': startEnglishSpeedSpell, back: goBack }
+  },
+  englishSpeedSpell: {
+    component: EnglishSpeedSpell,
+    props: () => ({}),
+    events: { back: goBack, 'challengeEnd': onSpellEnd }
+  },
+  targetedTraining: {
+    component: TargetedTraining,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  review: {
+    component: ReviewSession,
+    props: () => ({}),
+    events: { back: goBack }
+  }
+};
+
+// 当前视图的组件、props、事件
+const viewComponent = computed(() => viewRegistry[currentView.value]?.component || null);
+const viewProps = computed(() => viewRegistry[currentView.value]?.props() || {});
+const viewEvents = computed(() => viewRegistry[currentView.value]?.events || {});
 
 onMounted(async () => {
   // 初始化游戏 - 等待完成

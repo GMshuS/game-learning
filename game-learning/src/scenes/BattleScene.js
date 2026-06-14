@@ -5,11 +5,8 @@ import Phaser from 'phaser';
 import { getRandomMonster } from '../config/monsters';
 import { BattleState, calculateRewards, applyItemEffect } from '../utils/battle';
 import { generateQuestion } from '../utils/questionGenerator';
+import { generateWrongOptions, shuffleArray } from '../utils/questionUtils';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
-
-// 选项生成参数
-const OPTION_OFFSET_RANGE = 20;   // 错误选项偏移范围（正负10）
-const MAX_OPTION_ATTEMPTS = 30;   // 生成选项最大尝试次数（从 100 降为 30，减少极端情况迭代）
 
 // 战斗参数常量
 const DEFAULT_TIME_LIMIT = 60;         // 默认战斗限时（秒）
@@ -388,37 +385,19 @@ export default class BattleScene extends Phaser.Scene {
    */
   generateQuestion() {
     const q = generateQuestion(this.grade, 'random');
-    
     const answer = Number(q.answer);
-    const options = new Set([answer]);
     
-    let attempts = 0;
-    while (options.size < 4 && attempts < MAX_OPTION_ATTEMPTS) {
-      const offset = Math.floor(Math.random() * OPTION_OFFSET_RANGE) - (OPTION_OFFSET_RANGE / 2);
-      const wrong = Math.max(0, answer + offset);
-      if (wrong !== answer) {
-        options.add(wrong);
-      }
-      attempts++;
-    }
-    
-    let fallback = 1;
-    while (options.size < 4) {
-      options.add(answer + fallback * 7);
-      fallback++;
-    }
-    
-    // Fisher-Yates 洗牌算法
-    const shuffled = Array.from(options);
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
+    // 复用 questionUtils 的选项生成逻辑，消除重复实现
+    const wrongOptions = generateWrongOptions(answer, 3, {
+      range: 20,
+      avoidZero: answer !== 0
+    });
+    const options = shuffleArray([answer, ...wrongOptions]);
 
     this.currentQuestion = {
       ...q,
       answer: Number(q.answer),
-      options: shuffled
+      options
     };
     
   }
@@ -633,11 +612,6 @@ export default class BattleScene extends Phaser.Scene {
     const btnBg = this.add.rectangle(width / 2, height / 2 + 80, 160, 50, result === 'victory' ? 0x4ade80 : 0x666666);
     btnBg.setStrokeStyle(2, 0xffffff);
     
-    /* unused btnText reference kept for clarity */
-    const _btnText = this.add.text(width / 2, height / 2 + 80, '继续', {
-      font: 'bold 20px Microsoft YaHei',
-      color: '#ffffff'
-    }).setOrigin(0.5);
     
     btnBg.setInteractive({ useHandCursor: true });
     btnBg.on('pointerover', () => btnBg.setScale(1.05));

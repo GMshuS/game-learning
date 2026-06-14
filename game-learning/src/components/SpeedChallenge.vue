@@ -160,7 +160,7 @@ function startMode(modeId) {
 }
 
 function handleAnswer(selected) {
-  const correct = store.answer(selected);
+  store.answer(selected);
   if (!store.isPlaying) {
     emit('challengeEnd', store.gameResult);
   }

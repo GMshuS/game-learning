@@ -33,13 +33,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { useCardStore } from '../store/cardStore';
-import { cards, getCardById, rarityConfig, getCardsByGrade } from '../config/cards';
+import { cards } from '../config/cards';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 
-const emit = defineEmits(['back']);
+defineEmits(['back', 'openPack']);
 
 const store = useCardStore();
 const gameStore = useGameStore();

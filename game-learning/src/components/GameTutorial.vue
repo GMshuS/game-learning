@@ -26,15 +26,9 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  title: {
-    type: String,
-    default: '游戏玩法说明'
-  },
-  steps: {
-    type: Array,
-    default: () => []
-  }
+defineProps({
+  steps: { type: Array, required: true },
+  title: { type: String, default: '教程' }
 });
 
 const emit = defineEmits(['close']);

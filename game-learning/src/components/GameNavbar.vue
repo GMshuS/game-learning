@@ -68,9 +68,7 @@ const currentModeLabel = computed(() => {
   return modeLabels[props.currentMode] || '未知模式';
 });
 
-const navigate = (mode) => {
-  emit('navigate', mode);
-};
+// navigate(mode) 函数已移除：模板中使用 openMenu 等具体事件，无需中间函数包装
 
 const openMenu = () => {
   emit('openMenu');

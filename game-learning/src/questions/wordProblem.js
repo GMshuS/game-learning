@@ -36,9 +36,6 @@ function generateWordProblem(grade, range) {
     }
   } else if (grade <= 4) {
     // 3-4 年级：多步计算应用题
-    const a = randomInt(Math.max(min, 1), Math.min(max, 30));
-    const b = randomInt(Math.max(min, 1), Math.min(max, 20));
-    const c = randomInt(1, 5);
     const scenario = randomInt(0, 2);
 
     if (scenario === 0) {

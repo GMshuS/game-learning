@@ -108,7 +108,7 @@ import { getDueCount } from '../utils/spacedRepetition';
 // ⚠️ 架构建议：以下 computed 直接访问 gameStore 深层嵌套属性（如 gameStore.speedChallenge?.bestScores?.base）。
 //    建议在对应 Store 中暴露 getter（如 speedChallengeStore.bestScore），降低组件与 Store 内部结构的耦合度。
 
-const emit = defineEmits([
+defineEmits([
   'back',
   'startShop',
   'startCashier',

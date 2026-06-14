@@ -23,7 +23,7 @@ export const useWorkshopStore = defineStore('workshop', {
       })).filter(m => m.quantity > 0);
     },
 
-    availableRecipes: (state, getters) => {
+    availableRecipes: (_state, _getters) => {
       const settingsStore = useSettingsStore();
       const grade = settingsStore.grade;
       return workshopConfig.recipes.filter(r =>

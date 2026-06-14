@@ -2,7 +2,7 @@
  * Phaser 游戏主场景 - 世界地图
  */
 import Phaser from 'phaser';
-import { getAllAreas, getArea } from '../config/adventure';
+import { getAllAreas } from '../config/adventure';
 
 export default class WorldMapScene extends Phaser.Scene {
   constructor() {
@@ -70,7 +70,7 @@ export default class WorldMapScene extends Phaser.Scene {
   createBackground(width, height) {
     // 渐变背景
     const graphics = this.add.graphics();
-    const gradient = graphics.fillGradientStyle(
+    graphics.fillGradientStyle(
       0x1a1a2e, 0x1a1a2e,
       0x16213e, 0x16213e,
       1

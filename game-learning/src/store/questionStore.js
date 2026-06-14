@@ -7,7 +7,7 @@ import {
   getQuestionsFromBank,
   questionToMultipleChoice,
   checkAnswer
-} from '../utils/questionBank';
+} from '../utils/questionUtils';
 import { useMathKnowledgeStore } from './mathKnowledgeStore';
 
 export const useQuestionStore = defineStore('question', {

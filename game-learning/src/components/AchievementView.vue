@@ -200,14 +200,6 @@ const isUnlocked = (achievementId) => {
   return props.unlockedAchievements.includes(achievementId);
 };
 
-const getRarityStyle = (rarity) => {
-  const config = getRarityConfig(rarity);
-  return {
-    border: `2px solid ${config.color}`,
-    bg: `${config.color}20`
-  };
-};
-
 const getRarityColor = (rarity) => {
   const config = getRarityConfig(rarity);
   return config?.color || '#888';
@@ -238,10 +230,7 @@ const getAchievementStyle = (achievement) => {
 const selectAchievement = (achievement) => {
   emit('select', achievement);
 };
-
-const close = () => {
-  emit('close');
-};
+// close 函数未使用，模板已通过 $emit('close') 直接 emit
 </script>
 
 <style scoped>

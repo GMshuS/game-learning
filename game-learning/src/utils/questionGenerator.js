@@ -3,8 +3,7 @@
  * 支持加减乘除、分数、小数、百分比等运算
  * 题型生成逻辑委托给 src/questions/ 下的独立模块，通过注册表管理
  *
- * ⚠️ 功能重叠提示：本模块与 src/utils/questionBank.js 均包含题目生成逻辑。
- *    建议长期统一入口，将 questionBank.js 的独立生成逻辑迁移到注册表模式中。
+ * 题目工具函数（选项生成、答案校验、选择题格式转换）请使用 questionUtils.js。
  */
 import { getGradeRange, getGradeOperations } from '../config/grades';
 import { generate as registryGenerate, register } from '../questions/registry';

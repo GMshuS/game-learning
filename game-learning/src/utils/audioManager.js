@@ -351,7 +351,7 @@ class AudioManager {
     } else {
       this.pauseBgm();
     }
-    this.saveSettings();
+    // 设置变更由 settingsStore 统一持久化，不再直接调用已弃用的 saveSettings()
     return this.bgmEnabled;
   }
 
@@ -360,7 +360,7 @@ class AudioManager {
    */
   toggleSfx() {
     this.sfxEnabled = !this.sfxEnabled;
-    this.saveSettings();
+    // 设置变更由 settingsStore 统一持久化，不再直接调用已弃用的 saveSettings()
     return this.sfxEnabled;
   }
 
@@ -384,7 +384,7 @@ class AudioManager {
     this.bgmEnabled = false;
     this.sfxEnabled = false;
     this.pauseBgm();
-    this.saveSettings();
+    // 设置变更由 settingsStore 统一持久化，不再直接调用已弃用的 saveSettings()
   }
 
   /**
@@ -394,7 +394,7 @@ class AudioManager {
     this.bgmEnabled = true;
     this.sfxEnabled = true;
     this.resumeBgm();
-    this.saveSettings();
+    // 设置变更由 settingsStore 统一持久化，不再直接调用已弃用的 saveSettings()
   }
 }
 

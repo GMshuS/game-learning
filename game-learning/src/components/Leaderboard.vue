@@ -45,7 +45,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useGameStore } from '../store/gameStore';
 import leaderboardConfig from '../config/leaderboard';
 
-const emit = defineEmits(['back']);
+defineEmits(['back']);
 
 const gameStore = useGameStore();
 const activeMode = ref('speed_base');

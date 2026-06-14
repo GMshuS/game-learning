@@ -72,6 +72,22 @@ class StorageManager {
   }
 
   /**
+   * 安全加载可选数据（解析失败时返回 null 并记录警告）
+   * @param {string} storageKey - localStorage 的 key
+   * @param {string} label - 日志标签，用于标识数据来源
+   * @returns {any|null} 解析后的数据或 null
+   */
+  _loadOptionalData(storageKey, label) {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn(`Failed to parse ${label} data, resetting:`, e.message);
+      return null;
+    }
+  }
+
+  /**
    * 保存玩家数据
    */
   savePlayer(player) {
@@ -230,85 +246,21 @@ class StorageManager {
       version: this.checkVersion()
     };
     
-    // 加载新增玩法数据（向后兼容：旧存档返回 null）
-    try {
-      const speedChallengeData = localStorage.getItem(STORAGE_KEYS.SPEED_CHALLENGE);
-      baseData.speedChallenge = speedChallengeData ? JSON.parse(speedChallengeData) : null;
-    } catch (e) {
-      console.warn('Failed to parse speedChallenge data, resetting:', e.message);
-      baseData.speedChallenge = null;
-    }
-    
-    try {
-      const workshopData = localStorage.getItem(STORAGE_KEYS.WORKSHOP);
-      baseData.workshop = workshopData ? JSON.parse(workshopData) : null;
-    } catch (e) {
-      console.warn('Failed to parse workshop data, resetting:', e.message);
-      baseData.workshop = null;
-    }
-    
-    try {
-      const cardBattleData = localStorage.getItem(STORAGE_KEYS.CARD_BATTLE);
-      baseData.cardBattle = cardBattleData ? JSON.parse(cardBattleData) : null;
-    } catch (e) {
-      console.warn('Failed to parse cardBattle data, resetting:', e.message);
-      baseData.cardBattle = null;
-    }
-    
-    try {
-      const leaderboardData = localStorage.getItem(STORAGE_KEYS.LEADERBOARD);
-      baseData.leaderboard = leaderboardData ? JSON.parse(leaderboardData) : null;
-    } catch (e) {
-      console.warn('Failed to parse leaderboard data, resetting:', e.message);
-      baseData.leaderboard = null;
-    }
-    
-    try {
-      const notificationsData = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-      baseData.notifications = notificationsData ? JSON.parse(notificationsData) : null;
-    } catch (e) {
-      console.warn('Failed to parse notifications data, resetting:', e.message);
-      baseData.notifications = null;
-    }
-    
-    try {
-      const englishSpeedSpellData = localStorage.getItem(STORAGE_KEYS.ENGLISH_SPEED_SPELL);
-      baseData.englishSpeedSpell = englishSpeedSpellData ? JSON.parse(englishSpeedSpellData) : null;
-    } catch (e) {
-      console.warn('Failed to parse englishSpeedSpell data, resetting:', e.message);
-      baseData.englishSpeedSpell = null;
-    }
-    
-    try {
-      const mathKnowledgeData = localStorage.getItem(STORAGE_KEYS.MATH_KNOWLEDGE);
-      baseData.mathKnowledge = mathKnowledgeData ? JSON.parse(mathKnowledgeData) : null;
-    } catch (e) {
-      console.warn('Failed to parse mathKnowledge data, resetting:', e.message);
-      baseData.mathKnowledge = null;
-    }
-    
-    try {
-      const englishKnowledgeData = localStorage.getItem(STORAGE_KEYS.ENGLISH_KNOWLEDGE);
-      baseData.englishKnowledge = englishKnowledgeData ? JSON.parse(englishKnowledgeData) : null;
-    } catch (e) {
-      console.warn('Failed to parse englishKnowledge data, resetting:', e.message);
-      baseData.englishKnowledge = null;
-    }
-    
-    try {
-      const weightOverridesData = localStorage.getItem(STORAGE_KEYS.WEIGHT_OVERRIDES);
-      baseData.weightOverrides = weightOverridesData ? JSON.parse(weightOverridesData) : null;
-    } catch (e) {
-      console.warn('Failed to parse weightOverrides data, resetting:', e.message);
-      baseData.weightOverrides = null;
-    }
-    
-    try {
-      const knowledgeConfigData = localStorage.getItem(STORAGE_KEYS.KNOWLEDGE_CONFIG);
-      baseData.knowledgeConfig = knowledgeConfigData ? JSON.parse(knowledgeConfigData) : null;
-    } catch (e) {
-      console.warn('Failed to parse knowledgeConfig data, resetting:', e.message);
-      baseData.knowledgeConfig = null;
+    // 批量加载扩展数据（向后兼容：旧存档对应字段返回 null）
+    const optionalKeys = [
+      { key: 'speedChallenge', storageKey: STORAGE_KEYS.SPEED_CHALLENGE },
+      { key: 'workshop', storageKey: STORAGE_KEYS.WORKSHOP },
+      { key: 'cardBattle', storageKey: STORAGE_KEYS.CARD_BATTLE },
+      { key: 'leaderboard', storageKey: STORAGE_KEYS.LEADERBOARD },
+      { key: 'notifications', storageKey: STORAGE_KEYS.NOTIFICATIONS },
+      { key: 'englishSpeedSpell', storageKey: STORAGE_KEYS.ENGLISH_SPEED_SPELL },
+      { key: 'mathKnowledge', storageKey: STORAGE_KEYS.MATH_KNOWLEDGE },
+      { key: 'englishKnowledge', storageKey: STORAGE_KEYS.ENGLISH_KNOWLEDGE },
+      { key: 'weightOverrides', storageKey: STORAGE_KEYS.WEIGHT_OVERRIDES },
+      { key: 'knowledgeConfig', storageKey: STORAGE_KEYS.KNOWLEDGE_CONFIG }
+    ];
+    for (const { key, storageKey } of optionalKeys) {
+      baseData[key] = this._loadOptionalData(storageKey, key);
     }
     
     return baseData;
@@ -341,18 +293,12 @@ class StorageManager {
       
       // 修复音量值：如果 > 1，说明存储的是百分比格式，需要转换为 0-1 范围
       if (typeof settings.musicVolume === 'number' && settings.musicVolume > 1) {
-        while (settings.musicVolume > 1) {
-          settings.musicVolume = settings.musicVolume / 100;
-        }
-        settings.musicVolume = Math.max(0, Math.min(1, settings.musicVolume));
+        settings.musicVolume = Math.max(0, Math.min(1, settings.musicVolume / 100));
         migrated = true;
       }
       
       if (typeof settings.soundVolume === 'number' && settings.soundVolume > 1) {
-        while (settings.soundVolume > 1) {
-          settings.soundVolume = settings.soundVolume / 100;
-        }
-        settings.soundVolume = Math.max(0, Math.min(1, settings.soundVolume));
+        settings.soundVolume = Math.max(0, Math.min(1, settings.soundVolume / 100));
         migrated = true;
       }
       

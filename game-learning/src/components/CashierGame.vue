@@ -206,12 +206,6 @@ const currentTotal = computed(() => {
   }, 0);
 });
 
-// 计算还需要找零多少
-const remainingChange = computed(() => {
-  if (!problem.value) return 0;
-  return problem.value.change - currentTotal.value;
-});
-
 // 提交答案
 const submit = () => {
   if (!problem.value || isComplete.value) return;

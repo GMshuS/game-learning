@@ -122,21 +122,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useWorkshopStore } from '../store/workshopStore';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { generateQuestion as generateQuizQuestion } from '../utils/questionGenerator';
-import { questionToMultipleChoice } from '../utils/questionBank';
+import { questionToMultipleChoice } from '../utils/questionUtils';
 import workshopConfig from '../config/workshop';
 import GameTutorial from './GameTutorial.vue';
 
-const emit = defineEmits(['back']);
+defineEmits(['back']);
 
 const store = useWorkshopStore();
 const gameStore = useGameStore();
-const settingsStore = useSettingsStore();
+// settingsStore 暂时保留以备后续使用
+// const settingsStore = useSettingsStore();
 
 const showTutorial = ref(false);
 

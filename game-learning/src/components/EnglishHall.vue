@@ -44,7 +44,7 @@ import { useGameStore } from '../store/gameStore';
 import { speedSpellConfig } from '../config/english/speedSpell';
 import { englishGradesConfig } from '../config/english/grades';
 
-const emit = defineEmits(['startSpeedSpell', 'back']);
+defineEmits(['startSpeedSpell', 'back']);
 
 const settingsStore = useSettingsStore();
 const gameStore = useGameStore();

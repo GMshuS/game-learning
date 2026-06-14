@@ -209,7 +209,7 @@ const PIN_KEY = 'math_game_admin_pin';
 const DEFAULT_PIN = '0000';
 
 const isAdminAuthed = ref(false);
-const showPinModal = ref(false);
+// const showPinModal = ref(false); // 已注释：功能待实现
 const pinInput = ref('');
 const newPin = ref('');
 const newPinConfirm = ref('');

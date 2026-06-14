@@ -107,12 +107,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useCardStore } from '../store/cardStore';
-import { getCardById, getCardsByGrade } from '../config/cards';
+import { getCardById } from '../config/cards';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import GameTutorial from './GameTutorial.vue';
 
-const emit = defineEmits(['back', 'openCollection', 'battleEnd']);
+defineEmits(['back', 'openCollection', 'battleEnd']);
 
 const store = useCardStore();
 const gameStore = useGameStore();

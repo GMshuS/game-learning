@@ -46,7 +46,7 @@
       <div class="review-progress">
         第 {{ currentIndex + 1 }} / {{ dueItems.length }} 题
         <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: ((currentIndex + 1) / dueItems.length * 100) + '%' }"></div>
+          <div class="progress-fill" :style="{ width: ((currentIndex + 1) / dueItems.length * 100) + '%' }" />
         </div>
       </div>
 
@@ -120,16 +120,19 @@
       <div class="quality-distribution">
         <h4>自评分布</h4>
         <div class="quality-bar">
-          <div class="quality-segment forget-seg"
-               :style="{ width: (reviewResults.filter(r => r.quality === 0).length / reviewResults.length * 100) + '%' }">
+          <div
+            class="quality-segment forget-seg"
+            :style="{ width: (reviewResults.filter(r => r.quality === 0).length / reviewResults.length * 100) + '%' }">
             😰 {{ reviewResults.filter(r => r.quality === 0).length }}
           </div>
-          <div class="quality-segment hard-seg"
-               :style="{ width: (reviewResults.filter(r => r.quality === 1).length / reviewResults.length * 100) + '%' }">
+          <div
+            class="quality-segment hard-seg"
+            :style="{ width: (reviewResults.filter(r => r.quality === 1).length / reviewResults.length * 100) + '%' }">
             🤔 {{ reviewResults.filter(r => r.quality === 1).length }}
           </div>
-          <div class="quality-segment easy-seg"
-               :style="{ width: (reviewResults.filter(r => r.quality === 2).length / reviewResults.length * 100) + '%' }">
+          <div
+            class="quality-segment easy-seg"
+            :style="{ width: (reviewResults.filter(r => r.quality === 2).length / reviewResults.length * 100) + '%' }">
             😊 {{ reviewResults.filter(r => r.quality === 2).length }}
           </div>
         </div>
@@ -141,16 +144,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
-import { mathKnowledgeNodes, englishKnowledgeNodes, subjects } from '../config/knowledge';
+import { mathKnowledgeNodes, englishKnowledgeNodes } from '../config/knowledge';
 import { useSettingsStore } from '../store/settingsStore';
 import { generateQuestion } from '../utils/questionGenerator';
-import { questionToMultipleChoice } from '../utils/questionBank';
+import { questionToMultipleChoice } from '../utils/questionUtils';
 import { getWordsByLevel } from '../config/english/grades';
 
-const emit = defineEmits(['back']);
+defineEmits(['back']);
 const mathKnowledgeStore = useMathKnowledgeStore();
 const englishKnowledgeStore = useEnglishKnowledgeStore();
 const settingsStore = useSettingsStore();
@@ -174,7 +177,7 @@ function collectDueItems() {
     for (const node of nodes) {
       const record = records[node.id];
       if (record && record.easeFactor !== undefined &&
-          (record.nextReviewTime === null || record.nextReviewTime <= now)) {
+        (record.nextReviewTime === null || record.nextReviewTime <= now)) {
         const gradeRange = node.gradeRange || [1, 6];
         const grade = Math.min(Math.max(settingsStore.grade, gradeRange[0]), gradeRange[1]);
         items.push({
@@ -302,7 +305,7 @@ function selectAnswer(answer) {
 
   // 判断是否正确
   const correct = answer === currentQuestion.value.correctAnswer ||
-                  answer === currentQuestion.value.correctOption;
+    answer === currentQuestion.value.correctOption;
   isCorrect.value = correct;
   showAnswerResult.value = true;
 

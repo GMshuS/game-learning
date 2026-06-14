@@ -48,7 +48,7 @@ import { ref, computed, onMounted } from 'vue';
 import audioManager from '../utils/audioManager';
 import { useSettingsStore } from '../store/settingsStore';
 
-const props = defineProps({
+defineProps({
   compact: {
     type: Boolean,
     default: false
