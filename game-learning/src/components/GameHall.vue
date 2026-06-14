@@ -76,6 +76,17 @@
           <span v-else>暂无薄弱点</span>
         </div>
       </div>
+
+      <!-- 复习模式 -->
+      <div class="hall-card review-card" @click="$emit('startReview')">
+        <div class="card-icon">📚</div>
+        <h3>复习模式</h3>
+        <p>基于遗忘曲线，智能安排复习</p>
+        <div class="card-status">
+          <span v-if="dueCount > 0">{{ dueCount }} 个知识点待复习</span>
+          <span v-else>暂无待复习内容</span>
+        </div>
+      </div>
     </div>
 
     <div class="hall-footer">
@@ -91,6 +102,8 @@ import { computed } from 'vue';
 import { useGameStore } from '../store/gameStore';
 import { useCashierStore } from '../store/cashierStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
+import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
+import { getDueCount } from '../utils/spacedRepetition';
 
 // ⚠️ 架构建议：以下 computed 直接访问 gameStore 深层嵌套属性（如 gameStore.speedChallenge?.bestScores?.base）。
 //    建议在对应 Store 中暴露 getter（如 speedChallengeStore.bestScore），降低组件与 Store 内部结构的耦合度。
@@ -104,6 +117,7 @@ const emit = defineEmits([
   'startWorkshop',
   'startCardBattle',
   'startTargetedTraining',
+  'startReview',
   'openLeaderboard'
 ]);
 
@@ -140,11 +154,15 @@ const cardCollectionCount = computed(() => {
 });
 
 const mathKnowledgeStore = useMathKnowledgeStore();
+const englishKnowledgeStore = useEnglishKnowledgeStore();
 const weakNodeCount = computed(() => {
   const records = mathKnowledgeStore.records;
   return Object.values(records).filter(r =>
     r.totalAttempts > 0 && (r.wrongCount / r.totalAttempts) > 0.3
   ).length;
+});
+const dueCount = computed(() => {
+  return getDueCount(mathKnowledgeStore.records) + getDueCount(englishKnowledgeStore.records);
 });
 </script>
 
@@ -235,6 +253,10 @@ const weakNodeCount = computed(() => {
 
 .training-card:hover {
   border-color: #f59e0b;
+}
+
+.review-card:hover {
+  border-color: #8b5cf6;
 }
 
 .card-icon {

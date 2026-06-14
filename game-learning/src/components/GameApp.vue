@@ -130,6 +130,7 @@
         @start-shop="startShopFromHall"
         @start-cashier="startCashierFromHall"
         @start-targeted-training="startTargetedTraining"
+        @start-review="startReview"
         @open-leaderboard="openLeaderboard"
         @back="goBack"
       />
@@ -194,6 +195,12 @@
         v-if="currentView === 'targetedTraining'"
         @back="goBack"
       />
+
+      <!-- 复习模式 -->
+      <ReviewSession
+        v-if="currentView === 'review'"
+        @back="goBack"
+      />
     </main>
 
     <!-- 音频控制器 -->
@@ -244,6 +251,7 @@ const BattlePrepare = defineAsyncComponent(() => import('./BattlePrepare.vue'));
 const EnglishHall = defineAsyncComponent(() => import('./EnglishHall.vue'));
 const EnglishSpeedSpell = defineAsyncComponent(() => import('./EnglishSpeedSpell.vue'));
 const TargetedTraining = defineAsyncComponent(() => import('./TargetedTraining.vue'));
+const ReviewSession = defineAsyncComponent(() => import('./ReviewSession.vue'));
 
 const gameStore = useGameStore();
 const audioStore = useAudioStore();
@@ -322,7 +330,7 @@ const currentMode = computed(() => {
   if (currentView.value === 'challenge' || currentView.value === 'speedChallenge' ||
     currentView.value === 'workshop' || currentView.value === 'cardBattle' ||
     currentView.value === 'cardCollection' || currentView.value === 'cardPack' ||
-    currentView.value === 'leaderboard') {
+    currentView.value === 'leaderboard' || currentView.value === 'review') {
     return 'challenge_center';
   }
   if (currentView.value === 'englishHall' || currentView.value === 'englishSpeedSpell') {
@@ -875,6 +883,11 @@ const onSpellEnd = (_result) => {
 const startTargetedTraining = () => {
   previousView.value = currentView.value;
   currentView.value = 'targetedTraining';
+};
+
+const startReview = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'review';
 };
 
 // 卡牌对战结束处理

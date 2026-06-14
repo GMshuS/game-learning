@@ -33,7 +33,12 @@
 
       <!-- 知识掌握度 -->
       <div v-if="knowledgeMastery.length > 0" class="knowledge-mastery">
-        <h3>📚 知识掌握度</h3>
+        <h3>
+          📚 知识掌握度
+          <span v-if="dueReviewCount > 0" class="review-badge">
+            {{ dueReviewCount }} 个待复习
+          </span>
+        </h3>
         <div class="mastery-show">
           <div
             v-for="item in knowledgeMastery.slice(0, showAllMastery ? knowledgeMastery.length : 5)"
@@ -111,6 +116,7 @@ import { getAllAchievements, getAchievementsByCategory, getRarityConfig } from '
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
 import { mathKnowledgeNodes, englishKnowledgeNodes } from '../config/knowledge';
+import { getDueCount } from '../utils/spacedRepetition';
 
 const props = defineProps({
   unlockedAchievements: {
@@ -140,6 +146,10 @@ const showAllMastery = ref(false);
 
 const mathKnowledgeStore = useMathKnowledgeStore();
 const englishKnowledgeStore = useEnglishKnowledgeStore();
+
+const dueReviewCount = computed(() => {
+  return getDueCount(mathKnowledgeStore.records) + getDueCount(englishKnowledgeStore.records);
+});
 
 const knowledgeMastery = computed(() => {
   const result = [];
@@ -438,6 +448,18 @@ const close = () => {
 
 .status-locked {
   opacity: 0.5;
+}
+
+.review-badge {
+  display: inline-block;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
 }
 
 .knowledge-mastery {

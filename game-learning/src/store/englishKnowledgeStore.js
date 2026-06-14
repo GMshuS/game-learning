@@ -7,17 +7,35 @@
  */
 import { defineStore } from 'pinia';
 import storageManager, { STORAGE_KEYS } from '../utils/storage';
+import { reviewResult, getInitialSM2Fields } from '../utils/spacedRepetition';
 
 export const useEnglishKnowledgeStore = defineStore('englishKnowledge', {
   state: () => ({
     /**
      * 知识点记录，以知识点 id 为 key
-     * @type {Object<string, {totalAttempts: number, wrongCount: number, lastWrongTime: number|null, subtopics: Object}>}
+     * @type {Object<string, {totalAttempts: number, wrongCount: number, lastWrongTime: number|null, subtopics: Object, easeFactor?: number, interval?: number, nextReviewTime?: number|null, lastReviewDate?: number|null}>}
      */
     records: {}
   }),
 
-  getters: {},
+  getters: {
+    /**
+     * 获取所有到期可复习的知识点
+     * 筛选 easeFactor 已设置 且 (nextReviewTime 为空 或 已到期) 的记录
+     * @returns {Array<{id: string, totalAttempts: number, wrongCount: number, lastWrongTime: number|null, subtopics: Object, easeFactor: number, interval: number, nextReviewTime: number|null, lastReviewDate: number|null}>}
+     */
+    dueReviews(state) {
+      const now = Date.now();
+      const items = [];
+      for (const [id, record] of Object.entries(state.records)) {
+        if (record.easeFactor !== undefined &&
+            (record.nextReviewTime === null || record.nextReviewTime <= now)) {
+          items.push({ id, ...record });
+        }
+      }
+      return items;
+    }
+  },
 
   actions: {
     /**
@@ -60,7 +78,41 @@ export const useEnglishKnowledgeStore = defineStore('englishKnowledge', {
         record.lastWrongTime = Date.now();
       }
 
+      // 首次答对时初始化 SM-2 字段
+      if (correct && record.easeFactor === undefined) {
+        const sm2Fields = getInitialSM2Fields();
+        record.easeFactor = sm2Fields.easeFactor;
+        record.interval = sm2Fields.interval;
+        record.nextReviewTime = Date.now() + 86400000; // 1天后可复习
+        record.lastReviewDate = sm2Fields.lastReviewDate;
+      }
+
       // save-on-write：立即持久化
+      this._persist();
+    },
+
+    /**
+     * 安排一次 SM-2 复习
+     * @param {string} id - 知识点标识
+     * @param {number} quality - 复习质量 0=忘记, 1=困难, 2=轻松
+     * @returns {boolean} 是否成功
+     */
+    scheduleReview(id, quality) {
+      const record = this.records[id];
+      if (!record || record.easeFactor === undefined) return false;
+      const result = reviewResult(record, quality);
+      record.easeFactor = result.newEF;
+      record.interval = result.newInterval;
+      record.nextReviewTime = result.nextReviewTime;
+      record.lastReviewDate = Date.now();
+      this._persist();
+      return true;
+    },
+
+    /**
+     * 持久化当前 records 到 localStorage
+     */
+    _persist() {
       try {
         storageManager._safeSetItem(
           STORAGE_KEYS.ENGLISH_KNOWLEDGE,
