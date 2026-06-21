@@ -351,6 +351,6 @@ export default class WorldMapScene extends Phaser.Scene {
    * 颜色转换
    */
   hexToColor(hex) {
-    return parseInt(hex.replace('#', '0x'));
+    return parseInt(hex.slice(1), 16);
   }
 }

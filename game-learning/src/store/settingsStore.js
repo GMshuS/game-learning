@@ -4,6 +4,7 @@
 import { defineStore } from 'pinia';
 import storageManager from '../utils/storage';
 import Settings from '../models/Settings';
+import { clearQuestionCache } from '../utils/questionUtils';
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
@@ -124,6 +125,7 @@ export const useSettingsStore = defineStore('settings', {
       if (['easy', 'normal', 'hard'].includes(difficulty)) {
         this.difficulty = difficulty;
         this.saveSettings();
+        clearQuestionCache(); // 难度变更后清空题目缓存
       }
     },
 
@@ -134,6 +136,7 @@ export const useSettingsStore = defineStore('settings', {
       if (grade >= 1 && grade <= 6) {
         this.grade = grade;
         this.saveSettings();
+        clearQuestionCache(); // 年级变更后清空题目缓存
       }
     },
 

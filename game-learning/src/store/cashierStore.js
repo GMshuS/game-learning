@@ -92,8 +92,9 @@ export const useCashierStore = defineStore('cashier', {
       // 星级奖励
       const starBonus = result.stars * 50;
       
-      // 时间奖励
-      const timeBonus = Math.floor(result.timeUsed * 2);
+      // 时间奖励（用时越短奖励越高，满分 120 秒内完成）
+      const MAX_TIME = 120;
+      const timeBonus = Math.floor(Math.max(0, MAX_TIME - result.timeUsed) * 2);
       
       // 连击奖励
       const streakBonus = this.currentStreak * 10;

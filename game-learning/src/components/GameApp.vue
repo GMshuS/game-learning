@@ -503,33 +503,16 @@ const handleImport = () => {
         });
       }
       
-      // 导入玩家数据
-      if (importData.player) {
-        gameStore.player = importData.player;
-      }
-      if (importData.progress) {
-        gameStore.progress = importData.progress;
-      }
-      if (importData.items) {
-        gameStore.items = importData.items;
-      }
+      // 导入玩家数据（使用 $patch 确保响应式追踪）
+      gameStore.$patch({
+        player: importData.player || gameStore.player,
+        progress: importData.progress || gameStore.progress,
+        playerCoins: importData.playerCoins ?? gameStore.playerCoins,
+        playerGems: importData.playerGems ?? gameStore.playerGems,
+        playerLevel: importData.playerLevel ?? gameStore.playerLevel
+      });
       if (importData.playerName && gameStore.player) {
         gameStore.player.name = importData.playerName;
-      }
-      if (importData.playerCoins !== undefined && gameStore.player) {
-        gameStore.player.coins = importData.playerCoins;
-      }
-      if (importData.playerLevel !== undefined && gameStore.player) {
-        gameStore.player.level = importData.playerLevel;
-      }
-      if (importData.playerCoins !== undefined) {
-        gameStore.playerCoins = importData.playerCoins;
-      }
-      if (importData.playerGems !== undefined) {
-        gameStore.playerGems = importData.playerGems;
-      }
-      if (importData.playerLevel !== undefined) {
-        gameStore.playerLevel = importData.playerLevel;
       }
       
       // 保存游戏
@@ -894,13 +877,13 @@ const viewEvents = computed(() => viewRegistry[currentView.value]?.events || {})
 onMounted(async () => {
   // 初始化游戏 - 等待完成
   const loaded = await gameStore.initGame();
-  console.log('GameApp onMounted - game loaded:', loaded, 'player:', gameStore.player);
+  if (import.meta.env.DEV) console.log('GameApp onMounted - game loaded:', loaded, 'player:', gameStore.player);
   
   // 如果没有存档，创建新游戏
   if (!loaded || !gameStore.player) {
-    console.log('No saved game, creating new game');
+    if (import.meta.env.DEV) console.log('No saved game, creating new game');
     await gameStore.newGame('冒险者', 1);
-    console.log('New game created - player:', gameStore.player);
+    if (import.meta.env.DEV) console.log('New game created - player:', gameStore.player);
   }
   
   audioStore.init();

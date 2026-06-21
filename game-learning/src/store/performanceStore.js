@@ -12,7 +12,9 @@ export const usePerformanceStore = defineStore('performance', {
     loadTime: 0,
     isLowPerformance: false,
     lazyLoader: null,
-    performanceMonitor: null
+    performanceMonitor: null,
+    /** @type {number|null} setInterval ID，用于后续清理 */
+    _metricsIntervalId: null
   }),
 
   getters: {
@@ -39,8 +41,8 @@ export const usePerformanceStore = defineStore('performance', {
       this.performanceMonitor = new PerformanceMonitor();
       this.performanceMonitor.start();
       
-      // 定期更新状态
-      setInterval(() => {
+      // 定期更新状态（保存 interval ID 以便后续清理）
+      this._metricsIntervalId = setInterval(() => {
         this.updateMetrics();
       }, 1000);
       
@@ -115,6 +117,23 @@ export const usePerformanceStore = defineStore('performance', {
      */
     disableLowQualityMode() {
       this.isLowPerformance = false;
+    },
+
+    /**
+     * 销毁性能系统：清除计时器，释放资源
+     * 应在组件卸载或 HMR 时调用
+     */
+    destroy() {
+      if (this._metricsIntervalId !== null) {
+        clearInterval(this._metricsIntervalId);
+        this._metricsIntervalId = null;
+      }
+      if (this.performanceMonitor) {
+        this.performanceMonitor.stop();
+      }
+      if (this.lazyLoader) {
+        this.lazyLoader = null;
+      }
     }
   }
 });

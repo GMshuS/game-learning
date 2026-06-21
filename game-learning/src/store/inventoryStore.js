@@ -7,15 +7,30 @@ import { defineStore } from 'pinia';
 import { getEffectByProductId, isCollectible, getCollectibleSetInfo } from '../config/shopEffects';
 import { useAchievementStore } from './achievementStore';
 import { getProductById } from '../config/shop';
+import storageManager from '../utils/storage';
 
-const STORAGE_KEY = 'math_game_inventory_store';
+// 批量保存计数器
+let _batchSaveCount = 0;
 
-// 从 localStorage 加载数据
+/**
+ * 从 StorageManager 读取背包数据
+ */
 function loadFromStorage() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
+    const gameData = storageManager.loadGame();
+    if (gameData && gameData.inventory) {
+      const inv = gameData.inventory;
+      // 兼容 Inventory 模型格式（collectibles 中 id → productId）
+      const collectibles = (inv.collectibles || []).map(c => ({
+        productId: c.productId || c.id,
+        collectedAt: c.collectedAt || Date.now()
+      }));
+      return {
+        items: inv.items || [],
+        collectibles,
+        battleSlots: inv.battleSlots || [null, null, null, null, null],
+        maxBattleSlots: inv.maxBattleSlots || 5
+      };
     }
   } catch (e) {
     console.error('加载背包数据失败:', e);
@@ -23,15 +38,18 @@ function loadFromStorage() {
   return null;
 }
 
-// 保存到 localStorage
+/**
+ * 通过 StorageManager 保存背包数据
+ */
 function saveToStorage(state) {
+  if (_batchSaveCount > 0) return; // 批量模式下跳过
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    storageManager.saveInventory({
       items: state.items,
       collectibles: state.collectibles,
       battleSlots: state.battleSlots,
       maxBattleSlots: state.maxBattleSlots
-    }));
+    });
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
       console.warn('localStorage 容量不足，背包数据保存失败');
@@ -281,6 +299,23 @@ export const useInventoryStore = defineStore('inventory', {
      */
     _save() {
       saveToStorage(this);
+    },
+
+    /**
+     * 开始批量保存模式：暂停自动保存直到 endBatchSave 被调用
+     */
+    beginBatchSave() {
+      _batchSaveCount++;
+    },
+
+    /**
+     * 结束批量保存模式：恢复自动保存并执行一次完整保存
+     */
+    endBatchSave() {
+      _batchSaveCount = Math.max(0, _batchSaveCount - 1);
+      if (_batchSaveCount === 0) {
+        saveToStorage(this);
+      }
     }
   }
 });

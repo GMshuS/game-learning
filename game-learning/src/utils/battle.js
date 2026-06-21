@@ -367,10 +367,12 @@ export class BattleState {
       
       this.battleResult = determineBattleResult(this.player.hp, this.monster.currentHp);
       
+      // 答对路径：在此处递增 turn 并保持 isPlayerTurn=true（玩家可连续答题攻击）
       this.turn++;
       this.isPlayerTurn = true;
     } else {
-      // 答错，怪物反击
+      // 答错路径：委托给 monsterAttack() 管理 turn 递增和 isPlayerTurn 设置
+      // monsterAttack() 内部已在每个分支（skip/taunt/正常）中执行 turn++ 和 isPlayerTurn=true
       const result = this.monsterAttack();
       return result;
     }

@@ -36,6 +36,8 @@ export default class BattleScene extends Phaser.Scene {
     this._healPromptShown = false;
     /** @type {number[]} 追踪所有 setTimeout ID 以便场景关闭时清理 */
     this._timeoutIds = [];
+    /** @type {boolean} 场景是否已销毁，用于防止回调中的竞争条件 */
+    this._destroyed = false;
   }
 
   /**
@@ -47,6 +49,9 @@ export default class BattleScene extends Phaser.Scene {
   _setTimeout(fn, delay) {
     const id = setTimeout(() => {
       this._timeoutIds = this._timeoutIds.filter(t => t !== id);
+      // 先检查 _destroyed 标志（比 this.scene?.isActive() 更早返回），
+      // 防止回调执行间隙场景被销毁导致的竞争条件
+      if (this._destroyed) return;
       if (this.scene?.isActive()) fn();
     }, delay);
     this._timeoutIds.push(id);
@@ -57,6 +62,7 @@ export default class BattleScene extends Phaser.Scene {
    * 场景关闭/销毁时清理：清除所有 setTimeout 和 Phaser 对象引用
    */
   cleanup() {
+    this._destroyed = true;
     this._timeoutIds.forEach(id => clearTimeout(id));
     this._timeoutIds = [];
     if (this.timeEvent) {

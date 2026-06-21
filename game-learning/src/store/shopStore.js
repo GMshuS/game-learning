@@ -7,6 +7,7 @@ import { shopConfig } from '../config/shop';
 import { customerConfig, getRandomDialogue } from '../config/customers';
 import { useGameStore } from './gameStore';
 import { useInventoryStore } from './inventoryStore';
+import { useSettingsStore } from './settingsStore';
 
 export const useShopStore = defineStore('shop', {
   state: () => ({
@@ -204,29 +205,40 @@ export const useShopStore = defineStore('shop', {
 
       const gameStore = useGameStore();
       const inventoryStore = useInventoryStore();
+      const settingsStore = useSettingsStore();
       const items = this.customerQueue.items;
       let totalCoins = 0;
       const addedItems = [];
 
-      // 根据购物清单发放奖励：消耗金币成本，获得物品
-      for (const item of items) {
-        const cost = item.product.costPrice * item.quantity;
-        totalCoins += cost;
-        // 添加物品到背包
-        inventoryStore.addItem(item.product, item.quantity);
-        addedItems.push({
-          productId: item.product.id,
-          name: item.product.name,
-          icon: item.product.icon,
-          quantity: item.quantity
-        });
+      // 批量模式：暂停自动保存直到所有操作完成
+      inventoryStore.beginBatchSave();
+
+      try {
+        // 根据购物清单发放奖励：消耗金币成本，获得物品
+        for (const item of items) {
+          const cost = item.product.costPrice * item.quantity;
+          totalCoins += cost;
+          // 添加物品到背包
+          inventoryStore.addItem(item.product, item.quantity);
+          addedItems.push({
+            productId: item.product.id,
+            name: item.product.name,
+            icon: item.product.icon,
+            quantity: item.quantity
+          });
+        }
+
+        // 基于年级的动态折扣率（低年级补贴多，高年级逐渐减少补贴）
+        const discountRates = { 1: 0.3, 2: 0.4, 3: 0.5, 4: 0.6, 5: 0.7, 6: 0.8 };
+        const discountRate = discountRates[settingsStore.grade] || 0.5;
+        const coinCost = Math.max(1, Math.floor(totalCoins * discountRate));
+        gameStore.spendCoins(coinCost);
+
+        return { coins: coinCost, items: addedItems };
+      } finally {
+        // 恢复自动保存
+        inventoryStore.endBatchSave();
       }
-
-      // 扣除金币（从 gameStore）
-      const coinCost = Math.max(1, Math.floor(totalCoins * 0.5)); // 半价购买
-      gameStore.spendCoins(coinCost);
-
-      return { coins: coinCost, items: addedItems };
     },
 
     /**

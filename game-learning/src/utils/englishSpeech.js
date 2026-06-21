@@ -55,7 +55,7 @@ class EnglishSpeech {
 
         // 如果还没有语音，等待 voiceschanged 事件
         if (typeof window !== 'undefined') {
-          window.speechSynthesis.onvoiceschanged = () => {
+          this._onVoicesChanged = () => {
             const updatedVoices = this.synth.getVoices();
             this.voice = updatedVoices.find(v => v.lang === 'en-US') ||
                          updatedVoices.find(v => v.lang.startsWith('en')) ||
@@ -64,6 +64,7 @@ class EnglishSpeech {
             this._supported = true;
             resolve(true);
           };
+          window.speechSynthesis.addEventListener('voiceschanged', this._onVoicesChanged);
           // 设置超时防止无限等待
           setTimeout(() => {
             if (!this._initialized) {
@@ -162,6 +163,20 @@ class EnglishSpeech {
    */
   isSpeaking() {
     return this.synth ? this.synth.speaking : false;
+  }
+
+  /**
+   * 销毁语音管理器，清理事件监听
+   */
+  destroy() {
+    this.stop();
+    if (this.synth && this._onVoicesChanged) {
+      this.synth.removeEventListener('voiceschanged', this._onVoicesChanged);
+      this._onVoicesChanged = null;
+    }
+    this.synth = null;
+    this._initialized = false;
+    this._supported = false;
   }
 }
 

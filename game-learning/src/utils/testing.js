@@ -189,9 +189,13 @@ export function detectMemoryLeak() {
   // 清理
   questions.length = 0;
   
-  // 强制垃圾回收（如果可用）
-  if (global.gc) {
-    global.gc();
+  // 强制垃圾回收（如果可用，使用 try/catch 防止浏览器中 ReferenceError）
+  try {
+    if (global.gc) {
+      global.gc();
+    }
+  } catch (e) {
+    // 浏览器环境中 global 未定义，静默忽略
   }
   
   setTimeout(() => {
