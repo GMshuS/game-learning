@@ -23,7 +23,12 @@ const STORAGE_KEYS = {
   MATH_KNOWLEDGE: 'math_game_math_knowledge',
   ENGLISH_KNOWLEDGE: 'math_game_english_knowledge',
   WEIGHT_OVERRIDES: 'math_game_weight_overrides',
-  KNOWLEDGE_CONFIG: 'math_game_knowledge_config'
+  KNOWLEDGE_CONFIG: 'math_game_knowledge_config',
+  // 自定义题目模板系统
+  CUSTOM_TEMPLATES: 'math_game_custom_templates',
+  TEMPLATE_CONFIG: 'math_game_template_config',
+  // 管理面板
+  ADMIN_PIN: 'math_game_admin_pin'
 };
 
 const VERSION = '3.0.0';

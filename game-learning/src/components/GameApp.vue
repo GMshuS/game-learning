@@ -61,6 +61,7 @@ import { useSpeedChallengeStore } from '../store/speedChallengeStore';
 import { useEnglishSpeedSpellStore } from '../store/englishSpeedSpellStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
+import { useCustomTemplateStore } from '../store/customTemplateStore';
 import storageManager from '../utils/storage';
 import audioManager from '../utils/audioManager';
 import adventureConfig from '../config/adventure';
@@ -93,6 +94,7 @@ const EnglishHall = defineAsyncComponent(() => import('./EnglishHall.vue'));
 const EnglishSpeedSpell = defineAsyncComponent(() => import('./EnglishSpeedSpell.vue'));
 const TargetedTraining = defineAsyncComponent(() => import('./TargetedTraining.vue'));
 const ReviewSession = defineAsyncComponent(() => import('./ReviewSession.vue'));
+const AdminPage = defineAsyncComponent(() => import('./AdminPage.vue'));
 
 const gameStore = useGameStore();
 const audioStore = useAudioStore();
@@ -176,6 +178,9 @@ const currentMode = computed(() => {
   }
   if (currentView.value === 'englishHall' || currentView.value === 'englishSpeedSpell') {
     return 'english';
+  }
+  if (currentView.value === 'admin') {
+    return 'admin';
   }
   return 'menu';
 });
@@ -714,6 +719,11 @@ const startReview = () => {
   currentView.value = 'review';
 };
 
+const startAdmin = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'admin';
+};
+
 // 卡牌对战结束处理
 const onCardBattleEnd = (result) => {
   if (result.rewards) {
@@ -742,7 +752,8 @@ const viewRegistry = {
       'startChallengeCenter': startChallengeCenter,
       'openAchievements': openAchievements,
       'openSettings': openSettings,
-      'startEnglishHall': startEnglishHall
+      'startEnglishHall': startEnglishHall,
+      'startAdmin': startAdmin
     }
   },
   adventure: {
@@ -866,6 +877,11 @@ const viewRegistry = {
     component: ReviewSession,
     props: () => ({}),
     events: { back: goBack }
+  },
+  admin: {
+    component: AdminPage,
+    props: () => ({}),
+    events: { back: goBack }
   }
 };
 
@@ -894,6 +910,10 @@ onMounted(async () => {
   const englishKnowledgeStore = useEnglishKnowledgeStore();
   mathKnowledgeStore.init();
   englishKnowledgeStore.init();
+
+  // 初始化自定义模板 store（从 localStorage 加载模板数据）
+  const customTemplateStore = useCustomTemplateStore();
+  customTemplateStore.init();
   
   // 同步已持久化的设置到音频系统（使用统一的 syncSettings 接口）
   audioManager.syncSettings({

@@ -12,6 +12,8 @@ import { getAvailableTypesForGrade } from '../config/questionTypes';
 import { getAdjustedWeights } from '../config/knowledgeWeights';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { randomInt } from '../questions/_helpers';
+import { useCustomTemplateStore } from '../store/customTemplateStore';
+import { generate as generateCustomQuestion, getCustomWeight } from './customTemplateGenerator';
 
 // 显式导入所有题型生成器（非 side-effect import，避免 tree-shaking 移除）
 import generateAddition from '../questions/addition';
@@ -61,7 +63,7 @@ function weightedRandom(weights) {
 /**
  * 根据年级生成题目
  */
-export function generateQuestion(grade = 1, questionType = 'random') {
+export function generateQuestion(grade = 1, questionType = 'random', options = {}) {
   const range = getGradeRange(grade);
   const operations = getGradeOperations(grade);
   
@@ -74,6 +76,17 @@ export function generateQuestion(grade = 1, questionType = 'random') {
       for (const type of availableTypes) {
         if (gradeWeights[type] !== undefined) {
           filteredWeights[type] = gradeWeights[type];
+        }
+      }
+      // ★ custom 题型集成（策略C1）
+      // 仅在调用方传入了 mode 参数且该模式启用了 custom 模板时加入
+      if (options && options.mode) {
+        const customTemplateStore = useCustomTemplateStore();
+        if (customTemplateStore.isModeEnabled(options.mode)) {
+          const customWeight = getCustomWeight(grade);
+          if (customWeight > 0) {
+            filteredWeights.custom = customWeight;
+          }
         }
       }
       if (Object.keys(filteredWeights).length > 0) {
@@ -106,8 +119,21 @@ export function generateQuestion(grade = 1, questionType = 'random') {
     }
   }
   
-  // 统一走注册表生成题目（word 类型已通过 src/questions/wordProblem.js 注册）
-  let question = registryGenerate(questionType, grade, range);
+  let question;
+  // ★ custom 类型的特殊处理：通过 customTemplateGenerator 生成
+  if (questionType === 'custom') {
+    const customQuestion = generateCustomQuestion(grade);
+    if (customQuestion) {
+      question = customQuestion;
+    } else {
+      // 生成失败，回退到加法
+      questionType = 'add';
+      question = registryGenerate('add', grade, range);
+    }
+  } else {
+    // 统一走注册表生成题目（word 类型已通过 src/questions/wordProblem.js 注册）
+    question = registryGenerate(questionType, grade, range);
+  }
   if (!question) {
     // fallback 到加法
     question = registryGenerate('add', grade, range);
@@ -151,7 +177,8 @@ function generateQuestionId() {
 export function generateQuestionSet(grade, count = 10, options = {}) {
   const {
     types = [],
-    difficulty = 'random'
+    difficulty = 'random',
+    mode
   } = options;
 
   // --- 确定题型选择策略 ---
@@ -192,7 +219,7 @@ export function generateQuestionSet(grade, count = 10, options = {}) {
 
     do {
       const type = pickType();
-      question = generateQuestion(grade, type);
+      question = generateQuestion(grade, type, { mode });
       attempts++;
     } while (
       difficulty !== 'random' &&

@@ -76,7 +76,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall']);
+const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall', 'startAdmin']);
 
 const isLoading = ref(true);
 const selectedOption = ref(null);
@@ -112,6 +112,13 @@ const menuOptions = computed(() => [
     icon: '🎓',
     description: '单词速拼、英语冒险',
     gradient: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)'
+  },
+  {
+    id: 'admin',
+    label: '管理模式',
+    icon: '🔐',
+    description: '错题管理、权重调节、自定义模板',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   }
 ]);
 
@@ -144,6 +151,9 @@ const confirmOption = () => {
       break;
     case 'english':
       emit('startEnglishHall');
+      break;
+    case 'admin':
+      emit('startAdmin');
       break;
     }
   }

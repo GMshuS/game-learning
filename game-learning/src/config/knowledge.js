@@ -16,7 +16,8 @@ const mathKnowledgeNodes = [
   { id: 'word', label: '应用题', icon: '📝', gradeRange: [1, 6] },
   { id: 'numberFill', label: '填空', icon: '⬜', gradeRange: [1, 6] },
   { id: 'estimate', label: '估算', icon: '📐', gradeRange: [2, 6] },
-  { id: 'equation', label: '方程', icon: '⚖️', gradeRange: [4, 6] }
+  { id: 'equation', label: '方程', icon: '⚖️', gradeRange: [4, 6] },
+  { id: 'custom', label: '自定义模板', icon: '📋', gradeRange: [1, 6] }
 ];
 
 const englishKnowledgeNodes = [
