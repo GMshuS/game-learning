@@ -21,9 +21,39 @@ const mathKnowledgeNodes = [
 ];
 
 const englishKnowledgeNodes = [
+  // 现有节点
   { id: 'en2cn', label: '英译中', icon: '🇬🇧', gradeRange: [1, 6] },
   { id: 'cn2en', label: '中译英', icon: '🇨🇳', gradeRange: [1, 6] },
-  { id: 'listening', label: '听力', icon: '🎧', gradeRange: [1, 6] }
+  { id: 'listening', label: '听力', icon: '🎧', gradeRange: [1, 6] },
+
+  // 词法类
+  { id: 'noun', label: '名词', icon: '📦', gradeRange: [1, 6] },
+  { id: 'pronoun', label: '代词', icon: '👤', gradeRange: [2, 6] },
+  { id: 'verb', label: '动词', icon: '🏃', gradeRange: [1, 6] },
+  { id: 'adjAdv', label: '形容词/副词', icon: '🎨', gradeRange: [2, 6] },
+  { id: 'preposition', label: '介词', icon: '📍', gradeRange: [3, 6] },
+  { id: 'article', label: '冠词', icon: '📌', gradeRange: [2, 6] },
+  { id: 'conjunction', label: '连词', icon: '🔗', gradeRange: [2, 6] },
+
+  // 时态类
+  { id: 'presentSimple', label: '一般现在时', icon: '⏰', gradeRange: [2, 6] },
+  { id: 'presentContinuous', label: '现在进行时', icon: '🔄', gradeRange: [2, 6] },
+  { id: 'futureTense', label: '一般将来时', icon: '🔮', gradeRange: [3, 6] },
+  { id: 'pastTense', label: '一般过去时', icon: '📅', gradeRange: [3, 6] },
+
+  // 句法类
+  { id: 'sentenceStructure', label: '句子结构', icon: '📐', gradeRange: [2, 6] },
+  { id: 'thereBe', label: 'There be句型', icon: '🏗️', gradeRange: [3, 6] },
+  { id: 'questionForm', label: '疑问句', icon: '❓', gradeRange: [2, 6] },
+
+  // 口语类
+  { id: 'readAloud', label: '朗读', icon: '📖', gradeRange: [1, 6] },
+  { id: 'pronunciation', label: '发音', icon: '🔊', gradeRange: [1, 6] },
+
+  // 语法塔新增节点（映射 grammarTowers 塔 id）
+  { id: 'beVerb', label: 'Be动词', icon: '📖', gradeRange: [1, 6] },
+  { id: 'comparative', label: '比较级', icon: '📊', gradeRange: [3, 6] },
+  { id: 'basicClause', label: '基础从句', icon: '🔀', gradeRange: [4, 6] }
 ];
 
 const subjects = {
