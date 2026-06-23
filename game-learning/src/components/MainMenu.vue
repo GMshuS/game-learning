@@ -21,6 +21,9 @@
             <div class="exp-fill" :style="{ width: expPercent + '%' }" />
           </div>
         </div>
+        <button class="btn-settings-avatar" title="设置" @click="$emit('openSettings')">
+          ⚙️
+        </button>
       </div>
 
       <!-- 菜单选项 -->
@@ -76,7 +79,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall', 'startAdmin', 'startCardWorld']);
+const emit = defineEmits(['startChallengeCenter', 'openSettings', 'quit', 'startEnglishHall', 'startAdmin', 'startCardWorld']);
 
 const isLoading = ref(true);
 const selectedOption = ref(null);
@@ -91,20 +94,11 @@ const menuOptions = computed(() => [
     gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
   },
   {
-    id: 'achievements',
-    label: '成就系统',
-    icon: '🏆',
-    description: '查看你的成就和奖励',
-    color: '#fbbf24',
-    gradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
-  },
-  {
-    id: 'settings',
-    label: '设置',
-    icon: '⚙️',
-    description: '调整游戏设置和管理存档',
-    color: '#64748b',
-    gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)'
+    id: 'english',
+    label: '英语乐园',
+    icon: '🎓',
+    description: '单词速拼、英语冒险、语法城堡',
+    gradient: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)'
   },
   {
     id: 'cardWorld',
@@ -113,13 +107,6 @@ const menuOptions = computed(() => [
     description: '卡牌对战、收藏、开卡包',
     color: '#a78bfa',
     gradient: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)'
-  },
-  {
-    id: 'english',
-    label: '英语乐园',
-    icon: '🎓',
-    description: '单词速拼、英语冒险',
-    gradient: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)'
   },
   {
     id: 'admin',
@@ -151,17 +138,11 @@ const confirmOption = () => {
     case 'challenge':
       emit('startChallengeCenter');
       break;
-    case 'achievements':
-      emit('openAchievements');
-      break;
-    case 'settings':
-      emit('openSettings');
+    case 'english':
+      emit('startEnglishHall');
       break;
     case 'cardWorld':
       emit('startCardWorld');
-      break;
-    case 'english':
-      emit('startEnglishHall');
       break;
     case 'admin':
       emit('startAdmin');
@@ -244,6 +225,27 @@ onMounted(() => {
 
 .player-avatar {
   font-size: 3rem;
+}
+
+.btn-settings-avatar {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.btn-settings-avatar:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(30deg);
 }
 
 .player-details {

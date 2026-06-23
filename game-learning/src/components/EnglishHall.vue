@@ -9,6 +9,8 @@
         </p>
       </div>
       <div class="header-actions">
+        <button class="btn-leaderboard" @click="$emit('openLeaderboard')">🏆 排行榜</button>
+        <button class="btn-achievements" @click="$emit('openAchievements')">🏅 成就</button>
         <button class="btn-back" @click="$emit('back')">← 返回</button>
       </div>
     </div>
@@ -68,6 +70,7 @@
         <span v-if="grammarKeys > 0"> · 🔑 {{ grammarKeys }} 把钥匙</span>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -82,7 +85,7 @@ import { useEnglishSpiritStore } from '../store/englishSpiritStore';
 import { useEnglishAdventureStore } from '../store/englishAdventureStore';
 import { getAllEnglishRegions } from '../config/english/adventure';
 
-defineEmits(['startSpeedSpell', 'back', 'enterGrammar', 'startAdventure']);
+defineEmits(['startSpeedSpell', 'back', 'enterGrammar', 'startAdventure', 'openLeaderboard', 'openAchievements']);
 
 const settingsStore = useSettingsStore();
 const gameStore = useGameStore();
@@ -175,6 +178,42 @@ const currentRegionName = computed(() => {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.btn-leaderboard {
+  padding: 0.5rem 1.2rem;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  border-radius: 20px;
+  color: #000;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-leaderboard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-achievements {
+  padding: 0.5rem 1.2rem;
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-achievements:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(244, 114, 182, 0.4);
 }
 
 .btn-back {

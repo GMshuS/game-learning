@@ -883,7 +883,6 @@ const viewRegistry = {
     }),
     events: {
       'startChallengeCenter': startChallengeCenter,
-      'openAchievements': openAchievements,
       'openSettings': openSettings,
       'startEnglishHall': startEnglishHall,
       'startCardWorld': startCardWorld,
@@ -951,6 +950,7 @@ const viewRegistry = {
       'startUnitGame': startUnitFromHall,
       'startChartGame': startChartFromHall,
       'openLeaderboard': openLeaderboard,
+      'openAchievements': openAchievements,
       back: goBack
     }
   },
@@ -1009,6 +1009,8 @@ const viewRegistry = {
     props: () => ({}),
     events: {
       'navigate': navigateFromCardWorld,
+      'openAchievements': openAchievements,
+      'openLeaderboard': openLeaderboard,
       back: goBack
     }
   },
@@ -1024,6 +1026,8 @@ const viewRegistry = {
       'startSpeedSpell': startEnglishSpeedSpell,
       'enterGrammar': startGrammarHall,
       'startAdventure': startEnglishAdventure,
+      'openAchievements': openAchievements,
+      'openLeaderboard': openLeaderboard,
       back: goBack
     }
   },

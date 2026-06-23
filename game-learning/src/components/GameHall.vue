@@ -2,7 +2,11 @@
   <div class="game-hall">
     <div class="hall-header">
       <h2>🧮 数学乐园</h2>
-      <button class="btn-back" @click="$emit('back')">← 返回</button>
+      <div class="header-actions">
+        <button class="btn-leaderboard" @click="$emit('openLeaderboard')">🏆 排行榜</button>
+        <button class="btn-achievements" @click="$emit('openAchievements')">🏅 成就</button>
+        <button class="btn-back" @click="$emit('back')">← 返回</button>
+      </div>
     </div>
 
     <div class="hall-sections">
@@ -31,11 +35,6 @@
       </section>
     </div>
 
-    <div class="hall-footer">
-      <button class="btn-leaderboard" @click="$emit('openLeaderboard')">
-        🏆 排行榜
-      </button>
-    </div>
   </div>
 </template>
 
@@ -62,7 +61,8 @@ const emit = defineEmits([
   'startGeometryGame',
   'startUnitGame',
   'startChartGame',
-  'openLeaderboard'
+  'openLeaderboard',
+  'openAchievements'
 ]);
 
 const gameStore = useGameStore();
@@ -225,6 +225,12 @@ const handleGameClick = (game) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .hall-header h2 {
@@ -393,12 +399,6 @@ const handleGameClick = (game) => {
   font-style: italic;
 }
 
-.hall-footer {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
 .btn-leaderboard {
   padding: 0.8rem 2rem;
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
@@ -414,6 +414,23 @@ const handleGameClick = (game) => {
 .btn-leaderboard:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-achievements {
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  border: none;
+  border-radius: 25px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-achievements:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(244, 114, 182, 0.4);
 }
 
 @media (max-width: 768px) {

@@ -3,7 +3,11 @@
     <!-- 头部 -->
     <div class="header">
       <h2>🃏 卡牌世界</h2>
-      <button class="btn-back" @click="$emit('back')">← 返回</button>
+      <div class="header-actions">
+        <button class="btn-leaderboard" @click="$emit('openLeaderboard')">🏆 排行榜</button>
+        <button class="btn-achievements" @click="$emit('openAchievements')">🏅 成就</button>
+        <button class="btn-back" @click="$emit('back')">← 返回</button>
+      </div>
     </div>
 
     <!-- 概要信息 -->
@@ -106,6 +110,7 @@
         </div>
         <div class="entrance-arrow">→</div>
       </div>
+
     </div>
 
     <!-- 跨学科统计 -->
@@ -155,7 +160,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useCardStore } from '../store/cardStore';
 import { getCardById } from '../config/cards';
 
-const emit = defineEmits(['back', 'navigate']);
+const emit = defineEmits(['back', 'navigate', 'openLeaderboard', 'openAchievements']);
 
 const cardStore = useCardStore();
 
@@ -280,6 +285,48 @@ onMounted(() => {
 .header h2 {
   margin: 0;
   font-size: 1.8rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-leaderboard {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  border-radius: 20px;
+  color: #000;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-leaderboard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-achievements {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-achievements:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(244, 114, 182, 0.4);
 }
 
 .btn-back {
