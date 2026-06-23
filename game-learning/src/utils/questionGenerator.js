@@ -28,6 +28,14 @@ import generateWordProblem from '../questions/wordProblem';
 import generateNumberFill from '../questions/numberFill';
 import generateEstimate from '../questions/estimate';
 import generateEquation from '../questions/equation';
+import generateNumberCompare from '../questions/numberCompare';
+import generatePlaceValue from '../questions/placeValue';
+import generateNumberProperty from '../questions/numberProperty';
+import generateOperationLaw from '../questions/operationLaw';
+import generatePatternFind from '../questions/patternFind';
+import generateAverageCalc from '../questions/averageCalc';
+import generateNegativeNumber from '../questions/negativeNumber';
+import generateRatioProportion from '../questions/ratioProportion';
 
 // 显式注册所有题型，确保 tree-shaking 安全
 register('add', generateAddition);
@@ -42,6 +50,14 @@ register('word', generateWordProblem);
 register('numberFill', generateNumberFill);
 register('estimate', generateEstimate);
 register('equation', generateEquation);
+register('numberCompare', generateNumberCompare);
+register('placeValue', generatePlaceValue);
+register('numberProperty', generateNumberProperty);
+register('operationLaw', generateOperationLaw);
+register('patternFind', generatePatternFind);
+register('averageCalc', generateAverageCalc);
+register('negativeNumber', generateNegativeNumber);
+register('ratioProportion', generateRatioProportion);
 
 /**
  * 加权随机选择

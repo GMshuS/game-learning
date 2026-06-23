@@ -5,19 +5,20 @@ import { defineStore } from 'pinia';
 import storageManager from '../utils/storage';
 import { useSettingsStore } from './settingsStore';
 import { useBattleStore } from './battleStore';
-import { useShopStore } from './shopStore';
 import { useAchievementStore } from './achievementStore';
 import { useEquipmentStore } from './equipmentStore';
 import { useSpeedChallengeStore } from './speedChallengeStore';
-import { useCashierStore } from './cashierStore';
 import { useSaveDataStore } from './saveDataStore';
 import { useQuestionStore } from './questionStore';
 import { useWorkshopStore } from './workshopStore';
 import { useCardStore } from './cardStore';
 import { useInventoryStore } from './inventoryStore';
 import { useEnglishSpeedSpellStore } from './englishSpeedSpellStore';
+import { useEnglishGrammarStore } from './englishGrammarStore';
 import { useMathKnowledgeStore } from './mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from './englishKnowledgeStore';
+import { useEnglishSpiritStore } from './englishSpiritStore';
+import { useEnglishAdventureStore } from './englishAdventureStore';
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -35,7 +36,11 @@ export const useGameStore = defineStore('game', {
     cardBattle: null,
     leaderboard: null,
     notifications: [],
-    englishSpeedSpell: null
+    englishSpeedSpell: null,
+    grammarProgress: null,
+    // 英语冒险扩展
+    englishSpirits: null,
+    englishAdventureProgress: null
   }),
 
   getters: {
@@ -96,6 +101,10 @@ export const useGameStore = defineStore('game', {
         this.leaderboard = gameData.leaderboard || this.getDefaultLeaderboard();
         this.notifications = gameData.notifications || [];
         this.englishSpeedSpell = gameData.englishSpeedSpell || null;
+        this.grammarProgress = gameData.grammarProgress || null;
+        // 英语冒险扩展数据
+        this.englishSpirits = gameData.englishSpirits ?? null;
+        this.englishAdventureProgress = gameData.englishAdventureProgress ?? null;
       }
       
       return this.isLoaded;
@@ -121,6 +130,9 @@ export const useGameStore = defineStore('game', {
       this.leaderboard = this.getDefaultLeaderboard();
       this.notifications = [];
       this.englishSpeedSpell = null;
+      this.grammarProgress = null;
+      this.englishSpirits = null;
+      this.englishAdventureProgress = null;
     },
 
     /**
@@ -139,19 +151,20 @@ export const useGameStore = defineStore('game', {
     resetAllProgress() {
       this.$reset();
       useBattleStore().$reset();
-      useShopStore().$reset();
       useAchievementStore().$reset();
       useEquipmentStore().$reset();
       useSpeedChallengeStore().$reset();
-      useCashierStore().$reset();
       useSaveDataStore().$reset();
       useQuestionStore().$reset();
       useWorkshopStore().$reset();
       useCardStore().$reset();
       useInventoryStore().$reset();
       useEnglishSpeedSpellStore().$reset();
+      useEnglishGrammarStore().$reset();
       useMathKnowledgeStore().$reset();
       useEnglishKnowledgeStore().$reset();
+      useEnglishSpiritStore().$reset();
+      useEnglishAdventureStore().$reset();
     },
 
     /**
@@ -404,7 +417,10 @@ export const useGameStore = defineStore('game', {
             cardBattle: this.cardBattle,
             leaderboard: this.leaderboard,
             notifications: this.notifications,
-            englishSpeedSpell: this.englishSpeedSpell
+            englishSpeedSpell: this.englishSpeedSpell,
+            grammarProgress: this.grammarProgress,
+            englishSpirits: this.englishSpirits,
+            englishAdventureProgress: this.englishAdventureProgress
           }
         );
       }

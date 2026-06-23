@@ -35,7 +35,16 @@ export const englishGradesConfig = {
       { en: 'hand', cn: '手', category: 'body', difficulty: 1 },
       { en: 'eye', cn: '眼睛', category: 'body', difficulty: 1 },
       { en: 'ear', cn: '耳朵', category: 'body', difficulty: 1 },
-      { en: 'nose', cn: '鼻子', category: 'body', difficulty: 1 }
+      { en: 'nose', cn: '鼻子', category: 'body', difficulty: 1 },
+      // 常见短语（Level 1）
+      { en: 'good morning', cn: '早上好', category: 'phrase', difficulty: 1, phrase: 'Good morning!', sentence: 'Good morning, teacher!' },
+      { en: 'good night', cn: '晚安', category: 'phrase', difficulty: 1, phrase: 'Good night!', sentence: 'Good night, Mom.' },
+      { en: 'thank you', cn: '谢谢', category: 'phrase', difficulty: 1, phrase: 'Thank you!', sentence: 'Thank you very much.' },
+      { en: 'hello', cn: '你好', category: 'phrase', difficulty: 1, phrase: 'Hello!', sentence: 'Hello, my name is Tom.' },
+      { en: 'goodbye', cn: '再见', category: 'phrase', difficulty: 1, phrase: 'Goodbye!', sentence: 'Goodbye, see you tomorrow.' },
+      { en: 'yes', cn: '是的', category: 'phrase', difficulty: 1, phrase: 'Yes.', sentence: 'Yes, I can.' },
+      { en: 'no', cn: '不', category: 'phrase', difficulty: 1, phrase: 'No.', sentence: 'No, I don\'t.' },
+      { en: 'sorry', cn: '对不起', category: 'phrase', difficulty: 1, phrase: 'Sorry.', sentence: 'Sorry, I\'m late.' }
     ]
   },
 
@@ -72,7 +81,16 @@ export const englishGradesConfig = {
       { en: 'ball', cn: '球', category: 'toy', difficulty: 2 },
       { en: 'kite', cn: '风筝', category: 'toy', difficulty: 2 },
       { en: 'toy', cn: '玩具', category: 'toy', difficulty: 2 },
-      { en: 'game', cn: '游戏', category: 'toy', difficulty: 2 }
+      { en: 'game', cn: '游戏', category: 'toy', difficulty: 2 },
+      // 常见短语（Level 2）
+      { en: 'excuse me', cn: '打扰一下', category: 'phrase', difficulty: 2, phrase: 'Excuse me.', sentence: 'Excuse me, where is the park?' },
+      { en: 'come in', cn: '请进', category: 'phrase', difficulty: 2, phrase: 'Come in, please.', sentence: 'Come in and sit down.' },
+      { en: 'sit down', cn: '坐下', category: 'phrase', difficulty: 2, phrase: 'Sit down, please.', sentence: 'Please sit down.' },
+      { en: 'stand up', cn: '起立', category: 'phrase', difficulty: 2, phrase: 'Stand up!', sentence: 'Stand up, please.' },
+      { en: 'well done', cn: '做得好', category: 'phrase', difficulty: 2, phrase: 'Well done!', sentence: 'Well done, you got it right!' },
+      { en: 'you are welcome', cn: '不客气', category: 'phrase', difficulty: 2, phrase: 'You\'re welcome.', sentence: 'Thank you! — You\'re welcome.' },
+      { en: 'see you', cn: '再见', category: 'phrase', difficulty: 2, phrase: 'See you!', sentence: 'See you tomorrow!' },
+      { en: 'here you are', cn: '给你', category: 'phrase', difficulty: 2, phrase: 'Here you are.', sentence: 'Here you are, your book.' }
     ]
   },
 
@@ -104,7 +122,15 @@ export const englishGradesConfig = {
       { en: 'evening', cn: '傍晚', category: 'time', difficulty: 3 },
       { en: 'today', cn: '今天', category: 'time', difficulty: 3 },
       { en: 'tomorrow', cn: '明天', category: 'time', difficulty: 3 },
-      { en: 'yesterday', cn: '昨天', category: 'time', difficulty: 3 }
+      { en: 'yesterday', cn: '昨天', category: 'time', difficulty: 3 },
+      // 时间类短语
+      { en: 'at noon', cn: '在中午', category: 'time_phrase', difficulty: 3, phrase: 'at noon', sentence: 'We have lunch at noon.' },
+      { en: 'at night', cn: '在晚上', category: 'time_phrase', difficulty: 3, phrase: 'at night', sentence: 'I go to bed at night.' },
+      { en: 'in the morning', cn: '在早上', category: 'time_phrase', difficulty: 3, phrase: 'in the morning', sentence: 'I read books in the morning.' },
+      { en: 'every day', cn: '每天', category: 'time_phrase', difficulty: 3, phrase: 'every day', sentence: 'I go to school every day.' },
+      // 方位类短语
+      { en: 'next to', cn: '在旁边', category: 'direction_phrase', difficulty: 3, phrase: 'next to', sentence: 'The school is next to the park.' },
+      { en: 'in front of', cn: '在前面', category: 'direction_phrase', difficulty: 3, phrase: 'in front of', sentence: 'There is a tree in front of the house.' }
     ]
   },
 
@@ -136,7 +162,17 @@ export const englishGradesConfig = {
       { en: 'sad', cn: '伤心的', category: 'emotion', difficulty: 4 },
       { en: 'excited', cn: '兴奋的', category: 'emotion', difficulty: 4 },
       { en: 'afraid', cn: '害怕的', category: 'emotion', difficulty: 4 },
-      { en: 'proud', cn: '自豪的', category: 'emotion', difficulty: 4 }
+      { en: 'proud', cn: '自豪的', category: 'emotion', difficulty: 4 },
+      // 情感类短语
+      { en: 'have fun', cn: '玩得开心', category: 'emotion_phrase', difficulty: 4, phrase: 'have fun', sentence: 'Have fun at the party!' },
+      { en: 'take care', cn: '保重', category: 'emotion_phrase', difficulty: 4, phrase: 'take care', sentence: 'Take care of yourself.' },
+      { en: 'cheer up', cn: '振作起来', category: 'emotion_phrase', difficulty: 4, phrase: 'cheer up', sentence: 'Cheer up! Everything will be fine.' },
+      // 方位类短语扩展
+      { en: 'behind', cn: '在后面', category: 'direction', difficulty: 4, phrase: 'behind', sentence: 'The cat is behind the door.' },
+      { en: 'between', cn: '在之间', category: 'direction', difficulty: 4, phrase: 'between', sentence: 'The book is between the pens.' },
+      { en: 'under', cn: '在下面', category: 'direction', difficulty: 4, phrase: 'under', sentence: 'The ball is under the chair.' },
+      { en: 'on the left', cn: '在左边', category: 'direction_phrase', difficulty: 4, phrase: 'on the left', sentence: 'The library is on the left.' },
+      { en: 'on the right', cn: '在右边', category: 'direction_phrase', difficulty: 4, phrase: 'on the right', sentence: 'The hospital is on the right.' }
     ]
   },
 
@@ -164,7 +200,22 @@ export const englishGradesConfig = {
       { en: 'let it go', cn: '顺其自然', category: 'idiom', difficulty: 5 },
       { en: 'no pain no gain', cn: '不劳无获', category: 'idiom', difficulty: 5 },
       { en: 'on time', cn: '准时', category: 'idiom', difficulty: 5 },
-      { en: 'all right', cn: '好的', category: 'idiom', difficulty: 5 }
+      { en: 'all right', cn: '好的', category: 'idiom', difficulty: 5 },
+      // 抽象概念扩展
+      { en: 'wisdom', cn: '智慧', category: 'abstract', difficulty: 5, sentence: 'Knowledge comes from learning, wisdom comes from life.' },
+      { en: 'justice', cn: '正义', category: 'abstract', difficulty: 5, sentence: 'Everyone deserves justice.' },
+      { en: 'patience', cn: '耐心', category: 'abstract', difficulty: 5, sentence: 'You need patience to learn a language.' },
+      { en: 'confidence', cn: '自信', category: 'abstract', difficulty: 5, sentence: 'She has great confidence in her English.' },
+      // 复合词扩展
+      { en: 'schoolbag', cn: '书包', category: 'compound', difficulty: 5, sentence: 'I put my books in my schoolbag.' },
+      { en: 'classroom', cn: '教室', category: 'compound', difficulty: 5, sentence: 'Our classroom is on the second floor.' },
+      { en: 'playground', cn: '操场', category: 'compound', difficulty: 5, sentence: 'The children are playing on the playground.' },
+      { en: 'everyone', cn: '每个人', category: 'compound', difficulty: 5, sentence: 'Everyone in our class likes English.' },
+      // 惯用语扩展
+      { en: 'once upon a time', cn: '从前', category: 'idiom', difficulty: 5, phrase: 'once upon a time', sentence: 'Once upon a time, there was a princess...' },
+      { en: 'as usual', cn: '像往常一样', category: 'idiom', difficulty: 5, phrase: 'as usual', sentence: 'He arrived late as usual.' },
+      { en: 'in a hurry', cn: '匆忙', category: 'idiom', difficulty: 5, phrase: 'in a hurry', sentence: 'She left in a hurry.' },
+      { en: 'by the way', cn: '顺便说一下', category: 'idiom', difficulty: 5, phrase: 'by the way', sentence: 'By the way, do you like music?' }
     ]
   },
 
@@ -190,7 +241,20 @@ export const englishGradesConfig = {
       { en: 'get along with', cn: '与…相处', category: 'sentence', difficulty: 6 },
       { en: 'as soon as', cn: '一…就…', category: 'sentence', difficulty: 6 },
       { en: 'in addition', cn: '此外', category: 'sentence', difficulty: 6 },
-      { en: 'on the other hand', cn: '另一方面', category: 'sentence', difficulty: 6 }
+      { en: 'on the other hand', cn: '另一方面', category: 'sentence', difficulty: 6 },
+      // 学术词汇扩展
+      { en: 'discovery', cn: '发现', category: 'academic', difficulty: 6, sentence: 'This discovery changed the world.' },
+      { en: 'invention', cn: '发明', category: 'academic', difficulty: 6, sentence: 'The invention of the internet changed everything.' },
+      { en: 'knowledge', cn: '知识', category: 'academic', difficulty: 6, sentence: 'Knowledge is power.' },
+      { en: 'achievement', cn: '成就', category: 'academic', difficulty: 6, sentence: 'This is a great achievement.' },
+      { en: 'responsibility', cn: '责任', category: 'academic', difficulty: 6, sentence: 'We have a responsibility to protect nature.' },
+      // 惯用语/抽象扩展
+      { en: 'in my opinion', cn: '在我看来', category: 'sentence', difficulty: 6, phrase: 'in my opinion', sentence: 'In my opinion, English is very useful.' },
+      { en: 'as a result', cn: '因此', category: 'sentence', difficulty: 6, phrase: 'as a result', sentence: 'He studied hard. As a result, he passed the exam.' },
+      { en: 'in conclusion', cn: '总之', category: 'sentence', difficulty: 6, phrase: 'in conclusion', sentence: 'In conclusion, we should practice every day.' },
+      { en: 'first of all', cn: '首先', category: 'sentence', difficulty: 6, phrase: 'first of all', sentence: 'First of all, let me introduce myself.' },
+      { en: 'more importantly', cn: '更重要的是', category: 'sentence', difficulty: 6, phrase: 'more importantly', sentence: 'More importantly, you need to enjoy learning.' },
+      { en: 'on the contrary', cn: '相反', category: 'sentence', difficulty: 6, phrase: 'on the contrary', sentence: 'I\'m not tired. On the contrary, I feel great.' }
     ]
   }
 };

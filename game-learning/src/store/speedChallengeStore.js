@@ -2,6 +2,7 @@
  * 速算竞技场 Store
  */
 import { defineStore } from 'pinia';
+import { useCardStore } from './cardStore';
 import { useGameStore } from './gameStore';
 import { useSettingsStore } from './settingsStore';
 import { useMathKnowledgeStore } from './mathKnowledgeStore';
@@ -173,6 +174,19 @@ export const useSpeedChallengeStore = defineStore('speedChallenge', {
       gameStore.addCoins(result.coins);
       if (result.gems > 0) gameStore.addGems(result.gems);
       gameStore.saveGame();
+
+      // === 卡牌碎片产出 ===
+      // 每 100 分得 1 碎片
+      const shardsFromScore = Math.floor(this.score / 100);
+      if (shardsFromScore > 0) {
+        const cardStore = useCardStore();
+        cardStore.earnShard('math', shardsFromScore);
+      }
+      // S 评级额外得 3 碎片
+      if (result.rating === 'S') {
+        const cardStore = useCardStore();
+        cardStore.earnShard('math', 3);
+      }
     }
   }
 });

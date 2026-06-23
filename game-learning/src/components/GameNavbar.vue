@@ -4,7 +4,7 @@
       <button class="btn-back" title="返回主菜单" @click="openMenu">
         ← 菜单
       </button>
-      <span class="mode-label">{{ currentModeLabel }}</span>
+      <span class="mode-label">{{ displayTitle }}</span>
     </div>
 
     <div class="navbar-center">
@@ -37,6 +37,10 @@ const props = defineProps({
     type: String,
     default: 'menu'
   },
+  viewTitle: {
+    type: String,
+    default: ''
+  },
   playerName: {
     type: String,
     default: '冒险者'
@@ -59,13 +63,17 @@ const modeLabels = {
   shop: '经营商店',
   battle: '战斗中',
   cashier: '收银游戏',
-  challenge_center: '挑战中心',
+  challenge_center: '数学乐园',
   inventory: '背包',
   english: '英语乐园'
 };
 
 const currentModeLabel = computed(() => {
   return modeLabels[props.currentMode] || '未知模式';
+});
+
+const displayTitle = computed(() => {
+  return props.viewTitle || currentModeLabel.value;
 });
 
 // navigate(mode) 函数已移除：模板中使用 openMenu 等具体事件，无需中间函数包装

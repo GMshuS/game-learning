@@ -8,6 +8,7 @@
     <GameNavbar
       v-if="currentView !== 'menu'"
       :current-mode="currentMode"
+      :view-title="currentViewTitle"
       :player-name="playerInfo.name"
       :player-coins="playerInfo.coins"
       :player-gems="playerInfo.gems"
@@ -59,6 +60,9 @@ import { useInventoryStore } from '../store/inventoryStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useSpeedChallengeStore } from '../store/speedChallengeStore';
 import { useEnglishSpeedSpellStore } from '../store/englishSpeedSpellStore';
+import { useEnglishGrammarStore } from '../store/englishGrammarStore';
+import { useEnglishSpiritStore } from '../store/englishSpiritStore';
+import { useEnglishAdventureStore } from '../store/englishAdventureStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
 import { useCustomTemplateStore } from '../store/customTemplateStore';
@@ -66,7 +70,6 @@ import storageManager from '../utils/storage';
 import audioManager from '../utils/audioManager';
 import adventureConfig from '../config/adventure';
 import { getGameConfig } from '../utils/gameContext';
-import { CASHIER_REWARD } from '../config/cashier';
 
 // 始终加载的核心组件（首屏必需）
 import MainMenu from './MainMenu.vue';
@@ -76,8 +79,7 @@ import AudioControls from './AudioControls.vue';
 // 懒加载重型视图组件 — 首屏不立即加载，首次使用时才加载
 const AdventureMap = defineAsyncComponent(() => import('./AdventureMap.vue'));
 const BattleGame = defineAsyncComponent(() => import('./BattleGame.vue'));
-const ShopView = defineAsyncComponent(() => import('./ShopView.vue'));
-const CashierGame = defineAsyncComponent(() => import('./CashierGame.vue'));
+const MarketChallenge = defineAsyncComponent(() => import('./MarketChallenge.vue'));
 const AchievementView = defineAsyncComponent(() => import('./AchievementView.vue'));
 const SettingsPanel = defineAsyncComponent(() => import('./SettingsPanel.vue'));
 const GameHall = defineAsyncComponent(() => import('./GameHall.vue'));
@@ -92,9 +94,20 @@ const InventoryView = defineAsyncComponent(() => import('./InventoryView.vue'));
 const BattlePrepare = defineAsyncComponent(() => import('./BattlePrepare.vue'));
 const EnglishHall = defineAsyncComponent(() => import('./EnglishHall.vue'));
 const EnglishSpeedSpell = defineAsyncComponent(() => import('./EnglishSpeedSpell.vue'));
+const EnglishGrammar = defineAsyncComponent(() => import('./EnglishGrammar.vue'));
+const EnglishGrammarGame = defineAsyncComponent(() => import('./EnglishGrammarGame.vue'));
 const TargetedTraining = defineAsyncComponent(() => import('./TargetedTraining.vue'));
 const ReviewSession = defineAsyncComponent(() => import('./ReviewSession.vue'));
 const AdminPage = defineAsyncComponent(() => import('./AdminPage.vue'));
+const EnglishAdventureMap = defineAsyncComponent(() => import('./EnglishAdventureMap.vue'));
+const EnglishSpiritCollection = defineAsyncComponent(() => import('./EnglishSpiritCollection.vue'));
+const EnglishRegionBattle = defineAsyncComponent(() => import('./EnglishRegionBattle.vue'));
+const CardWorld = defineAsyncComponent(() => import('./CardWorld.vue'));
+const ClockGame = defineAsyncComponent(() => import('./ClockGame.vue'));
+const ProbabilityLab = defineAsyncComponent(() => import('./ProbabilityLab.vue'));
+const GeometryGame = defineAsyncComponent(() => import('./GeometryGame.vue'));
+const UnitGame = defineAsyncComponent(() => import('./UnitGame.vue'));
+const ChartGame = defineAsyncComponent(() => import('./ChartGame.vue'));
 
 const gameStore = useGameStore();
 const audioStore = useAudioStore();
@@ -104,6 +117,7 @@ const inventoryStore = useInventoryStore();
 const notificationStore = useNotificationStore();
 const speedChallengeStore = useSpeedChallengeStore();
 const englishSpeedSpellStore = useEnglishSpeedSpellStore();
+const englishGrammarStore = useEnglishGrammarStore();
 
 const currentView = ref('menu');
 const previousView = ref(null);
@@ -156,27 +170,73 @@ const playerInfo = computed(() => ({
   grade: settingsStore.grade
 }));
 
+// 视图标题映射 —— 每个视图显示各自的具体名称
+const viewTitleMap = {
+  // 数学乐园子功能
+  challenge: '数学乐园',
+  geometryGame: '几何王国',
+  unitGame: '单位大冒险',
+  chartGame: '统计图表',
+  speedChallenge: '速算竞技场',
+  workshop: '数学工坊',
+  clock: '钟表学院',
+  probability: '概率实验室',
+  market: '超市大挑战',
+  targetedTraining: '针对性训练',
+  review: '复习模式',
+  leaderboard: '排行榜',
+  // 英语乐园子功能
+  englishHall: '英语乐园',
+  englishSpeedSpell: '单词速拼',
+  englishGrammar: '语法城堡',
+  englishGrammarGame: '语法闯关',
+  englishAdventureMap: '英语冒险',
+  englishSpiritCollection: '精灵收集',
+  englishRegionBattle: '区域对战',
+  // 卡牌世界子功能
+  cardWorld: '卡牌世界',
+  cardBattle: '卡牌对战',
+  cardCollection: '卡牌收藏',
+  cardPack: '开卡包',
+  // 其他
+  adventure: '冒险模式',
+  battle: '战斗中',
+  levelSelect: '选择关卡',
+  battlePrepare: '战斗准备',
+  inventory: '背包',
+  admin: '管理模式',
+  menu: '主菜单'
+};
+
+const currentViewTitle = computed(() => {
+  return viewTitleMap[currentView.value] || '';
+});
+
 // 当前模式
 const currentMode = computed(() => {
   if (currentView.value === 'adventure' || currentView.value === 'battle' || currentView.value === 'levelSelect' || currentView.value === 'battlePrepare') {
     return 'adventure';
   }
-  if (currentView.value === 'shop') {
-    return 'shop';
+  if (currentView.value === 'market') {
+    return 'market';
   }
   if (currentView.value === 'inventory') {
     return 'inventory';
   }
-  if (currentView.value === 'cashier') {
-    return 'cashier';
-  }
   if (currentView.value === 'challenge' || currentView.value === 'speedChallenge' ||
     currentView.value === 'workshop' || currentView.value === 'cardBattle' ||
     currentView.value === 'cardCollection' || currentView.value === 'cardPack' ||
+    currentView.value === 'cardWorld' || currentView.value === 'clock' ||
+    currentView.value === 'probability' || currentView.value === 'geometryGame' ||
+    currentView.value === 'unitGame' || currentView.value === 'chartGame' ||
+    currentView.value === 'targetedTraining' ||
     currentView.value === 'leaderboard' || currentView.value === 'review') {
     return 'challenge_center';
   }
-  if (currentView.value === 'englishHall' || currentView.value === 'englishSpeedSpell') {
+  if (currentView.value === 'englishHall' || currentView.value === 'englishSpeedSpell' ||
+    currentView.value === 'englishGrammar' || currentView.value === 'englishGrammarGame' ||
+    currentView.value === 'englishAdventureMap' || currentView.value === 'englishSpiritCollection' ||
+    currentView.value === 'englishRegionBattle') {
     return 'english';
   }
   if (currentView.value === 'admin') {
@@ -314,12 +374,6 @@ const startBattle = (area, level) => {
   
   currentView.value = 'battle';
   audioStore.playBgm('battle');
-};
-
-// 开始收银游戏
-const startCashier = () => {
-  previousView.value = currentView.value;
-  currentView.value = 'cashier';
 };
 
 // 打开成就
@@ -601,22 +655,7 @@ const onBattleEnd = (result) => {
   goBack();
 };
 
-// 收银游戏完成处理
-const onCashierComplete = (result) => {
-  if (result.status === 'success') {
-    if (result.rewards && result.rewards.coins) {
-      gameStore.addCoins(result.rewards.coins);
-      gameStore.addExp(result.rewards.exp);
-    } else {
-      const coins = result.stars * CASHIER_REWARD.COINS_PER_STAR;
-      const exp = result.stars * CASHIER_REWARD.EXP_PER_STAR + Math.max(0, CASHIER_REWARD.TIME_BONUS_BASE - result.timeUsed);
-      gameStore.addCoins(coins);
-      gameStore.addExp(exp);
-    }
-  }
-};
-
-// 导航到挑战中心
+// 导航到数学乐园
 const startChallengeCenter = () => {
   previousView.value = currentView.value;
   currentView.value = 'challenge';
@@ -624,7 +663,7 @@ const startChallengeCenter = () => {
   audioStore.playBgm('main');
 };
 
-// 从挑战中心进入冒险模式
+// 从数学乐园进入冒险模式
 const startAdventureFromHall = () => {
   previousView.value = 'challenge';
   currentView.value = 'adventure';
@@ -632,18 +671,50 @@ const startAdventureFromHall = () => {
   audioStore.playBgm('adventure');
 };
 
-// 从挑战中心进入经营商店
-const startShopFromHall = () => {
+// 从数学乐园进入超市大挑战
+const startMarketFromHall = () => {
   previousView.value = 'challenge';
-  currentView.value = 'shop';
-  gameStore.setGameMode('shop');
-  audioStore.playBgm('shop');
+  currentView.value = 'market';
+  gameStore.setGameMode('challenge_center');
+  audioStore.playBgm('main');
 };
 
-// 从挑战中心进入收银游戏
-const startCashierFromHall = () => {
+// 从数学乐园进入钟表学院
+const startClockFromHall = () => {
   previousView.value = 'challenge';
-  currentView.value = 'cashier';
+  currentView.value = 'clock';
+  gameStore.setGameMode('challenge_center');
+  audioStore.playBgm('main');
+};
+
+// 从数学乐园进入概率实验室
+const startProbabilityFromHall = () => {
+  previousView.value = 'challenge';
+  currentView.value = 'probability';
+  gameStore.setGameMode('challenge_center');
+  audioStore.playBgm('main');
+};
+
+// 从数学乐园进入几何王国
+const startGeometryFromHall = () => {
+  previousView.value = 'challenge';
+  currentView.value = 'geometryGame';
+  gameStore.setGameMode('challenge_center');
+  audioStore.playBgm('main');
+};
+
+// 从数学乐园进入单位大冒险
+const startUnitFromHall = () => {
+  previousView.value = 'challenge';
+  currentView.value = 'unitGame';
+  gameStore.setGameMode('challenge_center');
+  audioStore.playBgm('main');
+};
+
+// 从数学乐园进入统计图表
+const startChartFromHall = () => {
+  previousView.value = 'challenge';
+  currentView.value = 'chartGame';
   gameStore.setGameMode('challenge_center');
   audioStore.playBgm('main');
 };
@@ -655,16 +726,16 @@ const startSpeedChallenge = () => {
   currentView.value = 'speedChallenge';
 };
 
+// 导航到超市大挑战
+const startMarket = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'market';
+};
+
 // 导航到数学工坊
 const startWorkshop = () => {
   previousView.value = currentView.value;
   currentView.value = 'workshop';
-};
-
-// 导航到卡牌对战
-const startCardBattle = () => {
-  previousView.value = currentView.value;
-  currentView.value = 'cardBattle';
 };
 
 // 打开卡牌收藏
@@ -709,6 +780,54 @@ const onSpellEnd = (_result) => {
   // 奖励已在 store.endGame() 中发放
 };
 
+// ====== 语法城堡导航 ======
+
+const currentGrammarTowerId = ref(null);
+
+const startGrammarTower = (towerId) => {
+  previousView.value = currentView.value;
+  currentGrammarTowerId.value = towerId;
+  englishGrammarStore.$reset();
+  currentView.value = 'englishGrammarGame';
+};
+
+const startGrammarHall = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'englishGrammar';
+};
+
+const goBackFromGrammar = () => {
+  goBack();
+};
+
+const goBackFromGrammarGame = () => {
+  englishGrammarStore.resetGame();
+  currentView.value = 'englishGrammar';
+};
+
+// ====== 英语冒险导航 ======
+
+const currentEnglishRegionId = ref(null);
+
+const startEnglishAdventure = () => {
+  previousView.value = currentView.value;
+  const adventureStore = useEnglishAdventureStore();
+  currentEnglishRegionId.value = adventureStore.currentRegion || null;
+  currentView.value = 'englishAdventureMap';
+  audioStore.playBgm('adventure');
+};
+
+const openEnglishSpiritCollection = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'englishSpiritCollection';
+};
+
+const startEnglishRegionBattle = (regionId) => {
+  previousView.value = currentView.value;
+  currentEnglishRegionId.value = regionId;
+  currentView.value = 'englishRegionBattle';
+};
+
 const startTargetedTraining = () => {
   previousView.value = currentView.value;
   currentView.value = 'targetedTraining';
@@ -732,6 +851,20 @@ const onCardBattleEnd = (result) => {
   }
 };
 
+// 导航到卡牌世界（从主菜单）
+const startCardWorld = () => {
+  previousView.value = currentView.value;
+  currentView.value = 'cardWorld';
+  gameStore.setGameMode('card_world');
+  audioStore.playBgm('main');
+};
+
+// 从卡牌世界导航到子视图（卡牌对战、收藏、开卡包）
+const navigateFromCardWorld = (view) => {
+  previousView.value = currentView.value;
+  currentView.value = view;
+};
+
 // 卡包开启处理
 const onPackOpened = (_cards) => {
   // 卡牌已添加到收藏，刷新显示
@@ -753,6 +886,7 @@ const viewRegistry = {
       'openAchievements': openAchievements,
       'openSettings': openSettings,
       'startEnglishHall': startEnglishHall,
+      'startCardWorld': startCardWorld,
       'startAdmin': startAdmin
     }
   },
@@ -784,16 +918,10 @@ const viewRegistry = {
     }),
     events: { 'battleEnd': onBattleEnd, back: goBack }
   },
-  shop: {
-    component: ShopView,
-    props: () => ({
-      playerCoins: playerInfo.value.coins,
-      inventory: playerInventory.value
-    }),
+  market: {
+    component: MarketChallenge,
+    props: () => ({}),
     events: {
-      buy: handleBuy,
-      'startCashier': startCashier,
-      'openInventory': openInventoryFromShop,
       back: goBack
     }
   },
@@ -807,26 +935,49 @@ const viewRegistry = {
     props: () => ({}),
     events: { back: goBack, 'startBattle': onBattlePrepareStart }
   },
-  cashier: {
-    component: CashierGame,
-    props: () => ({}),
-    events: { complete: onCashierComplete, back: goBack }
-  },
   challenge: {
     component: GameHall,
     props: () => ({}),
     events: {
       'startSpeedChallenge': startSpeedChallenge,
       'startWorkshop': startWorkshop,
-      'startCardBattle': startCardBattle,
+      'startMarket': startMarketFromHall,
+      'startClock': startClockFromHall,
+      'startProbability': startProbabilityFromHall,
       'startAdventure': startAdventureFromHall,
-      'startShop': startShopFromHall,
-      'startCashier': startCashierFromHall,
       'startTargetedTraining': startTargetedTraining,
       'startReview': startReview,
+      'startGeometryGame': startGeometryFromHall,
+      'startUnitGame': startUnitFromHall,
+      'startChartGame': startChartFromHall,
       'openLeaderboard': openLeaderboard,
       back: goBack
     }
+  },
+  clock: {
+    component: ClockGame,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  probability: {
+    component: ProbabilityLab,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  geometryGame: {
+    component: GeometryGame,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  unitGame: {
+    component: UnitGame,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+  chartGame: {
+    component: ChartGame,
+    props: () => ({}),
+    events: { back: goBack }
   },
   speedChallenge: {
     component: SpeedChallenge,
@@ -853,6 +1004,14 @@ const viewRegistry = {
     props: () => ({}),
     events: { 'packOpened': onPackOpened, back: goBack }
   },
+  cardWorld: {
+    component: CardWorld,
+    props: () => ({}),
+    events: {
+      'navigate': navigateFromCardWorld,
+      back: goBack
+    }
+  },
   leaderboard: {
     component: Leaderboard,
     props: () => ({}),
@@ -861,12 +1020,37 @@ const viewRegistry = {
   englishHall: {
     component: EnglishHall,
     props: () => ({}),
-    events: { 'startSpeedSpell': startEnglishSpeedSpell, back: goBack }
+    events: {
+      'startSpeedSpell': startEnglishSpeedSpell,
+      'enterGrammar': startGrammarHall,
+      'startAdventure': startEnglishAdventure,
+      back: goBack
+    }
   },
   englishSpeedSpell: {
     component: EnglishSpeedSpell,
     props: () => ({}),
     events: { back: goBack, 'challengeEnd': onSpellEnd }
+  },
+  englishGrammar: {
+    component: EnglishGrammar,
+    props: () => ({}),
+    events: {
+      'enterTower': startGrammarTower,
+      back: goBackFromGrammar
+    }
+  },
+  englishGrammarGame: {
+    component: EnglishGrammarGame,
+    props: () => ({
+      towerId: currentGrammarTowerId.value
+    }),
+    events: {
+      back: goBackFromGrammarGame,
+      'towerComplete': () => {
+        // 塔通关事件（暂不处理）
+      }
+    }
   },
   targetedTraining: {
     component: TargetedTraining,
@@ -882,6 +1066,43 @@ const viewRegistry = {
     component: AdminPage,
     props: () => ({}),
     events: { back: goBack }
+  },
+
+  // ====== 英语冒险视图 ======
+
+  englishAdventureMap: {
+    component: EnglishAdventureMap,
+    props: () => {
+      const adventureStore = useEnglishAdventureStore();
+      return {
+        unlockedRegions: adventureStore.unlockedRegionIds,
+        currentRegionId: adventureStore.currentRegion || 'region_1'
+      };
+    },
+    events: {
+      regionSelect: (region) => startEnglishRegionBattle(region.id || region),
+      back: goBack
+    }
+  },
+
+  englishSpiritCollection: {
+    component: EnglishSpiritCollection,
+    props: () => ({}),
+    events: { back: goBack }
+  },
+
+  englishRegionBattle: {
+    component: EnglishRegionBattle,
+    props: () => ({
+      regionId: currentEnglishRegionId.value
+    }),
+    events: {
+      back: goBack,
+      regionComplete: (_result) => {
+        // 区域通关后回到冒险地图
+        currentView.value = 'englishAdventureMap';
+      }
+    }
   }
 };
 
@@ -914,6 +1135,12 @@ onMounted(async () => {
   // 初始化自定义模板 store（从 localStorage 加载模板数据）
   const customTemplateStore = useCustomTemplateStore();
   customTemplateStore.init();
+
+  // 初始化英语冒险 stores（从 gameStore 加载持久化数据）
+  const englishSpiritStore = useEnglishSpiritStore();
+  const englishAdventureStore = useEnglishAdventureStore();
+  englishSpiritStore.loadFromSave();
+  englishAdventureStore.loadFromSave();
   
   // 同步已持久化的设置到音频系统（使用统一的 syncSettings 接口）
   audioManager.syncSettings({
@@ -966,6 +1193,6 @@ onMounted(async () => {
 
 .game-main {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
 }
 </style>

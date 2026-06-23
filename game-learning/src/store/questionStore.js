@@ -8,6 +8,7 @@ import {
   questionToMultipleChoice,
   checkAnswer
 } from '../utils/questionUtils';
+import { useCardStore } from './cardStore';
 import { useMathKnowledgeStore } from './mathKnowledgeStore';
 
 export const useQuestionStore = defineStore('question', {
@@ -121,6 +122,13 @@ export const useQuestionStore = defineStore('question', {
       } else {
         this.wrongCount++;
         this.streak = 0;
+      }
+
+      // 卡牌碎片产出：连续答对 10 题触发连击奖励得随机碎片
+      if (result.correct && this.streak > 0 && this.streak % 10 === 0) {
+        const cardStore = useCardStore();
+        const randomShards = Math.floor(Math.random() * 3) + 1; // 1-3 随机碎片
+        cardStore.earnShard('math', randomShards);
       }
 
       this.answeredQuestions.push({

@@ -28,7 +28,12 @@ const STORAGE_KEYS = {
   CUSTOM_TEMPLATES: 'math_game_custom_templates',
   TEMPLATE_CONFIG: 'math_game_template_config',
   // 管理面板
-  ADMIN_PIN: 'math_game_admin_pin'
+  ADMIN_PIN: 'math_game_admin_pin',
+  // 英语模块扩展
+  ENGLISH_SPIRITS: 'math_game_english_spirits',
+  ENGLISH_ADVENTURE: 'math_game_english_adventure',
+  // 卡牌系统独立持久化
+  CARDS: 'math_game_cards'
 };
 
 const VERSION = '3.0.0';
@@ -214,7 +219,9 @@ class StorageManager {
       mathKnowledge: STORAGE_KEYS.MATH_KNOWLEDGE,
       englishKnowledge: STORAGE_KEYS.ENGLISH_KNOWLEDGE,
       weightOverrides: STORAGE_KEYS.WEIGHT_OVERRIDES,
-      knowledgeConfig: STORAGE_KEYS.KNOWLEDGE_CONFIG
+      knowledgeConfig: STORAGE_KEYS.KNOWLEDGE_CONFIG,
+      englishSpirits: STORAGE_KEYS.ENGLISH_SPIRITS,
+      englishAdventureProgress: STORAGE_KEYS.ENGLISH_ADVENTURE
     };
 
     let extraSaved = true;
@@ -262,7 +269,9 @@ class StorageManager {
       { key: 'mathKnowledge', storageKey: STORAGE_KEYS.MATH_KNOWLEDGE },
       { key: 'englishKnowledge', storageKey: STORAGE_KEYS.ENGLISH_KNOWLEDGE },
       { key: 'weightOverrides', storageKey: STORAGE_KEYS.WEIGHT_OVERRIDES },
-      { key: 'knowledgeConfig', storageKey: STORAGE_KEYS.KNOWLEDGE_CONFIG }
+      { key: 'knowledgeConfig', storageKey: STORAGE_KEYS.KNOWLEDGE_CONFIG },
+      { key: 'englishSpirits', storageKey: STORAGE_KEYS.ENGLISH_SPIRITS },
+      { key: 'englishAdventureProgress', storageKey: STORAGE_KEYS.ENGLISH_ADVENTURE }
     ];
     for (const { key, storageKey } of optionalKeys) {
       baseData[key] = this._loadOptionalData(storageKey, key);

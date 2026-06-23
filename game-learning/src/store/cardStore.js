@@ -1,19 +1,53 @@
 /**
- * 卡牌对战 Store
+ * 卡牌对战 Store — 独立持久化 (v2)
+ *
+ * 不再依赖 gameStore.cardBattle，独立管理自身数据，
+ * 通过 localStorage 直接读写（键名 math_game_cards）。
  */
 import { defineStore } from 'pinia';
 import { useGameStore } from './gameStore';
 import { useSettingsStore } from './settingsStore';
 import { cards, rarityConfig, packConfig, getCardById, getCardsByGrade } from '../config/cards';
 import { getGameConfig } from '../utils/gameContext';
+import { STORAGE_KEYS } from '../utils/storage';
+
+const CARD_STORAGE_KEY = STORAGE_KEYS.CARDS || 'math_game_cards';
 
 export const useCardStore = defineStore('card', {
   state: () => ({
-    collection: [], // { cardId, quantity }
-    deck: [], // cardId[]
-    // 对战状态
-    battle: null, // { playerHP, aiHP, playerHand, aiHand, playerDeck, aiDeck, turn, phase }
-    _aiTimer: null  // AI 行动定时器 ID（非响应式清理用）
+    /** @type {boolean} 是否已从 localStorage 初始化 */
+    _initialized: false,
+
+    // === 原有字段 ===
+    /** @type {Array<{cardId: string, quantity: number}>} */
+    collection: [],
+    /** @type {string[]} 卡组中的卡牌 ID */
+    deck: [],
+    /** @type {{wins: number, losses: number, totalBattles: number}} 对战统计（原 gameStore.cardBattle.battleStats） */
+    battleStats: { wins: 0, losses: 0, totalBattles: 0 },
+    /** @type {object|null} 对战状态 */
+    battle: null,
+    /** @type {number|null} AI 行动定时器 ID（非响应式清理用） */
+    _aiTimer: null,
+
+    // === 新增字段（学科碎片系统） ===
+    /** @type {{math: number, english: number, total: number}} */
+    shards: {
+      math: 0,
+      english: 0,
+      total: 0
+    },
+    /** @type {string[]} 已解锁的学科来源 */
+    unlockedSources: ['math'],
+    /** @type {Array<{cardId: string, source: string, timestamp: number}>} 最近获得记录 */
+    recentAcquisitions: [],
+    /** @type {number} 累计获得卡牌总数 */
+    totalCardsEarned: 0,
+    /** @type {{mathCardsEarned: number, englishCardsEarned: number}} 跨学科统计 */
+    crossDomainStats: {
+      mathCardsEarned: 0,
+      englishCardsEarned: 0
+    }
   }),
 
   getters: {
@@ -23,27 +57,227 @@ export const useCardStore = defineStore('card', {
   },
 
   actions: {
+    // ==================== 初始化 & 持久化 ====================
+
     /**
-     * 从存档加载
+     * 确保数据已从 localStorage 加载（惰性初始化）
+     * 在每次数据访问/修改前调用
      */
-    loadData(data) {
-      if (data) {
-        this.collection = data.collection || [];
-        this.deck = data.deck || [];
+    _ensureLoaded() {
+      if (!this._initialized) {
+        this._initialized = true;
+        this.loadData();
       }
     },
 
     /**
-     * 获取存档数据
+     * 加载卡牌数据
+     * @param {object} [data] - 可选，从外部传入的数据（向后兼容 gameStore.cardBattle）
+     *                          无参数时自动从 localStorage 读取
      */
-    getSaveData() {
-      return { collection: this.collection, deck: this.deck };
+    loadData(data) {
+      if (data) {
+        // 向后兼容：从 gameStore.cardBattle 等外部数据源加载
+        this.collection = data.collection || [];
+        this.deck = data.deck || [];
+        this.battleStats = data.battleStats || { wins: 0, losses: 0, totalBattles: 0 };
+        this.shards = data.shards || { math: 0, english: 0, total: 0 };
+        this.unlockedSources = data.unlockedSources || ['math'];
+        this.recentAcquisitions = data.recentAcquisitions || [];
+        this.totalCardsEarned = data.totalCardsEarned || 0;
+        this.crossDomainStats = data.crossDomainStats || { mathCardsEarned: 0, englishCardsEarned: 0 };
+      } else {
+        // 从 localStorage 自动加载
+        this._loadFromStorage();
+      }
     },
 
     /**
+     * 获取存档数据（用于外部序列化或 _persist）
+     * @returns {object}
+     */
+    getSaveData() {
+      this._ensureLoaded();
+      return {
+        collection: this.collection,
+        deck: this.deck,
+        battleStats: this.battleStats,
+        shards: this.shards,
+        unlockedSources: this.unlockedSources,
+        recentAcquisitions: this.recentAcquisitions,
+        totalCardsEarned: this.totalCardsEarned,
+        crossDomainStats: this.crossDomainStats
+      };
+    },
+
+    /**
+     * 保存卡牌数据到 localStorage（公开接口）
+     */
+    saveData() {
+      this._ensureLoaded();
+      this._persist();
+    },
+
+    /**
+     * 从 localStorage 读取卡牌数据
+     * 如新键不存在则尝试从旧键（math_game_card_battle）迁移
+     */
+    _loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(CARD_STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          this.collection = data.collection || [];
+          this.deck = data.deck || [];
+          this.battleStats = data.battleStats || { wins: 0, losses: 0, totalBattles: 0 };
+          this.shards = data.shards || { math: 0, english: 0, total: 0 };
+          this.unlockedSources = data.unlockedSources || ['math'];
+          this.recentAcquisitions = data.recentAcquisitions || [];
+          this.totalCardsEarned = data.totalCardsEarned || 0;
+          this.crossDomainStats = data.crossDomainStats || { mathCardsEarned: 0, englishCardsEarned: 0 };
+        } else {
+          // 尝试从旧键迁移
+          this._migrateFromOldStorage();
+        }
+      } catch (e) {
+        console.warn('Failed to load card data from localStorage, using defaults');
+      }
+    },
+
+    /**
+     * 从旧的 gameStore.cardBattle 存储键迁移数据
+     * 旧键名：math_game_card_battle（由 storage.js 的 STORAGE_KEYS.CARD_BATTLE 定义）
+     */
+    _migrateFromOldStorage() {
+      try {
+        const oldRaw = localStorage.getItem('math_game_card_battle');
+        if (oldRaw) {
+          const oldData = JSON.parse(oldRaw);
+          this.collection = oldData.collection || [];
+          this.deck = oldData.deck || [];
+          this.battleStats = oldData.battleStats || { wins: 0, losses: 0, totalBattles: 0 };
+          // 立即保存到新键，完成迁移
+          this._persist();
+          console.log('Card data migrated from old storage (math_game_card_battle)');
+        }
+      } catch (e) {
+        // 无旧数据，使用默认空状态
+      }
+    },
+
+    /**
+     * 写入 localStorage（内部持久化）
+     * @returns {boolean}
+     */
+    _persist() {
+      const data = this.getSaveData();
+      try {
+        localStorage.setItem(CARD_STORAGE_KEY, JSON.stringify(data));
+        return true;
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+          console.warn('localStorage 容量不足，无法保存卡牌数据');
+        } else {
+          console.error('卡牌数据保存失败:', e);
+        }
+        return false;
+      }
+    },
+
+    // ==================== 碎片系统 ====================
+
+    /**
+     * 获得碎片
+     * @param {'math'|'english'|string} source - 碎片来源学科
+     * @param {number} [count=1] - 碎片数量
+     */
+    earnShard(source, count = 1) {
+      this._ensureLoaded();
+      if (!this.unlockedSources.includes(source)) {
+        this.unlockedSources.push(source);
+      }
+      this.shards[source] = (this.shards[source] || 0) + count;
+      this.shards.total += count;
+      this._persist();
+    },
+
+    /**
+     * 消耗碎片合成随机卡牌
+     * @param {number} [shardCost=10] - 消耗的碎片数量
+     * @returns {object|null} 合成的卡牌对象，失败返回 null
+     */
+    craftCard(shardCost = 10) {
+      this._ensureLoaded();
+      if (this.shards.total < shardCost) return null;
+
+      // 按比例扣除碎片（先扣数学，再扣英语）
+      let remaining = shardCost;
+      const mathDeduction = Math.min(this.shards.math, remaining);
+      this.shards.math -= mathDeduction;
+      remaining -= mathDeduction;
+      if (remaining > 0) {
+        this.shards.english = Math.max(0, this.shards.english - remaining);
+        remaining = 0;
+      }
+      this.shards.total -= shardCost;
+
+      // 随机选择卡牌
+      const settingsStore = useSettingsStore();
+      const grade = settingsStore.grade;
+      const gradeCards = getCardsByGrade(grade);
+
+      const craftWeights = { common: 50, rare: 30, epic: 15, legendary: 5 };
+      const totalWeight = Object.values(craftWeights).reduce((a, b) => a + b, 0);
+      let rand = Math.random() * totalWeight;
+      let selectedRarity = 'common';
+      for (const [rarity, weight] of Object.entries(craftWeights)) {
+        rand -= weight;
+        if (rand <= 0) { selectedRarity = rarity; break; }
+      }
+
+      const candidates = gradeCards.filter(c => c.rarity === selectedRarity);
+      let card;
+      if (candidates.length === 0) {
+        // 降级
+        const fallback = gradeCards.filter(c => rarityConfig[c.rarity] && rarityConfig[c.rarity].packWeight > 0);
+        if (fallback.length === 0) {
+          this._persist();
+          return null;
+        }
+        card = fallback[Math.floor(Math.random() * fallback.length)];
+      } else {
+        card = candidates[Math.floor(Math.random() * candidates.length)];
+      }
+
+      // 添加到收藏
+      this.addCardToCollection(card.id);
+
+      // 记录获得
+      this.totalCardsEarned++;
+      this.crossDomainStats.mathCardsEarned++;
+      this.recentAcquisitions.push({
+        cardId: card.id,
+        source: 'craft',
+        timestamp: Date.now()
+      });
+      // 保留最近 20 条
+      if (this.recentAcquisitions.length > 20) {
+        this.recentAcquisitions.shift();
+      }
+
+      this._persist();
+      return card;
+    },
+
+    // ==================== 卡牌操作 ====================
+
+    /**
      * 开卡包
+     * @param {string} packType - 卡包类型
+     * @returns {Array<{card: object, isNew: boolean}>}
      */
     openPack(packType) {
+      this._ensureLoaded();
       const pack = packConfig[packType];
       if (!pack) return [];
 
@@ -64,15 +298,28 @@ export const useCardStore = defineStore('card', {
         if (card) {
           this.addCardToCollection(card.id);
           results.push({ card, isNew: !this.hasCard(card.id) });
+          // 统计
+          this.totalCardsEarned++;
+          this.recentAcquisitions.push({
+            cardId: card.id,
+            source: 'pack',
+            timestamp: Date.now()
+          });
+          if (this.recentAcquisitions.length > 20) {
+            this.recentAcquisitions.shift();
+          }
         }
       }
 
-      gameStore.saveGame();
+      this._persist();
       return results;
     },
 
     /**
-     * 随机抽取卡牌
+     * 随机抽取卡牌（根据权重）
+     * @param {object} weights - 稀有度权重 { common: number, rare: number, ... }
+     * @param {object[]} gradeCards - 当前年级的卡牌列表
+     * @returns {object|null}
      */
     rollCard(weights, gradeCards) {
       const total = Object.values(weights).reduce((a, b) => a + b, 0);
@@ -87,7 +334,7 @@ export const useCardStore = defineStore('card', {
       const candidates = gradeCards.filter(c => c.rarity === selectedRarity);
       if (candidates.length === 0) {
         // 降级
-        const fallback = gradeCards.filter(c => rarityConfig[c.rarity].packWeight > 0);
+        const fallback = gradeCards.filter(c => rarityConfig[c.rarity] && rarityConfig[c.rarity].packWeight > 0);
         return fallback[Math.floor(Math.random() * fallback.length)] || null;
       }
       return candidates[Math.floor(Math.random() * candidates.length)];
@@ -95,8 +342,10 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 添加到收藏
+     * @param {string} cardId
      */
     addCardToCollection(cardId) {
+      this._ensureLoaded();
       const existing = this.collection.find(c => c.cardId === cardId);
       if (existing) {
         existing.quantity++;
@@ -113,31 +362,44 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 加入卡组
+     * @param {string} cardId
+     * @returns {boolean}
      */
     addToDeck(cardId) {
+      this._ensureLoaded();
       if (this.deck.length >= 15) return false;
       if (this.deck.includes(cardId)) return false;
       if (!this.hasCard(cardId)) return false;
       this.deck.push(cardId);
+      this._persist();
       return true;
     },
 
     /**
      * 从卡组移除
+     * @param {string} cardId
+     * @returns {boolean}
      */
     removeFromDeck(cardId) {
+      this._ensureLoaded();
       const idx = this.deck.indexOf(cardId);
       if (idx >= 0) {
         this.deck.splice(idx, 1);
+        this._persist();
         return true;
       }
       return false;
     },
 
+    // ==================== 对战逻辑 ====================
+
     /**
      * 开始对战
+     * @param {string} [difficulty='normal']
+     * @returns {boolean}
      */
     startBattle(difficulty = 'normal') {
+      this._ensureLoaded();
       if (!this.deckValid) return false;
 
       // 清理残留的 AI 定时器
@@ -184,6 +446,7 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 生成 AI 卡组
+     * @returns {string[]}
      */
     generateAIDeck() {
       const aiCards = [];
@@ -197,6 +460,7 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 抽牌
+     * @param {'player'|'ai'} who
      */
     drawCard(who) {
       const deckKey = who === 'player' ? 'playerDeck' : 'aiDeck';
@@ -210,6 +474,8 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 出牌
+     * @param {number} handIndex
+     * @returns {boolean}
      */
     playCard(handIndex) {
       if (this.battle.turn !== 'player' || this.battle.phase !== 'play') return false;
@@ -234,6 +500,8 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 答题（方程卡）
+     * @param {number} answer
+     * @returns {boolean}
      */
     answerEquation(answer) {
       if (this.battle.phase !== 'answer') return false;
@@ -250,6 +518,7 @@ export const useCardStore = defineStore('card', {
 
     /**
      * 结算效果
+     * @param {object} card
      */
     resolveEffect(card) {
       switch (card.type) {
@@ -317,7 +586,8 @@ export const useCardStore = defineStore('card', {
     },
 
     /**
-     * AI 策略
+     * AI 策略选择
+     * @returns {Function}
      */
     getAIStrategy() {
       const aiLevel = this.battle?.aiLevel || 'basic';
@@ -328,10 +598,12 @@ export const useCardStore = defineStore('card', {
       }
     },
 
+    /** @private */
     aiEasy(hand) {
       return Math.floor(Math.random() * hand.length);
     },
 
+    /** @private */
     aiNormal(hand, battle) {
       const hpRatio = battle.aiHP / battle.aiMaxHP;
       if (hpRatio < 0.3) {
@@ -347,6 +619,7 @@ export const useCardStore = defineStore('card', {
       return Math.floor(Math.random() * hand.length);
     },
 
+    /** @private */
     aiHard(hand, battle) {
       let bestIdx = 0;
       let bestScore = -1;
@@ -405,7 +678,13 @@ export const useCardStore = defineStore('card', {
     },
 
     /**
-     * 对战结束
+     * 对战结束 — 发放奖励并更新统计
+     *
+     * 【改造说明】
+     * 原代码写入 gameStore.cardBattle.battleStats，现已迁移到 cardStore 自身的 battleStats 字段，
+     * 完全去除了对 gameStore.cardBattle 的数据依赖。
+     *
+     * @param {'player'|'ai'} winner
      */
     onBattleEnd(winner) {
       // 清理 AI 定时器
@@ -426,16 +705,19 @@ export const useCardStore = defineStore('card', {
       gameStore.addCoins(coins);
       if (gems > 0) gameStore.addGems(gems);
 
-      if (!gameStore.cardBattle) gameStore.cardBattle = gameStore.getDefaultCardBattle();
-      gameStore.cardBattle.battleStats.totalBattles++;
-      if (winner === 'player') gameStore.cardBattle.battleStats.wins++;
-      else gameStore.cardBattle.battleStats.losses++;
+      // 使用自身的 battleStats，不再依赖 gameStore.cardBattle.battleStats
+      this.battleStats.totalBattles++;
+      if (winner === 'player') this.battleStats.wins++;
+      else this.battleStats.losses++;
 
-      gameStore.saveGame();
+      // 持久化卡牌数据
+      this._persist();
     },
 
     /**
      * 洗牌
+     * @param {Array} arr
+     * @returns {Array}
      */
     shuffle(arr) {
       const a = [...arr];

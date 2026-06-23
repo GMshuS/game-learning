@@ -105,7 +105,7 @@
               placeholder="请输入合适的 be 动词"
               :disabled="answered"
               @keyup.enter="submitFill"
-            />
+            >
             <button
               class="btn-confirm"
               :disabled="answered || !fillInput.trim()"
@@ -272,6 +272,15 @@
           />
         </div>
 
+        <!-- ===== 情景对话选择题（新题型） ===== -->
+        <div v-else-if="currentType === 'dialogueChoice'" class="question-type">
+          <EnglishDialogueChoice
+            :question="currentQuestion"
+            :disabled="answered"
+            @answer="handleNewTypeAnswer"
+          />
+        </div>
+
         <!-- ===== 未知题型兜底 ===== -->
         <div v-else class="question-type unknown-type">
           <p class="unknown-hint">暂不支持的题型：{{ currentType }}</p>
@@ -390,6 +399,7 @@ import EnglishImageChoice from './EnglishImageChoice.vue';
 import EnglishVerbTable from './EnglishVerbTable.vue';
 import EnglishTransform from './EnglishTransform.vue';
 import EnglishConnector from './EnglishConnector.vue';
+import EnglishDialogueChoice from './EnglishDialogueChoice.vue';
 
 const props = defineProps({
   towerId: {

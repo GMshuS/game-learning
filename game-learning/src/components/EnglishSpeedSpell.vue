@@ -39,7 +39,6 @@
     <!-- 游戏中 -->
     <div v-else-if="store.isPlaying" class="game-area">
       <div class="game-header">
-        <button class="btn-back" @click="goBackFromGame">← 返回</button>
         <div v-if="store.currentMode !== 'survival'" class="timer" :class="{ warning: store.timeLeft <= 10 }">
           ⏱️ {{ store.timeLeft }}s
         </div>
@@ -57,6 +56,7 @@
             <div class="ai-fill" :style="{ width: store.aiProgress + '%' }" />
           </div>
         </div>
+        <button class="btn-back" @click="goBackFromGame">← 返回</button>
       </div>
 
       <div class="question-area">

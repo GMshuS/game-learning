@@ -7,12 +7,22 @@
  * 未实现的题型（pictureCompare, chartQuestion, fractionVisual）暂不加入
  */
 export const gradeQuestionWeights = {
-  1: { add: 20, subtract: 20, word: 15, numberFill: 30 },
-  2: { add: 15, subtract: 15, multiply: 10, word: 20, numberFill: 25 },
-  3: { add: 10, subtract: 10, multiply: 15, divide: 10, mixed: 10, word: 15, estimate: 15, numberFill: 15 },
-  4: { add: 8, subtract: 8, multiply: 12, divide: 10, mixed: 15, word: 15, estimate: 12 },
-  5: { fraction: 15, decimal: 15, mixed: 10, word: 15, equation: 15, percentage: 10 },
-  6: { fraction: 10, decimal: 10, percentage: 15, equation: 20, word: 15, mixed: 10 }
+  1: { add: 15, subtract: 15, word: 10, numberFill: 20,
+       numberCompare: 15, placeValue: 15, patternFind: 10 },
+  2: { add: 12, subtract: 12, multiply: 8, word: 15, numberFill: 18,
+       numberCompare: 12, placeValue: 10, estimate: 8, patternFind: 5 },
+  3: { add: 8, subtract: 8, multiply: 10, divide: 8, mixed: 8,
+       word: 8, estimate: 8, numberFill: 5,
+       numberCompare: 8, numberProperty: 10, patternFind: 7, averageCalc: 12 },
+  4: { add: 6, subtract: 6, multiply: 8, divide: 8, mixed: 8,
+       word: 10, decimal: 8, estimate: 5,
+       numberCompare: 6, numberProperty: 10, operationLaw: 12, averageCalc: 7 },
+  5: { add: 3, subtract: 3, multiply: 5, divide: 5,
+       fraction: 10, decimal: 10, mixed: 6, word: 8, equation: 8, percentage: 6,
+       numberProperty: 8, operationLaw: 8, ratioProportion: 8, negativeNumber: 6, averageCalc: 6 },
+  6: { add: 3, subtract: 3, multiply: 5, divide: 5,
+       fraction: 8, decimal: 8, percentage: 8, mixed: 5, word: 8, equation: 10,
+       numberProperty: 8, operationLaw: 8, ratioProportion: 8, negativeNumber: 8, averageCalc: 5 }
 };
 
 export default gradeQuestionWeights;

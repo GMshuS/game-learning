@@ -3,8 +3,8 @@
     <!-- ========== 选择阶段 ========== -->
     <div v-if="phase === 'select'" class="tt-phase">
       <div class="tt-header">
-        <button class="back-btn" @click="$emit('back')">← 返回</button>
         <h2>🎯 针对性训练</h2>
+        <button class="back-btn" @click="$emit('back')">← 返回</button>
       </div>
 
       <p class="tt-intro">选择你要集中训练的知识点，系统将根据年级生成对应难度的题目。</p>
@@ -159,6 +159,7 @@
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue';
+import { useCardStore } from '../store/cardStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useQuestionStore } from '../store/questionStore';
@@ -225,6 +226,12 @@ function startTraining() {
 
 function submitAnswer(answer) {
   questionStore.submitAnswer(answer);
+
+  // 卡牌碎片产出：连续答对 5 题得 1 碎片
+  if (questionStore.isCorrect && questionStore.streak > 0 && questionStore.streak % 5 === 0) {
+    const cardStore = useCardStore();
+    cardStore.earnShard('math', 1);
+  }
 }
 
 function nextQuestion() {
@@ -276,8 +283,8 @@ onUnmounted(() => {
 
 .tt-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 

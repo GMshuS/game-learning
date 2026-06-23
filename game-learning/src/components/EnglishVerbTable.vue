@@ -5,7 +5,7 @@
     <div class="verb-table">
       <div class="table-header">
         <span class="header-col">原形</span>
-        <span class="header-sep"></span>
+        <span class="header-sep" />
         <span class="header-col">变形</span>
       </div>
 

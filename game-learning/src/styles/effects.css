@@ -1,0 +1,400 @@
+/* ============================================
+   英语模块视觉特效
+   包含粒子动画、连击火焰、BOSS血条、波形动画、
+   声波反馈、庆祝撒花
+   ============================================ */
+
+/* ========== 1. 粒子飘散动画（答对时 emoji 上浮） ========== */
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-60px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.6);
+  }
+}
+
+.particle-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.particle-item {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: float-up 1.2s ease-out forwards;
+  animation-delay: calc(var(--i, 0) * 0.1s);
+}
+
+/* ========== 2. 连击火焰（combo ≥ 3） ========== */
+.combo-fire {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  background: conic-gradient(
+    from 0deg,
+    #ff4500,
+    #ff8c00,
+    #ffd700,
+    #ff8c00,
+    #ff4500
+  );
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow:
+    0 0 10px rgba(255, 69, 0, 0.6),
+    0 0 20px rgba(255, 69, 0, 0.4),
+    0 0 40px rgba(255, 69, 0, 0.2);
+  animation: comboPulse 0.6s ease-in-out infinite alternate;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes comboPulse {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px rgba(255, 69, 0, 0.6),
+      0 0 20px rgba(255, 69, 0, 0.4);
+  }
+  100% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 15px rgba(255, 69, 0, 0.8),
+      0 0 30px rgba(255, 69, 0, 0.6),
+      0 0 50px rgba(255, 69, 0, 0.3);
+  }
+}
+
+/* 连击火焰等级变体 */
+.combo-fire.level-1 {
+  background: conic-gradient(from 0deg, #ff4500, #ff8c00);
+  box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+}
+
+.combo-fire.level-2 {
+  background: conic-gradient(from 0deg, #ff4500, #ff8c00, #ffd700);
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.6);
+}
+
+.combo-fire.level-3 {
+  background: conic-gradient(from 0deg, #ff4500, #ffd700, #ff4500, #ffd700);
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
+  animation-duration: 0.4s;
+}
+
+/* ========== 3. BOSS 血条样式 + 颤抖动画 ========== */
+.boss-hp-bar {
+  position: relative;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.boss-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316, #fbbf24);
+  border-radius: 8px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.boss-hp-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* BOSS 受到攻击时颤抖 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-6px) rotate(-1deg); }
+  20% { transform: translateX(6px) rotate(1deg); }
+  30% { transform: translateX(-4px) rotate(-0.5deg); }
+  40% { transform: translateX(4px) rotate(0.5deg); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-1px); }
+}
+
+.boss-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+/* BOSS HP 低血量闪烁警告 */
+.boss-hp-fill.low-hp {
+  animation: hpWarning 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes hpWarning {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.7;
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* BOSS 区域整体震动 */
+.boss-area-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ========== 4. 波形动画（听力题用） ========== */
+.wave-animation {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 40px;
+  padding: 0 0.5rem;
+}
+
+.wave-bar {
+  width: 6px;
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 3px;
+  animation: wave 1.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.1s);
+}
+
+@keyframes wave {
+  0%, 100% {
+    height: 8px;
+  }
+  25% {
+    height: 28px;
+  }
+  50% {
+    height: 16px;
+  }
+  75% {
+    height: 36px;
+  }
+}
+
+/* 波形动画 - listen 状态（播放中） */
+.wave-animation.listening .wave-bar {
+  background: linear-gradient(180deg, #34d399, #10b981);
+  animation-duration: 0.8s;
+}
+
+/* 波形动画 - 不同颜色变体 */
+.wave-animation.voice .wave-bar {
+  background: linear-gradient(180deg, #f59e0b, #ef4444);
+  animation-duration: 0.6s;
+}
+
+/* ========== 5. 声波反馈（逐词 ✓/✗ 标记） ========== */
+.voice-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  justify-content: center;
+}
+
+.voice-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  animation: wordPop 0.4s ease;
+  animation-delay: calc(var(--i, 0) * 0.15s);
+  animation-fill-mode: both;
+}
+
+.voice-word.correct {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+.voice-word.correct::after {
+  content: '✓';
+  font-size: 0.85rem;
+  color: #34d399;
+  font-weight: bold;
+}
+
+.voice-word.wrong {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  text-decoration: line-through;
+}
+
+.voice-word.wrong::after {
+  content: '✗';
+  font-size: 0.85rem;
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.voice-word.pending {
+  opacity: 0.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@keyframes wordPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========== 6. 庆祝撒花（全收集时触发） ========== */
+.confetti {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+  animation-duration: calc(2s + (var(--d, 0) * 1s));
+  animation-delay: calc(var(--delay, 0) * 0.1s);
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* 全收集庆祝文字动画 */
+.collection-celebration {
+  text-align: center;
+  padding: 2rem;
+  animation: celebrationPop 0.6s ease-out;
+}
+
+.collection-celebration h2 {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #ffd700, #ff6b6b, #667eea, #34d399);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes celebrationPop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ========== 7. 通用动画辅助类 ========== */
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ========== 响应式适配 ========== */
+@media (max-width: 768px) {
+  .confetti-piece {
+    width: 6px;
+    height: 6px;
+  }
+
+  .collection-celebration h2 {
+    font-size: 1.4rem;
+  }
+
+  .combo-fire {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .wave-bar {
+    width: 4px;
+  }
+
+  .voice-word {
+    font-size: 0.95rem;
+  }
+
+  .boss-hp-bar {
+    height: 12px;
+  }
+}

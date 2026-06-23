@@ -276,7 +276,9 @@
                       v-for="node in availableKnowledgeNodes"
                       :key="node.id"
                       :value="node.id"
-                    >{{ node.icon }} {{ node.label }}</option>
+                    >
+                      {{ node.icon }} {{ node.label }}
+                    </option>
                   </select>
                 </div>
 
@@ -367,7 +369,7 @@
                 </div>
 
                 <div class="form-actions">
-                  <button class="btn-test-gen" @click="testGenerate" :disabled="isGenerating">
+                  <button class="btn-test-gen" :disabled="isGenerating" @click="testGenerate">
                     {{ isGenerating ? '生成中...' : '测试生成' }}
                   </button>
                   <button class="btn-cancel" @click="closeTemplateModal">✕ 取消</button>

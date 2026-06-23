@@ -1,3 +1,5 @@
+@import './effects.css';
+
 /* 全局样式重置与基础样式 */
 * {
   margin: 0;

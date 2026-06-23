@@ -17,7 +17,15 @@ const mathKnowledgeNodes = [
   { id: 'numberFill', label: '填空', icon: '⬜', gradeRange: [1, 6] },
   { id: 'estimate', label: '估算', icon: '📐', gradeRange: [2, 6] },
   { id: 'equation', label: '方程', icon: '⚖️', gradeRange: [4, 6] },
-  { id: 'custom', label: '自定义模板', icon: '📋', gradeRange: [1, 6] }
+  { id: 'custom', label: '自定义模板', icon: '📋', gradeRange: [1, 6] },
+  { id: 'averageCalc', label: '平均数', icon: '📊', gradeRange: [3, 6] },
+  { id: 'negativeNumber', label: '负数', icon: '➖', gradeRange: [5, 6] },
+  { id: 'numberCompare', label: '数的大小比较', icon: '⚖️', gradeRange: [1, 6] },
+  { id: 'numberProperty', label: '数的性质', icon: '🔬', gradeRange: [3, 6] },
+  { id: 'operationLaw', label: '运算定律', icon: '📐', gradeRange: [4, 6] },
+  { id: 'patternFind', label: '找规律', icon: '🔍', gradeRange: [1, 6] },
+  { id: 'placeValue', label: '数位认知', icon: '🔢', gradeRange: [1, 4] },
+  { id: 'ratioProportion', label: '比和比例', icon: '📏', gradeRange: [5, 6] }
 ];
 
 const englishKnowledgeNodes = [
@@ -53,7 +61,11 @@ const englishKnowledgeNodes = [
   // 语法塔新增节点（映射 grammarTowers 塔 id）
   { id: 'beVerb', label: 'Be动词', icon: '📖', gradeRange: [1, 6] },
   { id: 'comparative', label: '比较级', icon: '📊', gradeRange: [3, 6] },
-  { id: 'basicClause', label: '基础从句', icon: '🔀', gradeRange: [4, 6] }
+  { id: 'basicClause', label: '基础从句', icon: '🔀', gradeRange: [4, 6] },
+
+  // 批次2新增塔的知识点节点
+  { id: 'phrase', label: '常用语', icon: '💬', gradeRange: [1, 6] },
+  { id: 'dialogue', label: '情景对话', icon: '🎭', gradeRange: [2, 6] }
 ];
 
 const subjects = {

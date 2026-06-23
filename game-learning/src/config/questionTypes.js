@@ -88,6 +88,46 @@ export const questionTypeConfig = {
     label: '方程求解',
     icon: '✕',
     color: '#fbbf24'
+  },
+  numberCompare: {
+    label: '数的大小比较',
+    icon: '⚖️',
+    color: '#f97316'
+  },
+  placeValue: {
+    label: '数位认知',
+    icon: '🔢',
+    color: '#06b6d4'
+  },
+  numberProperty: {
+    label: '数的性质',
+    icon: '🔬',
+    color: '#8b5cf6'
+  },
+  operationLaw: {
+    label: '运算定律',
+    icon: '📐',
+    color: '#ec4899'
+  },
+  patternFind: {
+    label: '找规律',
+    icon: '🔍',
+    color: '#14b8a6'
+  },
+  averageCalc: {
+    label: '平均数',
+    icon: '📊',
+    color: '#f59e0b'
+  },
+  negativeNumber: {
+    label: '负数',
+    icon: '➖',
+    color: '#ef4444'
+  },
+  ratioProportion: {
+    label: '比和比例',
+    icon: '📏',
+    color: '#6366f1'
   }
 };
 
@@ -110,14 +150,26 @@ export function getQuestionTypeConfig(type) {
  */
 export function getAvailableTypesForGrade(grade) {
   const typeMap = {
-    1: ['add', 'subtract', 'word', 'numberFill'],
-    2: ['add', 'subtract', 'multiply', 'word', 'numberFill'],
-    3: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word', 'estimate'],
-    4: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word'],
-    5: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'mixed', 'word', 'equation'],
-    6: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal', 'percentage', 'mixed', 'word', 'equation']
+    1: ['add', 'subtract', 'word', 'numberFill',
+        'numberCompare', 'placeValue', 'patternFind'],
+    2: ['add', 'subtract', 'multiply', 'word', 'numberFill',
+        'numberCompare', 'placeValue', 'estimate', 'patternFind'],
+    3: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word',
+        'estimate', 'numberCompare', 'numberProperty', 'patternFind',
+        'averageCalc'],
+    4: ['add', 'subtract', 'multiply', 'divide', 'mixed', 'word',
+        'decimal', 'numberCompare', 'numberProperty', 'operationLaw',
+        'averageCalc'],
+    5: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal',
+        'mixed', 'word', 'equation', 'percentage',
+        'numberProperty', 'operationLaw', 'ratioProportion',
+        'negativeNumber', 'averageCalc'],
+    6: ['add', 'subtract', 'multiply', 'divide', 'fraction', 'decimal',
+        'percentage', 'mixed', 'word', 'equation',
+        'numberProperty', 'operationLaw', 'ratioProportion',
+        'negativeNumber', 'averageCalc']
   };
-  
+
   return typeMap[grade] || typeMap[1];
 }
 

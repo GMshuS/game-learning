@@ -1,92 +1,34 @@
 <template>
   <div class="game-hall">
     <div class="hall-header">
-      <h2>🎮 挑战中心</h2>
+      <h2>🧮 数学乐园</h2>
       <button class="btn-back" @click="$emit('back')">← 返回</button>
     </div>
 
-    <div class="hall-cards">
-      <!-- 经营商店 -->
-      <div class="hall-card shop-card" @click="$emit('startShop')">
-        <div class="card-icon">🏪</div>
-        <h3>经营商店</h3>
-        <p>数学购物挑战，计算总价赢取道具</p>
-        <div class="card-status">
-          <span>金币: {{ shopCoins }}</span>
+    <div class="hall-sections">
+      <section v-for="section in sections" :key="section.id" class="hall-section">
+        <div class="section-header" @click="toggleSection(section.id)">
+          <span class="section-title">{{ section.icon }} {{ section.label }}</span>
+          <span class="section-toggle">{{ expandedSections[section.id] ? '▼' : '▶' }}</span>
         </div>
-      </div>
-
-      <!-- 收银游戏 -->
-      <div class="hall-card cashier-card" @click="$emit('startCashier')">
-        <div class="card-icon">🧾</div>
-        <h3>收银游戏</h3>
-        <p>练习收银找零，赢取金币奖励</p>
-        <div class="card-status">
-          <span>{{ cashierBestScore }}</span>
+        <div v-show="expandedSections[section.id]" class="section-cards">
+          <div
+            v-for="game in section.games"
+            :key="game.id"
+            class="hall-card"
+            :class="[game.cardClass, { 'coming-soon': game.comingSoon }]"
+            @click="handleGameClick(game)"
+          >
+            <div class="card-icon">{{ game.icon }}</div>
+            <h3>{{ game.name }}</h3>
+            <p>{{ game.description }}</p>
+            <div v-if="game.comingSoon" class="card-status soon-badge">即将开放</div>
+            <div v-else class="card-status">
+              <span>{{ getStatusText(game) }}</span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <!-- 冒险模式 -->
-      <div class="hall-card adventure-card" @click="$emit('startAdventure')">
-        <div class="card-icon">⚔️</div>
-        <h3>冒险模式</h3>
-        <p>挑战数学怪物，提升角色等级</p>
-        <div class="card-status">
-          <span>关卡: {{ adventureProgress }}</span>
-        </div>
-      </div>
-
-      <!-- 速算竞技 -->
-      <div class="hall-card speed-card" @click="$emit('startSpeedChallenge')">
-        <div class="card-icon">⚡</div>
-        <h3>速算竞技场</h3>
-        <p>限时答题，挑战手速</p>
-        <div class="card-status">
-          <span>最佳: {{ bestSpeedScore }}</span>
-        </div>
-      </div>
-
-      <!-- 数学工坊 -->
-      <div class="hall-card workshop-card" @click="$emit('startWorkshop')">
-        <div class="card-icon">🔨</div>
-        <h3>数学工坊</h3>
-        <p>收集材料，制作出售</p>
-        <div class="card-status">
-          <span>待售: {{ listedCount }} 件</span>
-        </div>
-      </div>
-
-      <!-- 卡牌对战 -->
-      <div class="hall-card card-card" @click="$emit('startCardBattle')">
-        <div class="card-icon">🃏</div>
-        <h3>卡牌对战</h3>
-        <p>收集卡牌，策略对决</p>
-        <div class="card-status">
-          <span>收藏: {{ cardCollectionCount }} 张</span>
-        </div>
-      </div>
-
-      <!-- 针对性训练 -->
-      <div class="hall-card training-card" @click="$emit('startTargetedTraining')">
-        <div class="card-icon">🎯</div>
-        <h3>针对性训练</h3>
-        <p>根据错题记录，自动推荐薄弱题型</p>
-        <div class="card-status">
-          <span v-if="weakNodeCount > 0">待强化: {{ weakNodeCount }} 个知识点</span>
-          <span v-else>暂无薄弱点</span>
-        </div>
-      </div>
-
-      <!-- 复习模式 -->
-      <div class="hall-card review-card" @click="$emit('startReview')">
-        <div class="card-icon">📚</div>
-        <h3>复习模式</h3>
-        <p>基于遗忘曲线，智能安排复习</p>
-        <div class="card-status">
-          <span v-if="dueCount > 0">{{ dueCount }} 个知识点待复习</span>
-          <span v-else>暂无待复习内容</span>
-        </div>
-      </div>
+      </section>
     </div>
 
     <div class="hall-footer">
@@ -98,9 +40,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { reactive, computed } from 'vue';
 import { useGameStore } from '../store/gameStore';
-import { useCashierStore } from '../store/cashierStore';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';
 import { useEnglishKnowledgeStore } from '../store/englishKnowledgeStore';
 import { getDueCount } from '../utils/spacedRepetition';
@@ -108,36 +49,28 @@ import { getDueCount } from '../utils/spacedRepetition';
 // ⚠️ 架构建议：以下 computed 直接访问 gameStore 深层嵌套属性（如 gameStore.speedChallenge?.bestScores?.base）。
 //    建议在对应 Store 中暴露 getter（如 speedChallengeStore.bestScore），降低组件与 Store 内部结构的耦合度。
 
-defineEmits([
+const emit = defineEmits([
   'back',
-  'startShop',
-  'startCashier',
+  'startMarket',
   'startAdventure',
   'startSpeedChallenge',
   'startWorkshop',
-  'startCardBattle',
+  'startClock',
+  'startProbability',
   'startTargetedTraining',
   'startReview',
+  'startGeometryGame',
+  'startUnitGame',
+  'startChartGame',
   'openLeaderboard'
 ]);
 
 const gameStore = useGameStore();
-const cashierStore = useCashierStore();
 
 const adventureProgress = computed(() => {
   const area = gameStore.currentArea || 'area_1';
   const areaNum = area.replace('area_', '');
   return `第${areaNum}关`;
-});
-
-const shopCoins = computed(() => {
-  return gameStore.playerCoins || 0;
-});
-
-const cashierBestScore = computed(() => {
-  const scores = cashierStore.highScores;
-  const best = Math.max(scores.easy, scores.medium, scores.hard);
-  return best > 0 ? `最佳: ${best}分` : '未挑战';
 });
 
 const bestSpeedScore = computed(() => {
@@ -147,10 +80,6 @@ const bestSpeedScore = computed(() => {
 
 const listedCount = computed(() => {
   return gameStore.workshop?.listedItems?.filter(item => !item.sold).length || 0;
-});
-
-const cardCollectionCount = computed(() => {
-  return gameStore.cardBattle?.collection?.reduce((sum, c) => sum + (c.quantity || 0), 0) || 0;
 });
 
 const mathKnowledgeStore = useMathKnowledgeStore();
@@ -164,6 +93,120 @@ const weakNodeCount = computed(() => {
 const dueCount = computed(() => {
   return getDueCount(mathKnowledgeStore.records) + getDueCount(englishKnowledgeStore.records);
 });
+
+const weakNodeText = computed(() => {
+  return weakNodeCount.value > 0
+    ? `待强化: ${weakNodeCount.value} 个知识点`
+    : '暂无薄弱点';
+});
+
+const dueText = computed(() => {
+  return dueCount.value > 0
+    ? `${dueCount.value} 个知识点待复习`
+    : '暂无待复习内容';
+});
+
+// 知识领域分组定义
+const sections = [
+  {
+    id: 'numbers',
+    label: '数与运算',
+    icon: '🔢',
+    games: [
+      { id: 'speedChallenge', name: '速算竞技场', icon: '⚡', description: '限时答题，挑战手速', cardClass: 'speed-card', comingSoon: false },
+      { id: 'market', name: '超市大挑战', icon: '🏪', description: '购物达人，收银小能手', cardClass: 'market-card', comingSoon: false },
+      { id: 'targetedTraining', name: '针对性训练', icon: '🎯', description: '根据错题记录，自动推荐薄弱题型', cardClass: 'training-card', comingSoon: false },
+      { id: 'review', name: '复习模式', icon: '📚', description: '基于遗忘曲线，智能安排复习', cardClass: 'review-card', comingSoon: false }
+    ]
+  },
+  {
+    id: 'geometry',
+    label: '几何王国',
+    icon: '📐',
+    games: [
+      { id: 'geometryGame', name: '几何王国', icon: '📐', description: '认识图形，探索几何奥秘', cardClass: 'geometry-card', comingSoon: false }
+    ]
+  },
+  {
+    id: 'quantities',
+    label: '常见量',
+    icon: '📏',
+    games: [
+      { id: 'clockGame', name: '钟表学院', icon: '🕐', description: '认读时间，掌握时刻', cardClass: 'clock-card', comingSoon: false },
+      { id: 'unitGame', name: '单位大冒险', icon: '📏', description: '单位换算，量感培养', cardClass: 'unit-card', comingSoon: false }
+    ]
+  },
+  {
+    id: 'statistics',
+    label: '统计与概率',
+    icon: '📊',
+    games: [
+      { id: 'probabilityLab', name: '概率实验室', icon: '🎲', description: '抛硬币、掷骰子，探索概率', cardClass: 'probability-card', comingSoon: false },
+      { id: 'chartGame', name: '统计图表', icon: '📊', description: '读图作答，数据分析', cardClass: 'chart-card', comingSoon: false }
+    ]
+  },
+  {
+    id: 'comprehensive',
+    label: '综合应用',
+    icon: '🧩',
+    games: [
+      { id: 'adventure', name: '冒险模式', icon: '⚔️', description: '挑战数学怪物，提升角色等级', cardClass: 'adventure-card', comingSoon: false },
+      { id: 'workshop', name: '数学工坊', icon: '🔨', description: '收集材料，制作出售', cardClass: 'workshop-card', comingSoon: false }
+    ]
+  }
+];
+
+const expandedSections = reactive({
+  numbers: true,
+  geometry: true,
+  quantities: true,
+  statistics: true,
+  comprehensive: true
+});
+
+const toggleSection = (id) => {
+  expandedSections[id] = !expandedSections[id];
+};
+
+const getStatusText = (game) => {
+  switch (game.id) {
+  case 'adventure':
+    return adventureProgress.value;
+  case 'speedChallenge':
+    return `最佳: ${bestSpeedScore.value}`;
+  case 'workshop':
+    return `待售: ${listedCount.value} 件`;
+  case 'targetedTraining':
+    return weakNodeText.value;
+  case 'review':
+    return dueText.value;
+  case 'clockGame':
+    return `${gameStore.selectedGrade || 1}年级可学`;
+  default:
+    return '';
+  }
+};
+
+const handleGameClick = (game) => {
+  if (game.comingSoon) return;
+  const emitMap = {
+    market: 'startMarket',
+    adventure: 'startAdventure',
+    speedChallenge: 'startSpeedChallenge',
+    workshop: 'startWorkshop',
+    clockGame: 'startClock',
+    probabilityLab: 'startProbability',
+    targetedTraining: 'startTargetedTraining',
+    review: 'startReview',
+    geometryGame: 'startGeometryGame',
+    unitGame: 'startUnitGame',
+    chartGame: 'startChartGame'
+  };
+  const emitName = emitMap[game.id];
+  if (emitName) {
+    emit(emitName);
+  }
+};
 </script>
 
 <style scoped>
@@ -204,38 +247,84 @@ const dueCount = computed(() => {
   background: rgba(255, 255, 255, 0.25);
 }
 
-.hall-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+.hall-sections {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hall-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.section-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.section-toggle {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+.section-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
 }
 
 .hall-card {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
 
-.hall-card:hover {
+.hall-card:not(.coming-soon):hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.hall-card.coming-soon {
+  cursor: default;
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hall-card.coming-soon:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .adventure-card:hover {
   border-color: #764ba2;
 }
 
-.shop-card:hover {
-  border-color: #f5576c;
-}
-
-.cashier-card:hover {
+.market-card:hover {
   border-color: #f97316;
 }
 
@@ -247,10 +336,6 @@ const dueCount = computed(() => {
   border-color: #10b981;
 }
 
-.card-card:hover {
-  border-color: #8b5cf6;
-}
-
 .training-card:hover {
   border-color: #f59e0b;
 }
@@ -259,27 +344,53 @@ const dueCount = computed(() => {
   border-color: #8b5cf6;
 }
 
+.clock-card:hover {
+  border-color: #f59e0b;
+}
+
+.probability-card:hover {
+  border-color: #8b5cf6;
+}
+
+.geometry-card:hover {
+  border-color: #3b82f6;
+}
+
+.unit-card:hover {
+  border-color: #22c55e;
+}
+
+.chart-card:hover {
+  border-color: #f59e0b;
+}
+
 .card-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  font-size: 3.5rem;
+  margin-bottom: 0.8rem;
 }
 
 .hall-card h3 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
 
 .hall-card p {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   opacity: 0.8;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .card-status {
   background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 15px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.soon-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
 }
 
 .hall-footer {
@@ -309,8 +420,8 @@ const dueCount = computed(() => {
   .game-hall {
     padding: 1rem;
   }
-  
-  .hall-cards {
+
+  .section-cards {
     grid-template-columns: 1fr;
   }
 }

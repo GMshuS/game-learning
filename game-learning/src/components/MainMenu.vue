@@ -76,7 +76,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall', 'startAdmin']);
+const emit = defineEmits(['startChallengeCenter', 'openSettings', 'openAchievements', 'quit', 'startEnglishHall', 'startAdmin', 'startCardWorld']);
 
 const isLoading = ref(true);
 const selectedOption = ref(null);
@@ -84,9 +84,9 @@ const selectedOption = ref(null);
 const menuOptions = computed(() => [
   {
     id: 'challenge',
-    label: '挑战中心',
-    icon: '🎮',
-    description: '速算竞技、数学工坊、卡牌对战',
+    label: '数学乐园',
+    icon: '🧮',
+    description: '速算竞技、针对性训练、数学工坊',
     color: '#06b6d4',
     gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
   },
@@ -105,6 +105,14 @@ const menuOptions = computed(() => [
     description: '调整游戏设置和管理存档',
     color: '#64748b',
     gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)'
+  },
+  {
+    id: 'cardWorld',
+    label: '卡牌世界',
+    icon: '🃏',
+    description: '卡牌对战、收藏、开卡包',
+    color: '#a78bfa',
+    gradient: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)'
   },
   {
     id: 'english',
@@ -149,6 +157,9 @@ const confirmOption = () => {
     case 'settings':
       emit('openSettings');
       break;
+    case 'cardWorld':
+      emit('startCardWorld');
+      break;
     case 'english':
       emit('startEnglishHall');
       break;
@@ -181,6 +192,7 @@ onMounted(() => {
   justify-content: center;
   padding: 2rem;
   color: #fff;
+  overflow-y: auto;
 }
 
 .loading {
