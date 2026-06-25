@@ -69,7 +69,7 @@ function generateRatioEquation() {
  * @param {number} grade
  * @returns {{ question: string, answer: number, operands: number[] }}
  */
-function generateTwoStepEquation(grade) {
+function generateTwoStepEquation(_grade) {
   const type = randomInt(0, 2);
 
   if (type === 0) {

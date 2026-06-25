@@ -33,7 +33,7 @@ export function calcRangeCoefficients(min, max) {
  * @param {Object} [gradeWeights] - 缺省时读 gradeQuestionWeights config
  * @returns {Object} { type: mergedWeight }
  */
-export function mergeWeightsForRange(min, max, strategy = 'linear_up', gradeWeights = null) {
+export function mergeWeightsForRange(min, max, _strategy = 'linear_up', gradeWeights = null) {
   if (min > max) {
     [min, max] = [max, min];
   }

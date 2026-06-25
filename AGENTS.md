@@ -35,7 +35,7 @@ Phaser is **not** a standalone game; it runs inside Vue wrapper components that 
 - `BattleGame.vue` → `src/scenes/BattleScene.js` (key: `'BattleScene'`)
 - `AdventureMap.vue` → `src/scenes/WorldMapScene.js` (key: `'WorldMapScene'`)
 
-`src/config/phaser.js` exists but has a broken import (unused by any component).
+<!-- `src/config/phaser.js` was historically referenced but has been removed (unused by any component). -->
 
 ### State
 - `src/store/` — 15 Pinia stores, one per domain. All stores follow a **save-on-write** pattern: every mutation calls `storageManager.saveGame(...)` immediately.

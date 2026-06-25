@@ -134,7 +134,7 @@ function generateWork() {
 function generateTreePlanting() {
   const type = randomInt(0, 2);
   const interval = randomInt(2, 8);
-  let length, totalTrees, sectionLength;
+  let length, totalTrees;
 
   if (type === 0) {
     // 两端都栽
@@ -220,8 +220,7 @@ function generateConcentration() {
  * @param {object} range - 数字范围 { min, max }
  * @returns {{ question: string, answer: number, type: string, operands: number[] }}
  */
-function generateWordProblem(grade, range) {
-  const { min, max } = range;
+function generateWordProblem(grade, _range) {
   let question, answer, operands;
 
   if (grade <= 2) {

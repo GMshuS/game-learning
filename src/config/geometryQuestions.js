@@ -465,7 +465,7 @@ export function generateAreaQuestion(grade) {
  * @param {number} grade - 年级
  * @returns {object} 题目对象
  */
-export function generateTransformQuestion(grade) {
+export function generateTransformQuestion(_grade) {
   const subTypes = ['translation', 'rotation', 'symmetry'];
   const subType = subTypes[Math.floor(Math.random() * subTypes.length)];
 
@@ -527,10 +527,6 @@ export function generateTransformQuestion(grade) {
     // 轴对称/对称
     const symmetricShapes = ['正方形', '长方形', '圆形', '等边三角形', '等腰三角形'];
     const asymmetricShapes = ['任意三角形', '任意四边形', '不规则图形'];
-    const pool = grade >= 4
-      ? [...symmetricShapes, ...asymmetricShapes]
-      : symmetricShapes;
-
     const isSymmetric = Math.random() < 0.5;
     const shape = isSymmetric
       ? symmetricShapes[Math.floor(Math.random() * symmetricShapes.length)]

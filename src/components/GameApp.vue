@@ -56,7 +56,6 @@ import { useGameStore } from '../store/gameStore';
 import { useAudioStore } from '../store/audioStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useAchievementStore } from '../store/achievementStore';
-import { useInventoryStore } from '../store/inventoryStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useSpeedChallengeStore } from '../store/speedChallengeStore';
 import { useEnglishSpeedSpellStore } from '../store/englishSpeedSpellStore';
@@ -113,7 +112,6 @@ const gameStore = useGameStore();
 const audioStore = useAudioStore();
 const settingsStore = useSettingsStore();
 const achievementStore = useAchievementStore();
-const inventoryStore = useInventoryStore();
 const notificationStore = useNotificationStore();
 const speedChallengeStore = useSpeedChallengeStore();
 const englishSpeedSpellStore = useEnglishSpeedSpellStore();
@@ -142,11 +140,6 @@ const battleMonster = ref(null);
 const battleGrade = ref(1);
 const battleStreak = ref(0);
 const battleDifficultyScale = ref(null);
-
-// 玩家库存（用于商店显示）
-const playerInventory = computed(() => {
-  return gameStore.items || [];
-});
 
 // 获取设置对象
 const settings = computed(() => ({
@@ -246,38 +239,6 @@ const currentMode = computed(() => {
   return 'menu';
 });
 
-// 处理购买
-const handleBuy = ({ items, total }) => {
-  // items 是包含多个商品的数组：[{ product, quantity }, ...]
-  
-  // 检查金币是否足够
-  if (gameStore.playerCoins < total) {
-    notificationStore.show('金币不足！', 'error');
-    return;
-  }
-  
-  // 消费金币
-  const spent = gameStore.spendCoins(total);
-  if (!spent) {
-    notificationStore.show('购买失败！', 'error');
-    return;
-  }
-  
-  // 使用 inventoryStore 添加物品到背包
-  items.forEach(({ product, quantity }) => {
-    inventoryStore.addItem(product, quantity);
-  });
-  
-  // 保存游戏
-  gameStore.saveGame();
-  
-  // 播放音效
-  audioStore.playSfx('victory');
-  
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  notificationStore.show(`成功购买 ${itemCount} 件商品！`, 'success');
-};
-
 // 显示关卡选择界面
 const showLevelSelect = (area) => {
   previousView.value = currentView.value;
@@ -304,12 +265,6 @@ const onBattlePrepareStart = () => {
 
 // 从导航栏打开背包
 const openInventoryFromNavbar = () => {
-  previousView.value = currentView.value;
-  currentView.value = 'inventory';
-};
-
-// 从商店打开背包
-const openInventoryFromShop = () => {
   previousView.value = currentView.value;
   currentView.value = 'inventory';
 };
@@ -727,12 +682,6 @@ const startSpeedChallenge = () => {
   currentView.value = 'speedChallenge';
 };
 
-// 导航到超市大挑战
-const startMarket = () => {
-  previousView.value = currentView.value;
-  currentView.value = 'market';
-};
-
 // 导航到数学工坊
 const startWorkshop = () => {
   previousView.value = currentView.value;
@@ -816,11 +765,6 @@ const startEnglishAdventure = () => {
   currentEnglishRegionId.value = adventureStore.currentRegion || null;
   currentView.value = 'englishAdventureMap';
   audioStore.playBgm('adventure');
-};
-
-const openEnglishSpiritCollection = () => {
-  previousView.value = currentView.value;
-  currentView.value = 'englishSpiritCollection';
 };
 
 const startEnglishRegionBattle = (regionId) => {

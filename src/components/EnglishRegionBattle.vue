@@ -71,6 +71,8 @@
 
           <!-- choice / bossFight 选择题 -->
           <div v-if="currentQuestion.type === 'choice' || currentQuestion.type === 'bossFight'" class="choice-question">
+            <!-- v-html safe: renderSentence() sanitizes via escapeHtml() before inserting HTML -->
+            <!-- eslint-disable-next-line vue/no-v-html -->
             <p class="question-sentence" v-html="renderSentence(currentQuestion)" />
             <div class="options-grid">
               <button

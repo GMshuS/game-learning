@@ -41,7 +41,7 @@ function shuffle(arr) {
  * @param {object} range - 数字范围 { min, max }
  * @returns {{ question: string, answer: string, type: string, operands: number[], inputType: string, choices?: string[] }}
  */
-function generateRatioProportion(grade, range) {
+function generateRatioProportion(grade, _range) {
   // 仅 5-6 年级生成比例题目
   if (grade < 5) {
     // 低年级降级为简单除法
@@ -96,7 +96,6 @@ function generateRatioProportion(grade, range) {
     const a = randomInt(2, 30);
     const b = randomInt(2, 30);
     // 确保结果是整数或简单小数
-    const mul = a * b;
     const value = Math.round((a / b) * 100) / 100;
     const answer = String(value);
 
@@ -148,7 +147,6 @@ function generateRatioProportion(grade, range) {
       // a : b = c : x => x = b*c/a
       const a = randomInt(2, 10);
       const c = a * randomInt(2, 5);
-      const b = randomInt(2, 15);
       // 确保整除：a * x = b * c => x = b * c / a
       // 令 b*c 能被 a 整除
       const factor = randomInt(1, 10);

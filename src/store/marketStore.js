@@ -233,7 +233,6 @@ export const useMarketStore = defineStore('market', {
      * @param {number} totalCost - 总价
      */
     generateProblem(items, totalCost) {
-      const grade = this.grade;
       let questionText = '';
       let answer = totalCost;
 

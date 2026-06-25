@@ -185,7 +185,7 @@ function generateBracketOperation(grade) {
       questionStr = `${a} × (${b} - ${c}) = ?`;
       ops.push('×', '-');
       break;
-    case 4:
+    case 4: {
       // (a + b) ÷ c （确保能整除）
       c = randomInt(2, 6);
       const q = randomInt(2, 10);
@@ -195,7 +195,8 @@ function generateBracketOperation(grade) {
       questionStr = `(${a} + ${b}) ÷ ${c} = ?`;
       ops.push('+', '÷');
       break;
-    case 5:
+    }
+    case 5: {
       // (a - b) ÷ c （确保能整除）
       c = randomInt(2, 6);
       const quotient = randomInt(2, 8);
@@ -206,6 +207,7 @@ function generateBracketOperation(grade) {
       questionStr = `(${a} - ${b}) ÷ ${c} = ?`;
       ops.push('-', '÷');
       break;
+    }
   }
 
   // 确保答案为整数

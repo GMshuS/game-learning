@@ -51,7 +51,7 @@ describe('StorageManager', () => {
 
     it('updateVersion 应写入当前版本', () => {
       storageManager.updateVersion();
-      expect(localStorage.getItem('math_game_version')).toBe('3.0.0');
+      expect(localStorage.getItem('math_game_version')).toBe('3.1.0');
     });
 
     it('checkVersion 在版本不匹配时应返回旧版本号', () => {
@@ -91,7 +91,7 @@ describe('StorageManager', () => {
       const settings = { sound: true, musicVolume: 0.5 };
       storageManager.saveGame(player, progress, inventory, settings);
 
-      expect(localStorage.getItem('math_game_version')).toBe('3.0.0');
+      expect(localStorage.getItem('math_game_version')).toBe('3.1.0');
       expect(localStorage.getItem('math_game_player')).toBeDefined();
     });
 

@@ -101,7 +101,7 @@ export default class GeometryScene extends Phaser.Scene {
   /**
    * 创建标题
    */
-  createTitle(width, height) {
+  createTitle(width, _height) {
     const modeNames = {
       identify: '🔍 图形识别',
       angles: '📐 角的世界',
@@ -402,7 +402,6 @@ export default class GeometryScene extends Phaser.Scene {
 
     if (question.subType === 'translation') {
       // 画平移：两个位置 + 箭头
-      const dir = data.direction || '右';
       const dist = (data.distance || 3) * 15;
       const size = 30;
 

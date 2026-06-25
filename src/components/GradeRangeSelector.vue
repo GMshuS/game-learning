@@ -14,8 +14,8 @@
           :min="1"
           :max="6"
           :value="modelValue.min"
-          @input="onMinChange"
           class="range-slider min-slider"
+          @input="onMinChange"
         />
         <span class="slider-value">{{ modelValue.min }}</span>
       </div>
@@ -26,8 +26,8 @@
           :min="1"
           :max="6"
           :value="modelValue.max"
-          @input="onMaxChange"
           class="range-slider max-slider"
+          @input="onMaxChange"
         />
         <span class="slider-value">{{ modelValue.max }}</span>
       </div>

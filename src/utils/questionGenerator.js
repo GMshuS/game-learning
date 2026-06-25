@@ -8,7 +8,6 @@
 import { getGradeRange, getGradeOperations } from '../config/grades';
 import { generate as registryGenerate, register } from '../questions/registry';
 import { gradeQuestionWeights } from '../config/gradeQuestionWeights';
-import { getAvailableTypesForGrade } from '../config/questionTypes';
 import { getAdjustedWeights } from '../config/knowledgeWeights';
 import { STORAGE_KEYS } from '../utils/storage';
 import { useMathKnowledgeStore } from '../store/mathKnowledgeStore';

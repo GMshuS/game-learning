@@ -71,7 +71,7 @@ function generateChoices(targetDigit, targetPlace, maxPlace) {
  * @param {object} range - 数字范围 { min, max }
  * @returns {{ question: string, answer: string, type: string, operands: number[], inputType: string, choices: string[] }}
  */
-function generatePlaceValue(grade, range) {
+function generatePlaceValue(grade, _range) {
   let number, targetPlace, maxPlace;
 
   if (grade <= 1) {

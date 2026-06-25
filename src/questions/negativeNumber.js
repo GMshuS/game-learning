@@ -26,7 +26,7 @@ function shuffle(arr) {
  * @param {object} range - 数字范围 { min, max }
  * @returns {{ question: string, answer: string, type: string, operands: number[], inputType: string, choices?: string[] }}
  */
-function generateNegativeNumber(grade, range) {
+function generateNegativeNumber(grade, _range) {
   // 仅 5-6 年级生成负数题目
   if (grade < 5) {
     // 低年级降级为简单正数比较
@@ -140,7 +140,6 @@ function generateNegativeNumber(grade, range) {
   } else {
     // 温度场景应用题
     const temp1 = randomInt(-20, -1);
-    const temp2 = randomInt(1, 20);
     const rise = randomInt(1, 15);
     const newTemp = temp1 + rise;
 

@@ -158,7 +158,6 @@ function generatePatternFind(grade, range) {
       }
       const pos = randomInt(period + 1, period * 4);
       const answer = pattern[(pos - 1) % period];
-      const patternStr = pattern.join(' ').repeat(2);
       const choices = shuffle([answer, ...shapes.filter(s => s !== answer).slice(0, 3)]);
 
       return {
