@@ -1,0 +1,195 @@
+/* ========== 移动端基础适配 ========== */
+
+/* 视口单位适配 */
+:root {
+  --vh: 1vh;
+  --vw: 1vw;
+}
+
+@media (max-width: 767px) {
+  /* 字体缩小 */
+  html {
+    font-size: 14px;
+  }
+  
+  /* 按钮触控优化 */
+  button, .btn, a {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* 输入框优化 */
+  input, textarea, select {
+    font-size: 16px; /* 防止 iOS 自动缩放 */
+  }
+  
+  /* 卡片适配 */
+  .card {
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+  
+  /* 列表适配 */
+  .list-item {
+    padding: 1rem;
+  }
+  
+  /* 表格滚动 */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 图片适配 */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* 视频适配 */
+  video {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* ========== 平板适配 ========== */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  html {
+    font-size: 15px;
+  }
+  
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ========== 横屏适配 ========== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-container {
+    max-height: 100vh;
+    overflow: auto;
+  }
+  
+  .game-header {
+    padding: 0.5rem;
+  }
+  
+  .game-content {
+    padding: 0.5rem;
+  }
+}
+
+/* ========== 游戏界面移动端适配 ========== */
+
+@media (max-width: 767px) {
+  /* 战斗界面 */
+  .battle-scene {
+    flex-direction: column;
+  }
+  
+  .battle-player {
+    order: 2;
+  }
+  
+  .battle-monster {
+    order: 1;
+  }
+  
+  .battle-question {
+    font-size: 1.25rem;
+  }
+  
+  .battle-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .battle-option-btn {
+    width: 100%;
+  }
+  
+  /* 商店界面 */
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .shop-item {
+    min-width: 0;
+  }
+  
+  /* 地图界面 */
+  .world-map {
+    transform: scale(0.8);
+    transform-origin: top center;
+  }
+  
+  /* 成就界面 */
+  .achievement-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== 小屏手机适配 ========== */
+
+@media (max-width: 375px) {
+  html {
+    font-size: 13px;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .card {
+    padding: 0.75rem;
+  }
+}
+
+/* ========== 触摸反馈 ========== */
+
+@media (hover: none) {
+  .touch-feedback:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  
+  .no-hover-effect:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ========== 键盘安全区域 ========== */
+
+.keyboard-visible {
+  padding-bottom: env(keyboard-inset-bottom, 0px);
+}
+
+/* ========== 全面屏适配 ========== */
+
+.notch-safe {
+  padding-top: max(0px, env(safe-area-inset-top));
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+/* ========== 加载状态适配 ========== */
+
+@media (max-width: 767px) {
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .loading-text {
+    font-size: 0.875rem;
+  }
+}

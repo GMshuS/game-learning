@@ -1,0 +1,772 @@
+<template>
+  <div class="english-speed-spell">
+    <!-- 模式选择 -->
+    <div v-if="!store.isPlaying && !store.gameResult" class="mode-select">
+      <div class="header">
+        <div class="header-left">
+          <h2>⚡ 单词速拼</h2>
+          <p class="level-info">
+            Level {{ effectiveLevel }} · {{ levelTheme }}
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-back" @click="$emit('back')">← 返回</button>
+        </div>
+      </div>
+
+      <p class="subtitle">选择模式开始英语单词挑战！</p>
+
+      <div class="mode-cards">
+        <div
+          v-for="mode in modes"
+          :key="mode.id"
+          class="mode-card"
+          @click="startMode(mode.id)"
+        >
+          <div class="mode-icon">{{ mode.icon }}</div>
+          <h3>{{ mode.name }}</h3>
+          <p>{{ mode.description }}</p>
+          <div v-if="bestScores[mode.id]" class="mode-best">
+            最佳: {{ bestScores[mode.id].score }}分 ({{ bestScores[mode.id].rating }})
+          </div>
+          <div v-else class="mode-best empty">
+            暂无记录
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 游戏中 -->
+    <div v-else-if="store.isPlaying" class="game-area">
+      <div class="game-header">
+        <div v-if="store.currentMode !== 'survival'" class="timer" :class="{ warning: store.timeLeft <= 10 }">
+          ⏱️ {{ store.timeLeft }}s
+        </div>
+        <div v-if="store.currentMode === 'survival'" class="timer survival-timer">
+          ♾️ 无限时
+        </div>
+        <div class="score">得分: {{ store.score }}</div>
+        <div v-if="store.combo > 1" class="combo">🔥 {{ store.combo }}连击</div>
+        <div v-if="store.currentMode === 'survival'" class="lives">
+          ❤️ {{ filledHearts }}{{ emptyHearts }}
+        </div>
+        <div v-if="store.currentMode === 'blitz'" class="ai-bar">
+          <div class="ai-label">AI 对手</div>
+          <div class="ai-progress-bar">
+            <div class="ai-fill" :style="{ width: store.aiProgress + '%' }" />
+          </div>
+        </div>
+        <button class="btn-back" @click="goBackFromGame">← 返回</button>
+      </div>
+
+      <div class="question-area">
+        <!-- 听音题型 -->
+        <div v-if="store.currentQuestion?.type === 'listening'" class="question listening">
+          <button
+            class="btn-listen"
+            :class="{ playing: isSpeaking }"
+            @click="playListening"
+          >
+            🔊
+          </button>
+          <span class="listen-hint">请选择对应的释义</span>
+        </div>
+
+        <!-- en2cn 题型 -->
+        <div v-else-if="store.currentQuestion?.type === 'en2cn'" class="question">
+          <span class="word-en">{{ store.currentQuestion?.word?.en }}</span>
+          <span class="question-hint">选择正确的中文释义</span>
+        </div>
+
+        <!-- cn2en 题型 -->
+        <div v-else-if="store.currentQuestion?.type === 'cn2en'" class="question">
+          <span class="word-cn">{{ store.currentQuestion?.word?.cn }}</span>
+          <span class="question-hint">选择正确的英文单词</span>
+        </div>
+
+        <div class="options">
+          <button
+            v-for="(opt, index) in store.currentQuestion?.options"
+            :key="index"
+            class="option-btn"
+            :class="{
+              correct: feedbackState === 'correct' && index === store.currentQuestion?.correctIndex,
+              wrong: feedbackState === 'wrong' && index === feedbackIndex,
+              locked: isLocked
+            }"
+            :disabled="isLocked"
+            @click="handleAnswer(index)"
+          >
+            {{ opt }}
+          </button>
+        </div>
+
+        <!-- Progress indicator -->
+        <div class="progress-info">
+          已答: {{ store.correctCount + store.wrongCount }}题
+          · 正确: {{ store.correctCount }}
+          · 错误: {{ store.wrongCount }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 结算 -->
+    <div v-else-if="store.gameResult" class="result-area">
+      <h2>🏁 挑战结束</h2>
+      <div class="result-stats">
+        <div class="stat">
+          <div class="stat-value">{{ store.gameResult.score }}</div>
+          <div class="stat-label">得分</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value rating-{{ store.gameResult.rating.toLowerCase() }}">{{ store.gameResult.rating }}</div>
+          <div class="stat-label">评级</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">💰 {{ store.gameResult.coins }}</div>
+          <div class="stat-label">金币</div>
+        </div>
+        <div v-if="store.gameResult.gems > 0" class="stat">
+          <div class="stat-value">💎 {{ store.gameResult.gems }}</div>
+          <div class="stat-label">钻石</div>
+        </div>
+      </div>
+      <div class="result-details">
+        <p>✅ 正确: {{ store.gameResult.correct }} | ❌ 错误: {{ store.gameResult.wrong }}</p>
+        <p>🔥 最大连击: {{ store.gameResult.maxCombo }}</p>
+        <p>📊 正确率: {{ accuracy }}%</p>
+        <p v-if="store.gameResult.aiWon">😤 AI 获胜！下次加油！</p>
+        <p v-else-if="store.currentMode === 'blitz' && !store.gameResult.aiWon">🎉 你击败了 AI！</p>
+      </div>
+      <div class="result-actions">
+        <button class="btn-retry" @click="startMode(store.currentMode)">再来一次</button>
+        <button class="btn-back-result" @click="goBackToModeSelect">返回模式选择</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useEnglishSpeedSpellStore } from '../store/englishSpeedSpellStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useGameStore } from '../store/gameStore';
+import { englishGradesConfig } from '../config/english/grades';
+import { speedSpellConfig } from '../config/english/speedSpell';
+import englishSpeech from '../utils/englishSpeech';
+
+const emit = defineEmits(['back', 'challengeEnd']);
+
+const store = useEnglishSpeedSpellStore();
+const settingsStore = useSettingsStore();
+const gameStore = useGameStore();
+
+let timer = null;
+
+// 反馈状态
+const feedbackState = ref(null);   // 'correct' | 'wrong' | null
+const feedbackIndex = ref(-1);      // 用户点击的选项索引
+const isLocked = ref(false);        // 反馈期间锁定操作
+const isSpeaking = ref(false);      // 语音是否正在播放
+const feedbackTimer = ref(null);    // 反馈延迟定时器
+const hasEmittedEnd = ref(false);   // 防止双重发射
+
+// 等级信息
+const effectiveLevel = computed(() => settingsStore.getEffectiveEnglishLevel);
+
+const levelTheme = computed(() => {
+  const cfg = englishGradesConfig[effectiveLevel.value];
+  return cfg ? cfg.theme : '';
+});
+
+// 模式列表（从 speedSpellConfig 读取，避免与 EnglishHall 重复定义）
+const modes = Object.values(speedSpellConfig.modes).map(m => ({
+  id: m.id,
+  icon: m.icon,
+  name: m.name,
+  description: m.description
+}));
+
+// 最佳成绩
+const bestScores = computed(() => gameStore.englishSpeedSpell?.bestScores || {});
+
+// 生命值显示（生存模式）
+const filledHearts = computed(() => '❤️'.repeat(store.lives));
+const emptyHearts = computed(() => '🖤'.repeat(store.maxLives - store.lives));
+
+// 正确率
+const accuracy = computed(() => {
+  const result = store.gameResult;
+  if (!result) return 0;
+  const total = (result.correct || 0) + (result.wrong || 0);
+  if (total === 0) return 0;
+  return ((result.correct / total) * 100).toFixed(1);
+});
+
+/**
+ * 开始游戏
+ * @param {string} modeId
+ */
+function startMode(modeId) {
+  hasEmittedEnd.value = false;
+  feedbackState.value = null;
+  feedbackIndex.value = -1;
+  isLocked.value = false;
+  store.startGame(modeId);
+  startTimer();
+}
+
+/**
+ * 处理答题
+ * @param {number} index
+ */
+function handleAnswer(index) {
+  if (isLocked.value || !store.currentQuestion) return;
+
+  isLocked.value = true;
+  feedbackIndex.value = index;
+
+  const isCorrect = store.answer(index);
+
+  if (isCorrect) {
+    feedbackState.value = 'correct';
+  } else {
+    feedbackState.value = 'wrong';
+  }
+
+  // 延迟后自动下一题
+  const delay = isCorrect ? 500 : 800;
+  feedbackTimer.value = setTimeout(() => {
+    feedbackTimer.value = null;
+    feedbackState.value = null;
+    feedbackIndex.value = -1;
+    isLocked.value = false;
+
+    // 如果游戏已结束，触发事件（防止双重发射）
+    if (!store.isPlaying && !hasEmittedEnd.value) {
+      hasEmittedEnd.value = true;
+      emit('challengeEnd', store.gameResult);
+    }
+  }, delay);
+}
+
+/**
+ * 播放听音
+ */
+async function playListening() {
+  if (!store.currentQuestion?.word?.en) return;
+
+  // 确保语音引擎已初始化
+  await englishSpeech.init();
+
+  isSpeaking.value = true;
+  englishSpeech.speak(store.currentQuestion.word.en, {
+    rate: 0.9,
+    onEnd: () => {
+      isSpeaking.value = false;
+    },
+    onError: () => {
+      isSpeaking.value = false;
+    }
+  });
+}
+
+/**
+ * 启动计时器
+ */
+function startTimer() {
+  stopTimer();
+  if (store.currentMode === 'survival') return;
+  timer = setInterval(() => {
+    store.tick();
+    if (!store.isPlaying) {
+      stopTimer();
+      emit('challengeEnd', store.gameResult);
+    }
+  }, 1000);
+}
+
+/**
+ * 停止计时器
+ */
+function stopTimer() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+/**
+ * 从游戏中返回（停止游戏并返回上一层）
+ */
+function goBackFromGame() {
+  if (feedbackTimer.value) {
+    clearTimeout(feedbackTimer.value);
+    feedbackTimer.value = null;
+  }
+  hasEmittedEnd.value = false;
+  stopTimer();
+  englishSpeech.stop();
+  store.$reset();
+  emit('back');
+}
+
+/**
+ * 返回模式选择
+ */
+function goBackToModeSelect() {
+  if (feedbackTimer.value) {
+    clearTimeout(feedbackTimer.value);
+    feedbackTimer.value = null;
+  }
+  hasEmittedEnd.value = false;
+  stopTimer();
+  englishSpeech.stop();
+  store.$reset();
+}
+
+onMounted(() => {
+  // 如果从 EnglishHall 直接进入游戏（isPlaying 已为 true），启动定时器
+  if (store.isPlaying && store.currentMode !== 'survival') {
+    startTimer();
+  }
+});
+
+onUnmounted(() => {
+  if (feedbackTimer.value) {
+    clearTimeout(feedbackTimer.value);
+    feedbackTimer.value = null;
+  }
+  stopTimer();
+  englishSpeech.stop();
+});
+</script>
+
+<style scoped>
+.english-speed-spell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: #fff;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #0f766e 0%, #155e75 100%);
+}
+
+/* ========== 模式选择 ========== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.level-info {
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-back {
+  padding: 0.5rem 1.2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.subtitle {
+  margin: 0 0 2rem;
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.mode-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.mode-card:hover {
+  transform: translateY(-3px);
+  border-color: #34d399;
+  box-shadow: 0 8px 25px rgba(52, 211, 153, 0.2);
+}
+
+.mode-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.mode-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.mode-card p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.mode-best {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #34d399;
+}
+
+.mode-best.empty {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ========== 游戏态 ========== */
+.game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.timer {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.timer.warning {
+  color: #ef4444;
+  animation: pulse 0.5s infinite;
+}
+
+.survival-timer {
+  font-size: 1.2rem;
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+.score {
+  font-size: 1.2rem;
+  color: #34d399;
+}
+
+.combo {
+  font-size: 1.2rem;
+  color: #f97316;
+}
+
+.lives {
+  font-size: 1.2rem;
+}
+
+.ai-bar {
+  width: 100%;
+}
+
+.ai-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.ai-progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ai-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #ef4444);
+  transition: width 0.3s;
+}
+
+.question-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.question {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.question.listening {
+  gap: 1rem;
+}
+
+.word-en {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #5eead4;
+  letter-spacing: 0.05em;
+}
+
+.word-cn {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.question-hint {
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.listen-hint {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.btn-listen {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-listen:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #34d399;
+  transform: scale(1.1);
+}
+
+.btn-listen.playing {
+  animation: listenPulse 1s infinite;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.3);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.option-btn {
+  padding: 1.2rem 1rem;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  word-break: break-word;
+}
+
+.option-btn:hover:not(.locked) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.option-btn.correct {
+  background: rgba(52, 211, 153, 0.4);
+  border-color: #34d399;
+  animation: correctFlash 0.5s ease;
+}
+
+.option-btn.wrong {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: #ef4444;
+  animation: shake 0.4s ease;
+}
+
+.option-btn.locked {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.progress-info {
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+/* ========== 结算态 ========== */
+.result-area {
+  text-align: center;
+  padding: 2rem;
+}
+
+.result-area h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.result-details {
+  margin: 1.5rem 0;
+  opacity: 0.8;
+  line-height: 1.8;
+}
+
+.result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-retry,
+.btn-back-result {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-retry {
+  background: linear-gradient(135deg, #06b6d4, #10b981);
+  color: #fff;
+}
+
+.btn-retry:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-back-result {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.btn-back-result:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========== 动画 ========== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes correctFlash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes listenPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+  50% { box-shadow: 0 0 0 15px rgba(52, 211, 153, 0); }
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .english-speed-spell {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .header-actions {
+    align-self: flex-end;
+  }
+
+  .mode-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .word-en,
+  .word-cn {
+    font-size: 1.8rem;
+  }
+
+  .options {
+    grid-template-columns: 1fr;
+  }
+
+  .option-btn {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
+</style>
